@@ -6,7 +6,6 @@
  *--------------------------------------------------------------------------*/
 var Pseudo = (function(){
 	var	x = 0,
-		ua = navigator.userAgent,
 		SEED = document.location.toString(),
 		VERSION = 2,
 		BROWSER = { "IE": /*@cc_on!@*/!1, "Opera": false, "Gecko": false, "Webkit": false, "Mobile": false },
@@ -22,12 +21,27 @@ var Pseudo = (function(){
 	SEED = x.toString(16);
 	
 	// browser/engine
-	BROWSER.Mobile = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+/.test(ua);
-	if (BROWSER.IE) BROWSER["IE"+ ua.match(/\s*MSIE\s*(\d+)/i)[1]] = true;
-	else switch (true) {
+	BROWSER.Mobile = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+/.test(navigator.userAgent);
+	if (BROWSER.IE) {
+	//	BROWSER_VERSION = ScriptEngineMajorVersion() +"."+ ScriptEngineMinorVersion() +"."+ ScriptEngineBuildVersion();
+		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
+		BROWSER["IE"+ parseInt(BROWSER_VERSION)] = true;
+	} else if (BROWSER.Opera = (TOSTRING.call(window.opera||Object) === "[object Opera]")) {
+		BROWSER_VERSION = window.opera.version();
+		BROWSER["Opera"+ parseInt(BROWSER_VERSION)] = true;
+	} else if (BROWSER.Gecko = (/\sGecko\/\d{8}\s/.test(navigator.userAgent))) {
+		BROWSER_VERSION = navigator.userAgent.match(/\s*rv\:([\d\.]+)/i)[1];
+		BROWSER["Gecko"+ parseInt(BROWSER_VERSION)] = true;
+	} else if (BROWSER.Webkit = (/\s(?:Apple)?WebKit\/\d{3}\.\d+/.test(navigator.userAgent))) {
+	//	BROWSER_VERSION = navigator.userAgent.match(/\)\s[A-Z][a-z]+\/([^\s]+)/)[1];
+		BROWSER_VERSION = navigator.userAgent.match(/\s(?:Apple)?WebKit\/([\d\.]+)/)[1];
+		BROWSER["Webkit"+ parseInt(BROWSER_VERSION)] = true;
+/*
+	} else switch (true) {
 		case BROWSER.Opera = TOSTRING.call(window.opera||Object) === "[object Opera]": break;
-		case BROWSER.Gecko = /\sGecko\/\d{8}\s/.test(ua): break;
-		case BROWSER.Webkit = /\s(?:Apple)?WebKit\/\d{3}\.\d+/.test(ua): break;
+		case BROWSER.Gecko = /\sGecko\/\d{8}\s/.test(navigator.userAgent): break;
+		case BROWSER.Webkit = /\s(?:Apple)?WebKit\/\d{3}\.\d+/.test(navigator.userAgent): break;
+*/
 	};
 	
 	// add scripts or stylesheet
@@ -69,6 +83,7 @@ var Pseudo = (function(){
 	return {
 		"version": VERSION,
 		"Browser": BROWSER,
+		"BrowserVersion": BROWSER_VERSION,
 		
 		// utility
 		"addScript": function addScript(source,callback,reload) {
@@ -1374,9 +1389,9 @@ var Class = (function(){
 *** DOM ****************
 ***********************/
 var DOM = (function(){
-	var	WIN = (window.HTMLWindow || window.Window),
-		DOC = (window.HTMLDocument || window.Document),
-		ELEM = (window.HTMLElement || window.Element),
+	var	WIN = window.DOMWindow || window.Window || window.constructor,
+		DOC = window.HTMLDocument || window.Document || document.constructor,
+		ELEM = window.HTMLElement || window.Element,
 		CUSTOM = {};
 	
 	return this.DOM = {
@@ -1567,10 +1582,7 @@ Pseudo.DOM.addMethods("*",(function(){
 		//	delete this.__handlers;
 			for (var prop in this) {
 				if (prop === "__pseudo") continue;
-				else if (prop.startsWith("__") || Object.className(prop) !== "String") {
-					this[prop] = undefined;
-					delete this[prop];
-				};
+				else if (prop.startsWith("__") || Object.className(prop) !== "String") delete this[prop];
 			};
 		}
 	};
@@ -1681,7 +1693,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	};
 	
 	// extend the Event
-	Pseudo.expand(Event.prototype,{
+	Pseudo.expand(window.Event.prototype,{
 		"cancel": function cancel() {
 			if (this.stopPropagation) this.stopPropagation();
 			this.cancelBubble = true;
