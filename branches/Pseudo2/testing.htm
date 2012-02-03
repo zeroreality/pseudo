@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Morbo the Annihillator</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta http-equiv="imagetoolbar" content="no" />
+<script type="text/javascript" src="pseudo2.js"></script>
+<!--script type="text/javascript">
+var Derp = Class.create(), hurr = new Derp();
+hurr.on("foo",function(e) {
+	// first event
+	console.log(this,e,"one");
+});
+hurr.on("foo",function(e) {
+	// raise bar event
+	console.log(this,e,"two")
+	this.fire("bar");
+});
+hurr.on("bar",function(e) {
+	// fired from a foo handler
+	console.log(this,e,"three");
+});
+hurr.on("foo",function(e) {
+	// causes an error
+	does_not_exist++;
+	console.log(this,e,"four");
+});
+hurr.on("foo",function(e) {
+	// bound to different scope
+	console.log(this,e,"five");
+}.bind(document));
+console.info(hurr.fire("foo"));
+</script-->
+<!--script type="text/javascript">
+window.on("load",function(e) { console.log("window:load",e) });
+document.on("DOMContentLoaded",function(e) { console.log("document:DOMContentLoaded",e) });
+</script-->
+<!--script type="text/javascript">
+window.onload = function() {
+	document.body.on("click",function(e) { console.log("one",this,e.pointer()) });
+	document.body.on("click",function(e) { console.log("two",this,e.pointer()) });
+	document.body.on("click",function(e) { console.log("three",this,e.pointer()) });
+};
+</script-->
+<script type="text/javascript">
+var	Derp = Class.create(null,{
+		"foo": { "value": "bar" },
+		"bar": { "get": function() { return this.name } }
+	},{
+		"constructor": function(name) { this.name = name },
+		"test": function() { return "hello " },
+		"me": function() { return this.name }
+	}),
+	Herp = Class.create(Derp,{
+		"foo": { "value": "baz" },
+		"bar": { "get": function($super) { return $super().toUpperCase() } }
+	},{
+		"test": function($super) { return $super() +"world!" }
+	}),
+	derp = new Derp("derp"),
+	herp = new Herp("herp");
+console.log(derp.foo,herp.foo);
+console.log(derp.getValue("bar"),herp.getValue("bar"));
+console.log(derp.test(),herp.test());
+//Pseudo.define(derp,{ "hurr": { "value": "derp derp derp" } });
+console.log(derp.hurr,herp.hurr);
+Pseudo.augment(herp,{ "me": function($super) { return $super() +"alicious!" } });
+console.log(derp.me(),herp.me());
+</script>
+</head>
+<body>
+	<h1>Pseudo testing</h1>
+	<div><a href="#">link</a></div>
+	<div><script type="text/javascript">document.write(navigator.userAgent)</script></div>
+</body>
+</html>
