@@ -4,6 +4,7 @@
  *	Pseudo is freely distributable under the terms of an MIT-style license.
  *	For details, see http://www.opensource.org/licenses/mit-license.php
  *--------------------------------------------------------------------------*/
+"use strict";
 var Pseudo = (function(){
 	var	x = 0,
 		SEED = document.location.toString(),
@@ -14,7 +15,7 @@ var Pseudo = (function(){
 		SLICE = Array.prototype.slice,
 		VALUEOF = Function.prototype.valueOf,
 		TOSTRING = Function.prototype.toString,
-		PROPERTY = { "configurable": true, "enumerable": false };
+		PROPERTY = { "configurable": true, "enumerable": true };
 	
 	// seed for guid & increment
 	for (var i = 0, l = SEED.length; i < l; i++) x += SEED.charCodeAt(i);
@@ -1331,24 +1332,25 @@ var Class = (function(){
 			Pseudo.augment(this,methods);
 		},
 		"addProperties": DOM_PROPS ? function addPropertiesNative(properties) {
+			for (var name in properties) Pseudo.expand(properties[name],{
+				"configurable": true,
+				"enumerable": name.startsWith("__")
+			});
 			Pseudo.define(this,properties);
 		} : function addProperties(properties) {
 			if (!this.__properties) this.__properties = {};
-			for (var name in properties) {
-			//	this.__properties[name]
-				//////////////////////////////////
-				// stuff happen here
-			};
+			for (var name in properties) this.__properties[name] = Object.clone(properties[name]);
 		}
 	});
 	
 	// classing
 	function createKlass($super) {
-		var Klass = function Klass() {
+		function Klass() {
 		//	this.__trace = true;
 			this.__pseudo = Pseudo.unique();
 		//	this.__machine = {};
 		//	this.__handlers = {};
+			if (!DOM_PROPS) for (var name in this.__properties) if ("value" in this.__properties[name]) this[name] = this.__properties[name].value;
 			this.__constructor.apply(this,SLICE.call(arguments,0));
 		};
 		Klass.prototype.__constructor = Pseudo.um;
@@ -1360,6 +1362,16 @@ var Class = (function(){
 		};
 		return Klass.prototype.constructor = Klass;
 	};
+	function create($super,properties,methods,factory,aliases) {
+		var Klass = createKlass($super);
+		Pseudo.expand(Klass,FACTORY);
+		Pseudo.expand(Klass.prototype,PROTOTYPES);
+		if (properties) Klass.addProperties(properties);
+		if (methods) Klass.addMethods(methods);
+		if (factory) Pseudo.extend(Klass,factory);
+		if (aliases) Klass.aliasMethods(aliases);
+		return Klass;
+	};
 	
 	return this.Class = {
 		"Factory": FACTORY,
@@ -1367,20 +1379,9 @@ var Class = (function(){
 		"Properties": PROPERTIES,
 		
 		"klass": createKlass,
-		"create": function create($super,properties,methods,factory,aliases) {
-			var Klass = createKlass($super);
-			Pseudo.expand(Klass,FACTORY);
-			Pseudo.expand(Klass.prototype,PROTOTYPES);
-			if (properties) Klass.addProperties(properties);
-			if (methods) Klass.addMethods(methods);
-			if (factory) Pseudo.extend(Klass,factory);
-			if (aliases) Klass.aliasMethods(aliases);
-			return Klass;
-		},
+		"create": create,
 		"singleton": function singleton($super,properties,methods,factory,aliases) {
-			var instance = new (create($super,properties,methods,factory,aliases))();
-			if (factory) Pseudo.extend(instance,factory);	// methods re-applied; possible overwrite
-			return instance;
+			return Pseudo.extend(new create($super,properties,methods,factory,aliases)(),factory || {});
 		}
 	};
 }).call(Pseudo);
@@ -1657,7 +1658,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	function HANDLER_WRAP(element,type,handler) {
 		return function wrapped(e) {
 			if (!e) e = window.event;
-			if (e.__type !== type) return;
+			if (!!e.__type && e.__type !== type) return;
 			else if (!e.target !== element) e.target = element;
 			return handler.call(element,e);
 		};
@@ -1725,7 +1726,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	});
 	
 	return {
-		"on": function(type,handler,capture) {
+		"on": function on(type,handler,capture) {
 			if (handler instanceof Array) {
 				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
 			} else if (handler instanceof Function) {
@@ -1737,7 +1738,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			};
 			return this;
 		},
-		"off": function(type,handler,capture) {
+		"off": function off(type,handler,capture) {
 			if (!arguments.length) {
 				if (this.__handlers) for (type in this.__handlers) this.off(type);
 			} else if (arguments.length === 1) {
@@ -1763,7 +1764,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			this.fireEvent(CUSTOM[this.nodeName] && CUSTOM[this.nodeName].contains(type) ? "ondataavailable" : type,e);
 			return e;
 		},
-		"has": function(type,handler,capture) {
+		"has": function has(type,handler,capture) {
 			return this.__handlers[type].filterIndex(HANDLER_FIND,{
 				"handler": handler,
 				"capture": !!capture && DOM
@@ -1773,11 +1774,11 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 }).call(Pseudo.DOM));
 if (Pseudo.Browser.IE && !Pseudo.Browser.IE9) {
 	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
-	(function(){
+	(function IEDOMContentLoaded(){
 		try {
 			document.documentElement.doScroll("left");
 			document.fire("DOMContentLoaded");
-		} catch(e) { setTimeout(arguments.callee,1) };
+		} catch(e) { setTimeout(IEDOMContentLoaded,1) };
 	})();
 };
 
@@ -1786,7 +1787,7 @@ if (Pseudo.Browser.IE && !Pseudo.Browser.IE9) {
 ***********************/
 var Ajax = (function(){
 	var	DOM_XHR = XMLHttpRequest ? true : false,
-		DOM_DOC = document.implementation && DOMParser && XMLSerializer ? true : false,
+		DOM_DOC = document.implementation && window.DOMParser && window.XMLSerializer ? true : false,
 		XMLHTTP = DOM_XHR ? XMLHTTP_DOM : XMLHTTP_MSIE,
 		DOCUMENT = DOM_DOC ? DOCUMENT_DOM : DOCUMENT_MSIE,
 		MSIE_XHR = "",
