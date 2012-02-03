@@ -27,7 +27,7 @@ var Pseudo = (function(){
 	//	BROWSER_VERSION = ScriptEngineMajorVersion() +"."+ ScriptEngineMinorVersion() +"."+ ScriptEngineBuildVersion();
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
 		BROWSER["IE"+ parseInt(BROWSER_VERSION)] = true;
-	} else if (BROWSER.Opera = (TOSTRING.call(window.opera||Object) === "[object Opera]")) {
+	} else if (BROWSER.Opera = (Object.prototype.toString.call(window.opera||Object) === "[object Opera]")) {
 		BROWSER_VERSION = window.opera.version();
 		BROWSER["Opera"+ parseInt(BROWSER_VERSION)] = true;
 	} else if (BROWSER.Gecko = (/\sGecko\/\d{8}\s/.test(navigator.userAgent))) {
@@ -37,12 +37,6 @@ var Pseudo = (function(){
 	//	BROWSER_VERSION = navigator.userAgent.match(/\)\s[A-Z][a-z]+\/([^\s]+)/)[1];
 		BROWSER_VERSION = navigator.userAgent.match(/\s(?:Apple)?WebKit\/([\d\.]+)/)[1];
 		BROWSER["Webkit"+ parseInt(BROWSER_VERSION)] = true;
-/*
-	} else switch (true) {
-		case BROWSER.Opera = TOSTRING.call(window.opera||Object) === "[object Opera]": break;
-		case BROWSER.Gecko = /\sGecko\/\d{8}\s/.test(navigator.userAgent): break;
-		case BROWSER.Webkit = /\s(?:Apple)?WebKit\/\d{3}\.\d+/.test(navigator.userAgent): break;
-*/
 	};
 	
 	// add scripts or stylesheet
@@ -62,10 +56,7 @@ var Pseudo = (function(){
 			//	if (func.valueOf() === ancestor.valueOf()) console.warn("recurrsion?",ancestor,func);
 				return func.apply(this,[ancestor.bind(this)].inject(SLICE.call(arguments,0)));
 			},
-			{
-				"valueOf": VALUEOF.bind(func),
-				"toString": TOSTRING.bind(func)
-			}
+			{ "valueOf": VALUEOF.bind(func), "toString": TOSTRING.bind(func) }
 		);
 	};
 	
@@ -141,43 +132,41 @@ var Pseudo = (function(){
 		
 		// classing/prototype
 		"augment": function augment(object,methods) {
-			var	each,
+			var	name,
 				method,
-				$base = object.prototype,
+				$base = object.prototype || object,
 				$super = Object.getPrototypeOf($base);
+			//	$base = object.prototype,
+			//	$super = $base.constructor;//Object.getPrototypeOf($base);
 			if (methods.constructor && !Function.isNative(methods.constructor)) methods.__constructor = methods.constructor;
-			for (each in methods) {
-				if (each === "constructor") continue;
-				else if (!OVERLOADABLE(methods[each])) $base[each] = methods[each];
-				else $base[each] = OVERLOAD($super && $super[name] || $base[name],methods[each]);
+			for (name in methods) {
+				if (name === "constructor") continue;
+				if (!OVERLOADABLE(methods[name])) $base[name] = methods[name];
+				else $base[name] = OVERLOAD($super && $super[name] || $base[name],methods[name]);
 			};
 			return object;
 		},
 		"define": function define(object,source1,source2,sourceN) {
 			var	sources = SLICE.call(arguments,1),
 				i = 0, l = sources.length,
-				properties = {}, each, property, current, ancestor,
-				publics = {}, privates = {},
-				$base = object && object.prototype,
+				name, property, current, ancestor,
+				$base = object.prototype || object,
 				$super = Object.getPrototypeOf($base);
-			for (;i<l;i++) for (each in sources[i]) {
-				current = ancestor = null;
-				property = expand({},properties[each],PROPERTY);
+			for (;i<l;i++) for (name in sources[i]) {
+				property = Pseudo.expand({},sources[i][name],PROPERTY);
+				current = Object.getOwnPropertyDescriptor($base,name);
+				ancestor = Object.getOwnPropertyDescriptor($super,name);
 				
-				if (OVERLOADABLE(property["get"])) {
-					current = current || $base && Object.getOwnPropertyDescriptor($base,each);
-					ancestor = ancestor || $super && Object.getOwnPropertyDescriptor($super,each);
-					property["get"] = OVERLOAD(current && current["get"] || ancestor && ancestor["get"],property["get"]);
-				};
-				if (OVERLOADABLE(property["set"])) {
-					current = current || $base && Object.getOwnPropertyDescriptor($base,each);
-					ancestor = ancestor || $super && Object.getOwnPropertyDescriptor($super,each);
-					property["set"] = OVERLOAD(current && current["set"] || ancestor && ancestor["set"],property["set"]);
-				};
-				
-				properties[each] = property;
+				if (OVERLOADABLE(property["get"])) property["get"] = OVERLOAD(
+					current && current["get"] || ancestor && ancestor["get"],
+					property["get"]
+				);
+				if (OVERLOADABLE(property["set"])) property["set"] = OVERLOAD(
+					current && current["set"] || ancestor && ancestor["set"],
+					property["set"]
+				);
+				Object.defineProperty($base,name,property);
 			};
-			Object.defineProperties($base,properties);
 			return object;
 		}
 	};
@@ -1213,11 +1202,23 @@ var Pseudo = (function(){
 ***********************/
 var Class = (function(){
 	var	SLICE = Array.prototype.slice,
-		DOM_PROPS = Function.isNative(Object.defineProperty),
+		DOM_PROPS = (function(){
+			var success = false, klass, instance;
+			try {
+				klass = function() {};
+				Object.defineProperty(klass.prototype,"test",{ "value": "success" });
+				instance = new klass();
+				success = instance.test === "success";
+				klass = instance = null;
+			} catch(x) {
+				success = false;
+			};
+			return success;
+		})(),
 		TRIGGER = document.addEventListener ? TRIGGER_DOM : TRIGGER_MSIE,
 		FACTORY = {},
 		PROTOTYPES = {},
-		PROPERTIES = {};
+		PROPERTIES = { "__pseudo": { "value": 0, "writable": true } };
 	
 	// events
 	function KlassEvent(scope,type,extras) {
@@ -1313,13 +1314,13 @@ var Class = (function(){
 			return this[name];
 		} : function getValue(name) {
 			var property = this.constructor.__properties[name];
-			return !property || !property.getter ? this[name] : property.getter.call(this,this[name]);
+			return !property || !property["get"] ? this[name] : property["get"].call(this,this[name]);
 		},
 		"setValue": DOM_PROPS ? function setValueNative(name,value) {
 			return this[name] = value;
 		} : function setValue(name,value) {
 			var property = this.constructor.__properties[name];
-			return this[name] = !property || !property.setter ? value : property.setter.call(this,value);
+			return this[name] = !property || !property["set"] ? value : property["set"].call(this,value);
 		},
 		"setValues": function setValue(values) {
 			for (var name in values) this.setValue(name,values[name]);
@@ -1329,17 +1330,20 @@ var Class = (function(){
 	// methods
 	Pseudo.extend(FACTORY,{
 		"addMethods": function(methods) {
-			Pseudo.augment(this,methods);
+			return Pseudo.augment(this,methods);
 		},
 		"addProperties": DOM_PROPS ? function addPropertiesNative(properties) {
-			for (var name in properties) Pseudo.expand(properties[name],{
-				"configurable": true,
-				"enumerable": name.startsWith("__")
-			});
-			Pseudo.define(this,properties);
+			var name, props = {};
+			for (name in properties) props[name] = Pseudo.extend({ "enumerable": !name.startsWith("__") },properties[name]);
+			return Pseudo.define(this,props);
 		} : function addProperties(properties) {
+			var name, props;
 			if (!this.__properties) this.__properties = {};
-			for (var name in properties) this.__properties[name] = Object.clone(properties[name]);
+			for (name in properties) {
+				this.__properties[name] = Object.clone(properties[name]);
+				// TODO: augment getter/setter
+			};
+			return this;
 		}
 	});
 	
@@ -1348,24 +1352,23 @@ var Class = (function(){
 		function Klass() {
 		//	this.__trace = true;
 			this.__pseudo = Pseudo.unique();
-		//	this.__machine = {};
-		//	this.__handlers = {};
-			if (!DOM_PROPS) for (var name in this.__properties) if ("value" in this.__properties[name]) this[name] = this.__properties[name].value;
+			var name, props = this.constructor.__properties;
+			if (!DOM_PROPS && props) for (name in props) if ("value" in props[name]) this[name] = props[name].value;
 			this.__constructor.apply(this,SLICE.call(arguments,0));
 		};
 		Klass.prototype.__constructor = Pseudo.um;
-		if ($super && $super.prototype) {
+		if ($super) {
 			var Quasi = function() {};
-			Quasi.prototype = $super.prototype;
+			Quasi.prototype = $super && $super.prototype;
 			Klass.prototype = new Quasi();
-			Klass.prototype.__constructor = $super;
+			if (!DOM_PROPS && $super.__properties) Klass.__properties = Object.clone($super.__properties);
 		};
 		return Klass.prototype.constructor = Klass;
 	};
 	function create($super,properties,methods,factory,aliases) {
-		var Klass = createKlass($super);
-		Pseudo.expand(Klass,FACTORY);
+		var Klass = Pseudo.expand(createKlass($super),FACTORY);
 		Pseudo.expand(Klass.prototype,PROTOTYPES);
+		Klass.addProperties(PROPERTIES);
 		if (properties) Klass.addProperties(properties);
 		if (methods) Klass.addMethods(methods);
 		if (factory) Pseudo.extend(Klass,factory);
@@ -1772,7 +1775,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
-if (Pseudo.Browser.IE && !Pseudo.Browser.IE9) {
+if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
 	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
 	(function IEDOMContentLoaded(){
 		try {
