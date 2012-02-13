@@ -134,15 +134,12 @@ var Pseudo = (function(){
 		"augment": function augment(object,methods) {
 			var	name,
 				method,
-				$base = object.prototype || object,
-				$super = Object.getPrototypeOf($base);
-			//	$base = object.prototype,
-			//	$super = $base.constructor;//Object.getPrototypeOf($base);
+				$super = Object.getPrototypeOf(object);
 			if (methods.constructor && !Function.isNative(methods.constructor)) methods.__constructor = methods.constructor;
 			for (name in methods) {
 				if (name === "constructor") continue;
-				if (!OVERLOADABLE(methods[name])) $base[name] = methods[name];
-				else $base[name] = OVERLOAD($super && $super[name] || $base[name],methods[name]);
+				if (!OVERLOADABLE(methods[name])) object[name] = methods[name];
+				else object[name] = OVERLOAD($super && $super[name] || object[name],methods[name]);
 			};
 			return object;
 		},
@@ -150,12 +147,12 @@ var Pseudo = (function(){
 			var	sources = SLICE.call(arguments,1),
 				i = 0, l = sources.length,
 				name, property, current, ancestor,
-				$base = object.prototype || object,
-				$super = Object.getPrototypeOf($base);
+				$super = Object.getPrototypeOf(object);
 			for (;i<l;i++) for (name in sources[i]) {
-				property = Pseudo.expand({},sources[i][name],PROPERTY);
-				current = Object.getOwnPropertyDescriptor($base,name);
-				ancestor = Object.getOwnPropertyDescriptor($super,name);
+				property = Object.clone(sources[i][name]);
+				if (current = Object.getOwnPropertyDescriptor(object,name)) Pseudo.expand(property,current);
+				if (ancestor = Object.getOwnPropertyDescriptor($super,name)) Pseudo.expand(property,ancestor);
+				Pseudo.expand(property,PROPERTY);
 				
 				if (OVERLOADABLE(property["get"])) property["get"] = OVERLOAD(
 					current && current["get"] || ancestor && ancestor["get"],
@@ -165,7 +162,7 @@ var Pseudo = (function(){
 					current && current["set"] || ancestor && ancestor["set"],
 					property["set"]
 				);
-				Object.defineProperty($base,name,property);
+				Object.defineProperty(object,name,Pseudo.expand(property,current,ancestor));
 			};
 			return object;
 		}
@@ -1218,7 +1215,7 @@ var Class = (function(){
 		TRIGGER = document.addEventListener ? TRIGGER_DOM : TRIGGER_MSIE,
 		FACTORY = {},
 		PROTOTYPES = {},
-		PROPERTIES = { "__pseudo": { "value": 0, "writable": true } };
+		PROPERTIES = {};
 	
 	// events
 	function KlassEvent(scope,type,extras) {
@@ -1330,12 +1327,16 @@ var Class = (function(){
 	// methods
 	Pseudo.extend(FACTORY,{
 		"addMethods": function(methods) {
-			return Pseudo.augment(this,methods);
+			return Pseudo.augment(this.prototype,methods);
 		},
 		"addProperties": DOM_PROPS ? function addPropertiesNative(properties) {
 			var name, props = {};
-			for (name in properties) props[name] = Pseudo.extend({ "enumerable": !name.startsWith("__") },properties[name]);
-			return Pseudo.define(this,props);
+			for (name in properties) {
+			//	props[name] = properties[name] instanceof Function ? properties[name]() : Object.clone(properties[name]);
+				props[name] = Object.clone(properties[name]);
+				if (!("enumerable" in props[name]) && name.startsWith("__")) props[name].enumerable = false;
+			};
+			return Pseudo.define(this.prototype,props);
 		} : function addProperties(properties) {
 			var name, props;
 			if (!this.__properties) this.__properties = {};
@@ -1353,7 +1354,8 @@ var Class = (function(){
 		//	this.__trace = true;
 			this.__pseudo = Pseudo.unique();
 			var name, props = this.constructor.__properties;
-			if (!DOM_PROPS && props) for (name in props) if ("value" in props[name]) this[name] = props[name].value;
+			if (DOM_PROPS) Object.defineProperty(this,"__pseudo",{ "enumerable": false })
+			else if (props) for (name in props) if ("value" in props[name]) this[name] = props[name].value;
 			this.__constructor.apply(this,SLICE.call(arguments,0));
 		};
 		Klass.prototype.__constructor = Pseudo.um;
@@ -1367,8 +1369,10 @@ var Class = (function(){
 	};
 	function create($super,properties,methods,factory,aliases) {
 		var Klass = Pseudo.expand(createKlass($super),FACTORY);
-		Pseudo.expand(Klass.prototype,PROTOTYPES);
-		Klass.addProperties(PROPERTIES);
+		if (!$super) {
+			Klass.addProperties(PROPERTIES);
+			Klass.addMethods(PROTOTYPES);
+		};
 		if (properties) Klass.addProperties(properties);
 		if (methods) Klass.addMethods(methods);
 		if (factory) Pseudo.extend(Klass,factory);
