@@ -50,10 +50,9 @@ var Pseudo = (function(){
 	function OVERLOADABLE(method) {
 		return !!(method instanceof Function && FILTER_OVERLOAD.test(method.toString()));
 	};
-	function OVERLOAD(ancestor,func) {
+	function overload(ancestor,func) {
 		return extend(
 			function() {
-			//	if (func.valueOf() === ancestor.valueOf()) console.warn("recurrsion?",ancestor,func);
 				return func.apply(this,[ancestor.bind(this)].inject(SLICE.call(arguments,0)));
 			},
 			{ "valueOf": VALUEOF.bind(func), "toString": TOSTRING.bind(func) }
@@ -110,13 +109,12 @@ var Pseudo = (function(){
 		"guid": function guid() {
 			var id = new Date().valueOf().toString(16) + SEED;
 			while (id.length < 32) id += Math.random().toString(16).substring(2);
-			id = id.substring(0,32);
 			return [
 				id.substring(0,8),
 				id.substring(8,12),
 				id.substring(12,16),
 				id.substring(16,20),
-				id.substring(20)
+				id.substring(20,32)
 			].join("-");
 		},
 		"tryThese": function tryThese(func1,func2,funcN) {
@@ -131,6 +129,7 @@ var Pseudo = (function(){
 		"unique": function unique() { return x++ },
 		
 		// classing/prototype
+		"overload": overload,
 		"augment": function augment(object,methods) {
 			var	name,
 				method,
@@ -139,7 +138,7 @@ var Pseudo = (function(){
 			for (name in methods) {
 				if (name === "constructor") continue;
 				if (!OVERLOADABLE(methods[name])) object[name] = methods[name];
-				else object[name] = OVERLOAD($super && $super[name] || object[name],methods[name]);
+				else object[name] = overload($super && $super[name] || object[name],methods[name]);
 			};
 			return object;
 		},
@@ -154,11 +153,11 @@ var Pseudo = (function(){
 				if (ancestor = Object.getOwnPropertyDescriptor($super,name)) Pseudo.expand(property,ancestor);
 				Pseudo.expand(property,PROPERTY);
 				
-				if (OVERLOADABLE(property["get"])) property["get"] = OVERLOAD(
+				if (OVERLOADABLE(property["get"])) property["get"] = overload(
 					current && current["get"] || ancestor && ancestor["get"],
 					property["get"]
 				);
-				if (OVERLOADABLE(property["set"])) property["set"] = OVERLOAD(
+				if (OVERLOADABLE(property["set"])) property["set"] = overload(
 					current && current["set"] || ancestor && ancestor["set"],
 					property["set"]
 				);
@@ -1042,7 +1041,7 @@ var Pseudo = (function(){
 		
 		// modifiers
 		"camelize": function camelize() {
-			var sections = this.split("-"), camel = [sections[0]], i = 0, l = sections.length;
+			var sections = this.split("-"), camel = [sections[0]], i = 1, l = sections.length;
 			for (;i<l;i++) if (sections[i]) camel.push(sections[i].capitalize());
 			return camel.join("");
 		},
@@ -1309,15 +1308,13 @@ var Class = (function(){
 	Pseudo.extend(PROTOTYPES,{
 		"getValue": DOM_PROPS ? function getValueNative(name) {
 			return this[name];
-		} : function getValue(name) {
-			var property = this.constructor.__properties[name];
-			return !property || !property["get"] ? this[name] : property["get"].call(this,this[name]);
+		} : function getValueProto(name) {
+			return !this["__get_"+ name] ? this[name] : this["__get_"+ name]();
 		},
 		"setValue": DOM_PROPS ? function setValueNative(name,value) {
 			return this[name] = value;
-		} : function setValue(name,value) {
-			var property = this.constructor.__properties[name];
-			return this[name] = !property || !property["set"] ? value : property["set"].call(this,value);
+		} : function setValueProto(name,value) {
+			return this[name] = !this["__set_"+ name] ? value : this["__set_"+ name](value);
 		},
 		"setValues": function setValue(values) {
 			for (var name in values) this.setValue(name,values[name]);
@@ -1327,7 +1324,8 @@ var Class = (function(){
 	// methods
 	Pseudo.extend(FACTORY,{
 		"addMethods": function(methods) {
-			return Pseudo.augment(this.prototype,methods);
+			Pseudo.augment(this.prototype,methods);
+			return this;
 		},
 		"addProperties": DOM_PROPS ? function addPropertiesNative(properties) {
 			var name, props = {};
@@ -1336,14 +1334,17 @@ var Class = (function(){
 				props[name] = Object.clone(properties[name]);
 				if (!("enumerable" in props[name]) && name.startsWith("__")) props[name].enumerable = false;
 			};
-			return Pseudo.define(this.prototype,props);
-		} : function addProperties(properties) {
-			var name, props;
-			if (!this.__properties) this.__properties = {};
+			Pseudo.define(this.prototype,props);
+			return this;
+		} : function addPropertiesProto(properties) {
+			var name, props = {}, property;
 			for (name in properties) {
-				this.__properties[name] = Object.clone(properties[name]);
-				// TODO: augment getter/setter
+				property = properties[name];
+				if (typeof property["get"] === "function") props["__get_"+ name] = property["get"];
+				if (typeof property["set"] === "function") props["__set_"+ name] = property["set"];
+				if ("value" in property) props[name] = property["value"];
 			};
+			Pseudo.augment(this.prototype,props);
 			return this;
 		}
 	});
@@ -1353,9 +1354,7 @@ var Class = (function(){
 		function Klass() {
 		//	this.__trace = true;
 			this.__pseudo = Pseudo.unique();
-			var name, props = this.constructor.__properties;
 			if (DOM_PROPS) Object.defineProperty(this,"__pseudo",{ "enumerable": false })
-			else if (props) for (name in props) if ("value" in props[name]) this[name] = props[name].value;
 			this.__constructor.apply(this,SLICE.call(arguments,0));
 		};
 		Klass.prototype.__constructor = Pseudo.um;
@@ -1426,16 +1425,16 @@ var DOM = (function(){
 			return CUSTOM[nodeName];
 		},
 		"addMethods": function addMethods(nodeName,methods) {
-			var proto;
-			if (!nodeName || nodeName === "*") proto = ELEM;
-			else if (nodeName === "#document") proto = DOC;
-			else if (nodeName === "#window") proto = WIN;
+			var klass;
+			if (!nodeName || nodeName === "*") klass = ELEM;
+			else if (nodeName === "#document") klass = DOC;
+			else if (nodeName === "#window") klass = WIN;
 			else if (nodeName.contains(",")) {
 				var nodeNames = nodeName.split(","), i = 0, l = nodeNames.length;
 				for (;i<l;i++) addMethods(nodeNames[i],methods);
 				return;
-			} else proto = document.createElement(nodeName).constructor;
-			return Pseudo.augment(proto,methods);
+			} else klass = document.createElement(nodeName).constructor;
+			return Pseudo.augment(klass.prototype,methods);
 		},
 		"addProperties": function addProperties(nodeName,properties) {
 			// augment getters/setters?
@@ -1451,6 +1450,15 @@ Pseudo.DOM.addMethods("#document",{
 		return elem;
 	}
 });
+Pseudo.DOM.addMethods("*,#document",(function(){
+	var	SLICE = Array.prototype.slice;
+	return {
+		"query": function(selector1,selector2,selectorN) {
+			var selectors = SLICE.call(arguments,0).flatten().join(",");
+			return Array.from(this[Pseudo.DOM.querySelectorAll](selectors));
+		}
+	};	
+}).call(Pseudo));
 Pseudo.DOM.addMethods("*",(function(){
 	var	NOTBLANK = /[^\s]+/m,
 		SLICE = Array.prototype.slice,
@@ -1463,7 +1471,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			"class": function(value) { this.className = value },
 			"innerHTML": function(value) { this.update(value) }
 		},
-		INNERHTML = this.HELPERS_INNERHTML = Pseudo.extend({},(function(){
+		INNERHTML = this.HELPERS_INNERHTML = Pseudo.extend((function(){
 			var isBuggy = true, element = document.createElement("tr");
 			element.innerHTML = "<td>test</td>";
 			isBuggy = element.getElementsByTagName("td").length !== 1;
@@ -1541,21 +1549,18 @@ Pseudo.DOM.addMethods("*",(function(){
 			if (deep) element.append(this.innerHTML);
 			return element;
 		},
-		"query": function(selector1,selector2,selectorN) {
-			var selectors = SLICE.call(arguments,0).flatten().join(",");
-			return Array.from(this[Pseudo.DOM.querySelectorAll](selectors));
-		},
 		"transplant": function(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
-		"up": Pseudo.DOM.matchesSelector ? function(selector1,selector2,selectorN) {
+		"up": Pseudo.DOM.matchesSelector ? function upMatches(selector1,selector2,selectorN) {
 			var element = this.parentNode, selectors = SLICE.call(arguments,0).join(",");
 			while (element instanceof Pseudo.DOM.Element) {
 				if (!element.matchesSelector(selectors)) element = element.parentNode;
 			};
 			return element || undefined;
-		} : function(selector1,selector2,selectorN) {
-			var element = this.parentNode, parents = document.query(SLICE.call(arguments,0));
+		} : function upOwnerAll(selector1,selector2,selectorN) {
+			var element = this.parentNode, parents = this.ownerDocument.query(SLICE.call(arguments,0));
 			while (element instanceof Pseudo.DOM.Element) {
-				if (!parents.contains(element)) element = element.parentNode;
+				if (parents.contains(element)) break;
+				else element = element.parentNode;
 			};
 			return element || undefined;
 		},
@@ -1601,6 +1606,104 @@ Pseudo.DOM.addMethods("*",(function(){
 		READERS = this.HELPERS_READ_STYLE = {},
 		WRITERS = this.HELPERS_WRITER_STYLE = {};
 	
+	if (Pseudo.Browser.IE8) {
+		var	FILTER_ALPHA = /\s*progid\:DXImageTransform\.Microsoft\.Alpha\([^\)]+\)\s*/i,
+			FILTER_OPACITY = /\bopacity\s*=\s*(\d+)/i,
+			FILTER_MATRIX = /\s*progid\:DXImageTransform\.Microsoft\.Matrix\([^\)]+\)\s*/i,
+			FILTER_SINCOS = /\bM[12]{2}\s*=\s*[0-9\.\-]+/gi,
+			FILTER_ROTATE = /\brotate\s*\((\d+)deg\)/i;
+		
+		READERS["opacity"] = function(element) {
+			var	matches = (element.style.filter || "").match(FILTER_ALPHA),
+				opacity, percent = NaN;
+			if (!matches) return;
+			opacity = matches[0].match(FILTER_OPACITY);
+			if (opacity) percent = parseFloat(opacity[1]);
+			return isNaN(percent) ? "" : (percent / 100).toString();
+		};
+		WRITERS["opacity"] = function(element,value) {
+			var	filters = (element.style.filter || "").split(FILTER_ALPHA),
+				filter, percent = parseFloat(value) * 100;
+			if (!isNaN(percent)) {
+				filter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+ Math.round(percent) +",Style=0)";
+				filters.push(filter);
+			};
+			element.style.filter = filters.join(" ");
+			return { "filter": filter };
+		};
+		
+		READERS["transform"] = function(element) {
+			var	matches = (element.style.filter || "").match(FILTER_MATRIX),
+				sincos, c = NaN, s = NaN;
+			if (!matches) return;
+			sincos = matches[0].match(FILTER_SINCOS);
+			if (sincos) {
+				c = Math.roundTo(Math.acos(parseFloat(sincos[0].substring(4))) / Math.DegreesToRadians,4);
+				s = Math.roundTo(Math.asin(parseFloat(sincos[2].substring(4))) / Math.DegreesToRadians,4);
+			};
+			return c === s ? "rotate("+ c +"deg)" : "";
+		};
+		WRITERS["transform"] = function(element,value) {
+			var	matches = value.match(FILTER_ROTATE),
+				degrees = NaN, r, c, s, filter,
+				filters = (element.style.filter || "").split(FILTER_MATRIX);
+			if (!matches) return;
+			degrees = parseFloat(matches[1]) || NaN;
+			if (!isNaN(degrees)) {
+				r = degrees * Math.DegreesToRadians;
+				c = Math.cos(r);
+				s = Math.sin(r);
+				filter = "progid:DXImageTransform.Microsoft.Matrix(M11="+ c +",M12=-"+ s +",M21="+ s +",M22="+ c +",FilterType=\"bilinear\",SizingMethod=\"auto expand\")";
+				filters.push(filter);
+			};
+			element.style.filter = filters.join(" ");
+			return { "filter": filter };
+		};
+/*
+		READERS["transform-origin"] = function(element) {
+			TODO
+		};
+		WRITERS["transform-origin"] = function(element,value) {
+		//	TODO
+A rotation of 45 degrees, and skewing about the x axis 33 degrees will result in the following matrix
+0.7071 	-0.2479
+0.7071 	1.1663
+
+Let's proceed with the implementation steps. Always have the original dimensions of the element handy.
+	width:100px; height: 100px;
+
+Take the original center of the element and translate it by the negated transform origin.
+	center = (50, 50)
+	origin = (100 * 150%, 100 * 33%) = (150, 33)
+	translated center = (50 - 150, 50 - 33) = (-100, 17)
+
+Apply the matrix transform to the result.
+	[[0.7071, -0.2479],
+	[0.7071, 1.1663]]
+	* [-100, 17]
+	= [0.7071 * -100 + -0.2479 * 17, 0.7071 * -100 + 1.1663 * 17]
+	= [-74.9242, -50.8834]
+
+Translate the result by the transform origin.
+	[-74.9242 + 150, -50.8834 + 33]
+	= [75.0758, -17.8834]
+
+Subtract from the x value of the result half the width of the bounding box, and from the y value of the result half the height of the bounding box.
+	[75.0758 - 97/2, -17.8834 - 187/2] ~= [26.5, -112]
+		};
+*/
+	} else (function(){
+		var	styles = [
+				["border-radius","5px"],
+				["opacity","0.5"],
+				["outline","5px solid"],
+				["transform","matrix(0.5, 0, 0, 0, 0.5, 0), translate(5px,-5px) scale(5) rotate(45deg) skewX(90deg) skewY(90deg)"],
+				["transform-origin","top left"]
+			],
+			div = document.createElement("div");
+		div.style.cssText = styles.map(function(prop) { return prop[0] +":"+ prop[1] }).join(";");
+	})();
+	
 	function GETSTYLE_COMPUTED(element,propertyName) {
 		var style = window.getComputedStyle(element,null);
 		return !style ? "" : style.getPropertyValue(propertyName.dasherize()) || "";
@@ -1622,30 +1725,31 @@ Pseudo.DOM.addMethods("*",(function(){
 	return {
 		// returns array or object containing styles applied
 		"getStyle": this.HELPERS_READ_ATTRIBUTE["style"] = function getStyle(property) {
-			if (arguments.length > 1) property = Array.from(arguments);
-			if (property instanceof Array) {
-				var i = 0, l = property.length, results = new Array(property.length);
-				for (;i<l; i++) results[i] = this.getStyle(arguments[i]);
-				return results.flatten();
+			var properties = arguments.length > 1 ? Array.from(arguments).flatten() : [property];
+			if (properties.length > 1) {
+				var i = 0, l = properties.length, results = new Array(properties.length);
+				for (;i<l; i++) results[i] = this.getStyle(properties[i]);
+				return results;
 			} else if (Object.className(property) === "Object") {
 				for (var name in property) property[name] = this.getStyle(name);
 				return property;
 			} else {
-				
-				
+				var name = property.camelize()
+				return READERS[name] ? READERS[name](this) : this.style[property] || GETSTYLE(this,property);
 			};
 		},
 		// returns object containing styles applied
 		"setStyle": this.HELPERS_WRITE_ATTRIBUTE["style"] = function setStyle(property,object) {
 			if (Object.className(property) === "Object") {
-				var results = {};
-				for (var name in property) Pseudo.extend(results,this.setStyle(name,property[name]));
+				var name, results = {};
+				for (name in property) Pseudo.extend(results,this.setStyle(name,property[name]));
 				return results;
 			} else if (property.contains(";")) {
 				return this.setStyle(STYLES_OBJECT(property));
 			} else {
 				var name = property.camelize(), value = String(object), results = {};
-				if (!WRITERS[each]) results[name] = this.style[name] = value;
+console.log(property,name,value);
+				if (!WRITERS[name]) results[name] = this.style[name] = value;
 				else Pseudo.extend(results,WRITERS[name](this,object));
 				return results;
 			};
@@ -1795,7 +1899,6 @@ if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
 var Ajax = (function(){
 	var	DOM_XHR = XMLHttpRequest ? true : false,
 		DOM_DOC = document.implementation && window.DOMParser && window.XMLSerializer ? true : false,
-		XMLHTTP = DOM_XHR ? XMLHTTP_DOM : XMLHTTP_MSIE,
 		DOCUMENT = DOM_DOC ? DOCUMENT_DOM : DOCUMENT_MSIE,
 		MSIE_XHR = "",
 		MSIE_XHRS = ["MSXML4.XMLHTTP","MSXML3.XMLHTTP","MSXML2.XMLHTTP","MSXML.XMLHTTP","Microsoft.XMLHTTP"],
@@ -1883,7 +1986,7 @@ var Ajax = (function(){
 			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
 			"X-Requested-With": "XMLHttpRequest", "X-Pseudo-Version": Pseudo.version
 		},
-		"transport": XMLHTTP,
+		"transport": DOM_XHR ? XMLHTTP_DOM : XMLHTTP_MSIE,
 		"doc": function doc(namespaceURI,documentElementName,contents) {
 			var xml = DOCUMENT(ns || "", name || "", null);
 			if (contents) {
