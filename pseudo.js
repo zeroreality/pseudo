@@ -22,7 +22,7 @@ var Pseudo = (function(){
 	SEED = x.toString(16);
 	
 	// browser/engine
-	BROWSER.Mobile = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+/.test(navigator.userAgent);
+	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
 	if (BROWSER.IE) {
 	//	BROWSER_VERSION = ScriptEngineMajorVersion() +"."+ ScriptEngineMinorVersion() +"."+ ScriptEngineBuildVersion();
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
@@ -52,9 +52,7 @@ var Pseudo = (function(){
 	};
 	function overload(ancestor,func) {
 		return extend(
-			function() {
-				return func.apply(this,[ancestor.bind(this)].inject(SLICE.call(arguments,0)));
-			},
+			function() { return func.apply(this,[ancestor.bind(this)].inject(SLICE.call(arguments,0))) },
 			{ "valueOf": VALUEOF.bind(func), "toString": TOSTRING.bind(func) }
 		);
 	};
@@ -478,7 +476,7 @@ var Pseudo = (function(){
 		"gather": function gather(propertyName) {
 			var i = 0, l = this.length, result = new Array(l);
 			for (;i<l;i++) result[i] = this[i][propertyName];
-			return this;
+			return result;
 		},
 		"plant": function plant(propertyName,value) {
 			var i = 0, l = this.length;
@@ -1508,26 +1506,31 @@ Pseudo.DOM.addMethods("*",(function(){
 		// html
 		"amputate": function() { return this.parentNode.removeChild(this) },
 		"append": function(value) {
-			if (value instanceof Element || value instanceof DocumentFragment) {
+		//	if (value instanceof Element || value instanceof DocumentFragment) {
+			if (value instanceof window.Element || window.DocumentFragment && value instanceof window.DocumentFragment) {
 				this.appendChild(value);
 			} else if (value instanceof Array) {
 				for (var i=0,l=value.length; i<l; i++) this.append(value[i]);
 			} else {
 				var	name = this.nodeName.toLowerCase(),
-					nodes = [],
 					helper = INNERHTML[name],
-					container = document.createElement("div");
+					container,
+					nodes,
+					i = 0, l;
 				if (helper) {
+					container = document.createElement("div");
 					container.innerHTML = helper[0] + value + helper[1];
-					nodes.inject(container.getElementsByTagName(name)[0].childNodes);
+					nodes = Array.from(container.getElementsByTagName(name)[0].childNodes);
 				} else {
+					container = document.createElement(name);
 					container.innerHTML = value;
-					nodes.inject(container.childNodes);
+					nodes = Array.from(container.childNodes);
 				};
-				container.innerHTML = "";
+				container.clear();
+				for (l=nodes.length; i<l; i++) this.appendChild(nodes[i]);
 				container = null;
-				while (nodes.length) this.appendChild(nodes.shift());
 			};
+			return this;
 		},
 		"clean": function(deep) {
 			var i = this.childNodes.length, kid, type;
@@ -1606,104 +1609,6 @@ Pseudo.DOM.addMethods("*",(function(){
 		READERS = this.HELPERS_READ_STYLE = {},
 		WRITERS = this.HELPERS_WRITER_STYLE = {};
 	
-	if (Pseudo.Browser.IE8) {
-		var	FILTER_ALPHA = /\s*progid\:DXImageTransform\.Microsoft\.Alpha\([^\)]+\)\s*/i,
-			FILTER_OPACITY = /\bopacity\s*=\s*(\d+)/i,
-			FILTER_MATRIX = /\s*progid\:DXImageTransform\.Microsoft\.Matrix\([^\)]+\)\s*/i,
-			FILTER_SINCOS = /\bM[12]{2}\s*=\s*[0-9\.\-]+/gi,
-			FILTER_ROTATE = /\brotate\s*\((\d+)deg\)/i;
-		
-		READERS["opacity"] = function(element) {
-			var	matches = (element.style.filter || "").match(FILTER_ALPHA),
-				opacity, percent = NaN;
-			if (!matches) return;
-			opacity = matches[0].match(FILTER_OPACITY);
-			if (opacity) percent = parseFloat(opacity[1]);
-			return isNaN(percent) ? "" : (percent / 100).toString();
-		};
-		WRITERS["opacity"] = function(element,value) {
-			var	filters = (element.style.filter || "").split(FILTER_ALPHA),
-				filter, percent = parseFloat(value) * 100;
-			if (!isNaN(percent)) {
-				filter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+ Math.round(percent) +",Style=0)";
-				filters.push(filter);
-			};
-			element.style.filter = filters.join(" ");
-			return { "filter": filter };
-		};
-		
-		READERS["transform"] = function(element) {
-			var	matches = (element.style.filter || "").match(FILTER_MATRIX),
-				sincos, c = NaN, s = NaN;
-			if (!matches) return;
-			sincos = matches[0].match(FILTER_SINCOS);
-			if (sincos) {
-				c = Math.roundTo(Math.acos(parseFloat(sincos[0].substring(4))) / Math.DegreesToRadians,4);
-				s = Math.roundTo(Math.asin(parseFloat(sincos[2].substring(4))) / Math.DegreesToRadians,4);
-			};
-			return c === s ? "rotate("+ c +"deg)" : "";
-		};
-		WRITERS["transform"] = function(element,value) {
-			var	matches = value.match(FILTER_ROTATE),
-				degrees = NaN, r, c, s, filter,
-				filters = (element.style.filter || "").split(FILTER_MATRIX);
-			if (!matches) return;
-			degrees = parseFloat(matches[1]) || NaN;
-			if (!isNaN(degrees)) {
-				r = degrees * Math.DegreesToRadians;
-				c = Math.cos(r);
-				s = Math.sin(r);
-				filter = "progid:DXImageTransform.Microsoft.Matrix(M11="+ c +",M12=-"+ s +",M21="+ s +",M22="+ c +",FilterType=\"bilinear\",SizingMethod=\"auto expand\")";
-				filters.push(filter);
-			};
-			element.style.filter = filters.join(" ");
-			return { "filter": filter };
-		};
-/*
-		READERS["transform-origin"] = function(element) {
-			TODO
-		};
-		WRITERS["transform-origin"] = function(element,value) {
-		//	TODO
-A rotation of 45 degrees, and skewing about the x axis 33 degrees will result in the following matrix
-0.7071 	-0.2479
-0.7071 	1.1663
-
-Let's proceed with the implementation steps. Always have the original dimensions of the element handy.
-	width:100px; height: 100px;
-
-Take the original center of the element and translate it by the negated transform origin.
-	center = (50, 50)
-	origin = (100 * 150%, 100 * 33%) = (150, 33)
-	translated center = (50 - 150, 50 - 33) = (-100, 17)
-
-Apply the matrix transform to the result.
-	[[0.7071, -0.2479],
-	[0.7071, 1.1663]]
-	* [-100, 17]
-	= [0.7071 * -100 + -0.2479 * 17, 0.7071 * -100 + 1.1663 * 17]
-	= [-74.9242, -50.8834]
-
-Translate the result by the transform origin.
-	[-74.9242 + 150, -50.8834 + 33]
-	= [75.0758, -17.8834]
-
-Subtract from the x value of the result half the width of the bounding box, and from the y value of the result half the height of the bounding box.
-	[75.0758 - 97/2, -17.8834 - 187/2] ~= [26.5, -112]
-		};
-*/
-	} else (function(){
-		var	styles = [
-				["border-radius","5px"],
-				["opacity","0.5"],
-				["outline","5px solid"],
-				["transform","matrix(0.5, 0, 0, 0, 0.5, 0), translate(5px,-5px) scale(5) rotate(45deg) skewX(90deg) skewY(90deg)"],
-				["transform-origin","top left"]
-			],
-			div = document.createElement("div");
-		div.style.cssText = styles.map(function(prop) { return prop[0] +":"+ prop[1] }).join(";");
-	})();
-	
 	function GETSTYLE_COMPUTED(element,propertyName) {
 		var style = window.getComputedStyle(element,null);
 		return !style ? "" : style.getPropertyValue(propertyName.dasherize()) || "";
@@ -1721,6 +1626,167 @@ Subtract from the x value of the result half the width of the bounding box, and 
 		});
 		return styles;
 	};
+	
+	if (Pseudo.Browser.IE8) (function(){
+		var	MATRIX_MULTIPLY = function(orig,mod) {
+				var i = 0, j, k, result = [[0,0,0],[0,0,0],[0,0,0]];
+				for (; i<3; i++) for (j=0; j<3; j++) for (k=0; k<3; k++) result[i][j] += orig[i][k] * mod[k][j];
+				return result;
+			},
+			VALUE_RADIANS = function(n) {
+				var r = 0;
+				if (n.indexOf("deg") > -1) r = parseFloat(n) * Math.DegreesToRadians;
+				else if (n.indexOf("grad") > -1) r = parseFloat(n) * Math.GradiansToRadians;
+				else r = parseFloat(n);
+				return r || 0;
+			},
+			ORDERED_TRANSFORMS = ["matrix","translate","translateX","translateY","scale","scaleX","scaleY","rotate","skew","skewX","skewY"],
+			FILTER_TRANSFORMS = /\b[a-z]+\([^\)]+\)/gi;
+		
+		READERS["opacity"] = function(element) {
+			var filter = element.filters["DXImageTransform.Microsoft.Alpha"];
+			return filter ? (filter.opacity / 100).toString() : "";
+		};
+		WRITERS["opacity"] = function(element,value) {
+			var filter = element.filters["DXImageTransform.Microsoft.Alpha"];
+			if (!filter) {
+				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Alpha(Style=0)";
+				filter = element.filters["DXImageTransform.Microsoft.Alpha"];
+			};
+			filter.opacity = Math.round(parseFloat(value) * 100);
+			return { "filter": element.style.filter };
+		};
+		
+		READERS["transform"] = function(element) {
+		//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
+			var	css = "",
+				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			if (filter) {
+				var	a = filter.M11, c = filter.M12, e = filter.DX,
+					b = filter.M21, d = filter.M22, f = filter.DY,
+					scaleX, scaleY, shear, negate, rotate;
+				if ((a * d) - (b * c) === 0) {
+					css = "matrix("+ a +","+ b +","+ c +","+ d +","+ e +","+ f +")";
+				} else {
+					scaleX = Math.sqrt((a*a) + (b*b));
+					a /= scaleX;
+					b /= scaleX;
+					shear = (a*c) + (b*d);
+					c -= a * shear;
+					d -= b * shear;
+					scaleY = Math.sqrt((c*c) + (d*d));
+					c /= scaleY;
+					d /= scaleY;
+					shear /= scaleY;
+					negate = (a * d) - (b * c);
+					scaleY *= negate;
+					shear *= negate;
+					rotate = Math.atan2(b,a);
+				
+					scaleX = Math.roundTo(scaleX,3);
+					scaleY = Math.roundTo(scaleY,3);
+					shear = Math.roundTo(shear / Math.RadiansToDegrees,3);	// there is a bug in this algorythm, the skewX result is off
+					rotate = Math.roundTo(rotate / Math.RadiansToDegrees,3);
+					if (e !== 0 && f !== 0) css += "translate("+ e +"px,"+ f +"px) ";
+					else if (e !== 0) css += "translate("+ e +"px) ";
+					else if (f !== 0) css += "translateY("+ f +"px) ";
+					if (scaleX !== 1 && scaleY !== 1) css += "scale("+ scaleX +"px,"+ scaleY +"px) ";
+					else if (scaleX !== 1) css += "scaleX("+ scaleX +"px) ";
+					else if (scaleY !== 1) css += "scaleY("+ scaleY +"px) ";
+					if (shear !== 0) css += "skewX("+ shear +"deg) ";
+					if (rotate !== 0) css += "rotate("+ rotate +"deg) ";
+				};
+			};
+			return css.trim();
+		};
+		READERS["transform-origin"] = function(element) {
+		//	TODO
+		};
+		WRITERS["transform"] = function(element,value) {
+			var filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			if (!filter) {
+			//	element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(FilterType=\"bilinear\",SizingMethod=\"auto expand\")";
+				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\"auto expand\")";
+				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			};
+			var	matches = value.match(FILTER_TRANSFORMS),
+				transform, values,
+				j = 0, c = matches ? matches.length : 0,
+				i = 0, l = ORDERED_TRANSFORMS.length,
+				result = [[1,0,0],[0,1,0],[0,0,1]];
+			if (c) for (; i<l; i++) {
+				transform = ORDERED_TRANSFORMS[i];
+				values = [];
+				for (j=0; j<c; j++) if (matches[j].indexOf(transform +"(") === 0) {
+					values = matches[j].substring(matches[j].indexOf("(")+1,matches[j].indexOf(")")).split(/\s,\s/);
+					break;
+				};
+				if (!values.length) { /* nope */ }
+				else if (transform === "matrix") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,parseFloat(values[2]) || 0,parseFloat(values[4]) || 0],[parseFloat(values[1]) || 0,parseFloat(values[3]) || 1,parseFloat(values[5]) || 0],[0,0,1]]);
+				else if (transform === "translate") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,parseFloat(values[1]) || 0],[0,0,1]]);
+				else if (transform === "translateX") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,0],[0,0,1]]);
+				else if (transform === "translateY") result = MATRIX_MULTIPLY(result,[[1,0,0],[0,1,parseFloat(values[0]) || 0],[0,0,1]]);
+				else if (transform === "scale") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,parseFloat(values[1]) || 1,0],[0,0,1]]);
+				else if (transform === "scaleX") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,1,0],[0,0,1]]);
+				else if (transform === "scaleY") result = MATRIX_MULTIPLY(result,[[1,0,0],[0,parseFloat(values[0]) || 1,0],[0,0,1]]);
+				else if (transform === "skew") result = MATRIX_MULTIPLY(result,[[1,VALUE_RADIANS(values[0]),0],[VALUE_RADIANS(values[1]),1,0],[0,0,1]]);
+				else if (transform === "skewX") result = MATRIX_MULTIPLY(result,[[1,VALUE_RADIANS(values[0]),0],[0,1,0],[0,0,1]]);
+				else if (transform === "skewY") result = MATRIX_MULTIPLY(result,[[1,0,0],[VALUE_RADIANS(values[0]),1,0],[0,0,1]]);
+				else if (transform === "rotate") {
+					var rad = VALUE_RADIANS(values[0]);
+					result = MATRIX_MULTIPLY(result,[[Math.cos(rad),-Math.sin(rad),0],[Math.sin(rad),Math.cos(rad),0],[0,0,1]]);
+				};
+			};
+			
+			filter.enabled = !(result[0][0] === 1 && result[1][1] === 1 && result[0][1] === 0 && result[1][0] === 0);
+			filter.M11 = result[0][0];
+			filter.M12 = result[0][1];
+			filter.DX = result[0][2];
+			filter.M21 = result[1][0];
+			filter.M22 = result[1][1];
+			filter.DY = result[1][2];
+			WRITERS["transform-origin"](this,READERS["transform-origin"](this) || "center center");
+			
+			// DX,DY do not work with "SizingMethod = auto expand", but we store them anyway for better reference
+			// TODO, figure out a way to use margin or top/left; see http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
+			
+			return { "filter": element.style.filter };
+		};
+		WRITERS["transform-origin"] = function(element,value) {
+		//	TODO
+		};
+	})(); else (function(){
+		var PREFIXER = Pseudo.Browser.IE ? function(name) {
+				return "-ms-"+ name;
+			} : Pseudo.Browser.Gecko ? function(name) {
+				return "-moz-"+ name;
+			} : Pseudo.Browser.Webkit ? function(name) {
+				return "-webkit-"+ name;
+			} : Pseudo.Browser.Opera ? function(name) {
+				return "-o-"+ name;
+			} : null;
+		if (PREFIXER) {
+			var	div = document.createElement("div"),
+				styles = ["border-radius","opacity","outline","transform","transform-origin"];
+			styles.each(function(name){
+				if (typeof div.style[name.camelize()] !== "string") {
+					READERS[name] = function(element) {
+						return GETSTYLE(element,PREFIXER(name));
+					};
+					WRITERS[name] = Pseudo.Browser.IE ? function(element,value) {
+						var result = {}, prop = PREFIXER(name);
+						element.style[prop[1].toLowerCase() + prop.substring(2).camelize()] = result[prop] = value;
+						return result;
+					} : function(element,value) {
+						var result = {}, prop = PREFIXER(name);
+						element.style[prop.camelize()] = result[prop] = value;
+						return result;
+					};
+				};
+			});
+			div = null;
+		};
+	})();
 	
 	return {
 		// returns array or object containing styles applied
@@ -1740,19 +1806,17 @@ Subtract from the x value of the result half the width of the bounding box, and 
 		},
 		// returns object containing styles applied
 		"setStyle": this.HELPERS_WRITE_ATTRIBUTE["style"] = function setStyle(property,object) {
+			var results = {};
 			if (Object.className(property) === "Object") {
-				var name, results = {};
-				for (name in property) Pseudo.extend(results,this.setStyle(name,property[name]));
-				return results;
+				for (var name in property) Pseudo.extend(results,this.setStyle(name,property[name]));
 			} else if (property.contains(";")) {
-				return this.setStyle(STYLES_OBJECT(property));
+				Pseudo.extend(results,this.setStyle(STYLES_OBJECT(property)));
 			} else {
-				var name = property.camelize(), value = String(object), results = {};
-console.log(property,name,value);
-				if (!WRITERS[name]) results[name] = this.style[name] = value;
-				else Pseudo.extend(results,WRITERS[name](this,object));
-				return results;
+				var name = property.camelize(), value = String(object);
+				if (!(property in WRITERS)) results[property] = this.style[name] = value;
+				else Pseudo.extend(results,WRITERS[property](this,object));
 			};
+			return results;
 		}
 	};
 }).call(Pseudo.DOM));
