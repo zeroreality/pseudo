@@ -1,8 +1,7 @@
 /* ---------------------------------------------------------------------------
  *	Pseudo JavaScript framework, v2.0 (c) 2012 Alex Lein
- *	
  *	Pseudo is freely distributable under the terms of an MIT-style license.
- *	For details, see http://www.opensource.org/licenses/mit-license.php
+ *	For source code and licence, see http://code.google.com/p/pseudo/
  *--------------------------------------------------------------------------*/
 "use strict";
 var Pseudo = (function(){
@@ -1015,7 +1014,7 @@ var Pseudo = (function(){
 		"concat": function concat(arg1,arg2,argN) { return this + SLICE.call(arguments,0).join("") },
 		"slice": function slice(start,end) {return SLICE.call(this.split(""),start,end) },
 		"substr": function substr(start,length) { return this.substring(start,start+length) },
-		"trim": function trim() { return !this.length ? "" : this.replace(FILTER_TRIM_BOTH) },
+		"trim": function trim() { return !this.length ? "" : this.replace(FILTER_TRIM_BOTH,"") },
 		
 		// extentions
 		"contains": function contains(string) { return this.indexOf(string) > -1 },	// needs RegExp variant,
@@ -1657,10 +1656,9 @@ Pseudo.DOM.addMethods("*",(function(){
 			return { "filter": element.style.filter };
 		};
 		
+	//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
 		READERS["transform"] = function(element) {
-		//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
-			var	css = "",
-				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			var css = "none", filter = element.filters["DXImageTransform.Microsoft.Matrix"];
 			if (filter) {
 				var	a = filter.M11, c = filter.M12, e = filter.DX,
 					b = filter.M21, d = filter.M22, f = filter.DY,
@@ -1682,11 +1680,13 @@ Pseudo.DOM.addMethods("*",(function(){
 					scaleY *= negate;
 					shear *= negate;
 					rotate = Math.atan2(b,a);
-				
+					
 					scaleX = Math.roundTo(scaleX,3);
 					scaleY = Math.roundTo(scaleY,3);
-					shear = Math.roundTo(shear / Math.RadiansToDegrees,3);	// there is a bug in this algorythm, the skewX result is off
-					rotate = Math.roundTo(rotate / Math.RadiansToDegrees,3);
+					shear = Math.roundTo(shear * Math.RadiansToDegrees,3);
+					rotate = Math.roundTo(rotate * Math.RadiansToDegrees,3);
+					
+					css = "";
 					if (e !== 0 && f !== 0) css += "translate("+ e +"px,"+ f +"px) ";
 					else if (e !== 0) css += "translate("+ e +"px) ";
 					else if (f !== 0) css += "translateY("+ f +"px) ";
@@ -1699,13 +1699,9 @@ Pseudo.DOM.addMethods("*",(function(){
 			};
 			return css.trim();
 		};
-		READERS["transform-origin"] = function(element) {
-		//	TODO
-		};
 		WRITERS["transform"] = function(element,value) {
 			var filter = element.filters["DXImageTransform.Microsoft.Matrix"];
 			if (!filter) {
-			//	element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(FilterType=\"bilinear\",SizingMethod=\"auto expand\")";
 				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\"auto expand\")";
 				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
 			};
@@ -1715,10 +1711,10 @@ Pseudo.DOM.addMethods("*",(function(){
 				i = 0, l = ORDERED_TRANSFORMS.length,
 				result = [[1,0,0],[0,1,0],[0,0,1]];
 			if (c) for (; i<l; i++) {
-				transform = ORDERED_TRANSFORMS[i];
 				values = [];
+				transform = ORDERED_TRANSFORMS[i];
 				for (j=0; j<c; j++) if (matches[j].indexOf(transform +"(") === 0) {
-					values = matches[j].substring(matches[j].indexOf("(")+1,matches[j].indexOf(")")).split(/\s,\s/);
+					values = matches[j].substring(matches[j].indexOf("(")+1,matches[j].indexOf(")")).split(/\s*,\s*/);
 					break;
 				};
 				if (!values.length) { /* nope */ }
@@ -1737,7 +1733,6 @@ Pseudo.DOM.addMethods("*",(function(){
 					result = MATRIX_MULTIPLY(result,[[Math.cos(rad),-Math.sin(rad),0],[Math.sin(rad),Math.cos(rad),0],[0,0,1]]);
 				};
 			};
-			
 			filter.enabled = !(result[0][0] === 1 && result[1][1] === 1 && result[0][1] === 0 && result[1][0] === 0);
 			filter.M11 = result[0][0];
 			filter.M12 = result[0][1];
@@ -1745,43 +1740,46 @@ Pseudo.DOM.addMethods("*",(function(){
 			filter.M21 = result[1][0];
 			filter.M22 = result[1][1];
 			filter.DY = result[1][2];
-			WRITERS["transform-origin"](this,READERS["transform-origin"](this) || "center center");
 			
 			// DX,DY do not work with "SizingMethod = auto expand", but we store them anyway for better reference
-			// TODO, figure out a way to use margin or top/left; see http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
-			
-			return { "filter": element.style.filter };
+			// TODO, figure out a way to use margin or top/left; see 
+		//	WRITERS["transform-origin"](this,READERS["transform-origin"](this) || "50% 50%");
+			return { "filter": "progid:DXImageTransform.Microsoft.Matrix(M11="+ filter.M11 +",M12="+ filter.M12 +",M21="+ filter.M21 +",M22="+ filter.M22 +",DX="+ filter.DX +",DY="+ filter.DY +",SizingMethod=\"auto expand\")" };
+		};
+		READERS["transform-origin"] = function(element) {
+			var filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			return filter ? filter.DX +"px "+ filter.DY +"px" : "";
 		};
 		WRITERS["transform-origin"] = function(element,value) {
-		//	TODO
+			var	filter = element.filters["DXImageTransform.Microsoft.Matrix"],
+				enabled = filter ? filter.enabled : false;
+			if (!filter) {
+				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\"auto expand\")";
+				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			};
+			filter.enabled = false;	// disabled to get coords/dimensions for calc
+			
+			// TODO: http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
+			
+			filter.enabled = enabled;
 		};
 	})(); else (function(){
-		var PREFIXER = Pseudo.Browser.IE ? function(name) {
-				return "-ms-"+ name;
-			} : Pseudo.Browser.Gecko ? function(name) {
-				return "-moz-"+ name;
-			} : Pseudo.Browser.Webkit ? function(name) {
-				return "-webkit-"+ name;
-			} : Pseudo.Browser.Opera ? function(name) {
-				return "-o-"+ name;
-			} : null;
-		if (PREFIXER) {
+		var PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
+			Pseudo.Browser.Gecko ? ["-moz-","Moz"] : 
+			Pseudo.Browser.Webkit ? ["-webkit-","webkit"] : 
+			Pseudo.Browser.Opera ? ["-o-","O"] : null;
+		if (PREFIX) {
 			var	div = document.createElement("div"),
 				styles = ["border-radius","opacity","outline","transform","transform-origin"];
-			styles.each(function(name){
-				if (typeof div.style[name.camelize()] !== "string") {
-					READERS[name] = function(element) {
-						return GETSTYLE(element,PREFIXER(name));
-					};
-					WRITERS[name] = Pseudo.Browser.IE ? function(element,value) {
-						var result = {}, prop = PREFIXER(name);
-						element.style[prop[1].toLowerCase() + prop.substring(2).camelize()] = result[prop] = value;
-						return result;
-					} : function(element,value) {
-						var result = {}, prop = PREFIXER(name);
-						element.style[prop.camelize()] = result[prop] = value;
-						return result;
-					};
+			styles.each(function(name) {
+				if (typeof div.style[name] === "string") return;
+				READERS[name] = function(element) {
+					return GETSTYLE(element,PREFIX[0] + name);
+				};
+				WRITERS[name] = function(element,value) {
+					var result = {}, prop = PREFIX[1] + name.camelize().capitalize();
+					element.style[prop] = result[prop] = value;
+					return result;
 				};
 			});
 			div = null;
@@ -1947,15 +1945,6 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
-if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
-	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
-	(function IEDOMContentLoaded(){
-		try {
-			document.documentElement.doScroll("left");
-			document.fire("DOMContentLoaded");
-		} catch(e) { setTimeout(IEDOMContentLoaded,1) };
-	})();
-};
 
 /***********************
 *** Ajax ***************
@@ -2156,3 +2145,19 @@ Pseudo.Ajax.Request = Class.create(null,{
 		};
 	}
 });
+
+/***********************
+*** Globals ************
+***********************/
+window.$ = document.getElementById;
+window.$$ = document.query.bind(document);
+window.$A = Array.from;
+if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
+	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
+	(function IEDOMContentLoaded(){
+		try {
+			document.documentElement.doScroll("left");
+			document.fire("DOMContentLoaded");
+		} catch(e) { setTimeout(IEDOMContentLoaded,1) };
+	})();
+};
