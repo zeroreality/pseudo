@@ -21,9 +21,9 @@ var Pseudo = (function(){
 	SEED = x.toString(16);
 	
 	// browser/engine
-	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
+//	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
+	BROWSER["Mobile"] = /\bAndroid\s+[\d.]+;|\b(?:iP[ao]d|iPhone);|IEMobile.[\d\.]+|\bPlayBook;|Opera\s(?:Mini|Mobi)\/[\d\.]+/.test(navigator.userAgent);
 	if (BROWSER.IE) {
-	//	BROWSER_VERSION = ScriptEngineMajorVersion() +"."+ ScriptEngineMinorVersion() +"."+ ScriptEngineBuildVersion();
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
 		BROWSER["IE"+ parseInt(BROWSER_VERSION)] = true;
 	} else if (BROWSER.Opera = (Object.prototype.toString.call(window.opera||Object) === "[object Opera]")) {
@@ -32,8 +32,7 @@ var Pseudo = (function(){
 	} else if (BROWSER.Gecko = (/\sGecko\/\d{8}\s/.test(navigator.userAgent))) {
 		BROWSER_VERSION = navigator.userAgent.match(/\s*rv\:([\d\.]+)/i)[1];
 		BROWSER["Gecko"+ parseInt(BROWSER_VERSION)] = true;
-	} else if (BROWSER.Webkit = (/\s(?:Apple)?WebKit\/\d{3}\.\d+/.test(navigator.userAgent))) {
-	//	BROWSER_VERSION = navigator.userAgent.match(/\)\s[A-Z][a-z]+\/([^\s]+)/)[1];
+	} else if (BROWSER.Webkit = (/\s(?:Apple)?WebKit\/([\d\.]+)/.test(navigator.userAgent))) {
 		BROWSER_VERSION = navigator.userAgent.match(/\s(?:Apple)?WebKit\/([\d\.]+)/)[1];
 		BROWSER["Webkit"+ parseInt(BROWSER_VERSION)] = true;
 	};
@@ -172,7 +171,9 @@ var Pseudo = (function(){
 	var	FILTER_CLASS = /^\[object\s(.*)\]$/,
 		TOSTRING = Object.prototype.toString,
 		NATIVE_CONSTRUCTOR = !!(TOSTRING.constructor ? TOSTRING.constructor.prototype : null),
-		NATIVE_PROTO = typeof TOSTRING.__proto__ === "object";
+		NATIVE_PROTO = typeof TOSTRING.__proto__ === "object",
+		KEYS_BUG = !({ "toString": null }).propertyIsEnumerable("toString"),
+		KEYS_DONT = ["toString","toLocaleString","valueOf","hasOwnProperty","isPrototypeOf","propertyIsEnumerable","constructor"];
 	
 	// extensions
 	function className(object) {
@@ -183,6 +184,13 @@ var Pseudo = (function(){
 	
 	this.expand(Object,this.Object = {
 		// compatibility
+		"keys": function keys(object) {
+			if (typeof object !== "object" && typeof object !== "function" || object === null) throw new TypeError("Object.keys called on non-object");
+			var result = [], each, i = 0;
+			for (each in object) if (object.hasOwnProperty(each)) result.push(each);
+			if (KEYS_BUG) for (;each=KEYS_DONT[i];i++) if (object.hasOwnProperty(each)) result.push(each);
+			return result;
+		},
 		"create": function create(prototype,descriptor) {
 			var klass = function(properties) {
 				if (properties) Pseudo.define(this,properties);
@@ -253,45 +261,10 @@ var Pseudo = (function(){
 	var	SLICE = Array.prototype.slice,
 	//	FILTER_NATURAL = /[a-z]+|\d+(?:\.\d+)*/gim,
 		FILTER_NATURAL =/[a-z]+|[0-9]+/gim,
-		FILTER_WHITESPACE = /\s+/g,
+	//	FILTER_WHITESPACE = /\s+/g,
 		HELPER_MAX = function(prev,next) { return prev > next ? prev : next },
 		HELPER_MIN = function(prev,next) { return prev < next ? prev : next },
 		HELPER_SUM = function(prev,next) { return prev+next };
-	
-	// extended functions
-	/*-- DEPRECIATED version
-	function natural(a,b) {
-		a = String(a).toLowerCase().trim();
-		b = String(b).toLowerCase().trim();
-		if (a === b) return 0;	// in the case of equal strings
-		
-		var	sa, na, sb, nb,
-			aa = a.match(FILTER_NATURAL), ab = b.match(FILTER_NATURAL),
-			i = 0, l = Math.max(aa.length,ab.length);
-		for (;i<l;i++) {
-			sa = aa[i];
-			sb = ab[i];
-			if (sa === sb) continue;
-			else if (!sa) return -1;
-			else if (!sb) return 1;
-			na = parseFloat(sa);
-			nb = parseFloat(sb);
-			
-			if (isNaN(na) && isNaN(nb)) {
-				if (sa > sb) return 1;
-				else if (sa < sb) return -1;
-			} else if (!isNaN(na) && !isNaN(nb)) {
-				if (na > nb) return 1;
-				else if (na < nb) return -1;
-			} else if (!isNaN(na) && isNaN(nb)) {
-				return 1;
-			} else if (isNaN(na) && !isNaN(nb)) {
-				return -1;
-			};
-		};
-		return 0;
-	};
-	*/
 	
 	this.expand(Array,this.Array = {
 		// compatibility
@@ -311,10 +284,10 @@ var Pseudo = (function(){
 			while (length--) results[length] = object[length];
 			return results;
 		},
-		"fromWhitespace": function fromWhitespace(string) {
+	/*	"whitespace": function whitespace(string) {
 			if (Object.isNothing(string) || string === "") return [];
 			return String(string).split(FILTER_WHITESPACE);
-		},
+		},	*/
 		"natural": function natural(a,b) {
 			if (!a && !b) return 0;
 			var first = a.match(FILTER_NATURAL), second = b.match(FILTER_NATURAL);
@@ -1603,14 +1576,15 @@ Pseudo.DOM.addMethods("*",(function(){
 	};
 }).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("*",(function(){
-	var	FILTER_STYLES = /\s*;\s*/gim,
+	var	DIV = document.createElement("div"),
+		FILTER_STYLES = /\s*;\s*/gim,
 		GETSTYLE = window.getComputedStyle ? GETSTYLE_COMPUTED : GETSTYLE_CURRENT,
 		READERS = this.HELPERS_READ_STYLE = {},
 		WRITERS = this.HELPERS_WRITER_STYLE = {};
 	
 	function GETSTYLE_COMPUTED(element,propertyName) {
 		var style = window.getComputedStyle(element,null);
-		return !style ? "" : style.getPropertyValue(propertyName.dasherize()) || "";
+		return !style ? "" : style.getPropertyValue(propertyName) || "";
 	};
 	function GETSTYLE_CURRENT(element,propertyName) {
 		var style = element.currentStyle;
@@ -1639,6 +1613,14 @@ Pseudo.DOM.addMethods("*",(function(){
 				else r = parseFloat(n);
 				return r || 0;
 			},
+			VALUE_COORD = function(value,size) {
+				if (value === "left" || value === "top") return 0;
+				else if (value === "center") return size / 2;
+				else if (value === "right" || value === "bottom") return size;
+				else if (value.contains("%")) return size * (parseFloat(value) / 100);
+				size = parseFloat(value);
+				return !isNaN(size) ? size : size / 2;
+			},
 			ORDERED_TRANSFORMS = ["matrix","translate","translateX","translateY","scale","scaleX","scaleY","rotate","skew","skewX","skewY"],
 			FILTER_TRANSFORMS = /\b[a-z]+\([^\)]+\)/gi;
 		
@@ -1658,8 +1640,10 @@ Pseudo.DOM.addMethods("*",(function(){
 		
 	//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
 		READERS["transform"] = function(element) {
-			var css = "none", filter = element.filters["DXImageTransform.Microsoft.Matrix"];
-			if (filter) {
+			var	transform = element.style.PseudoTransform,
+				filter = element.filters["DXImageTransform.Microsoft.Matrix"],
+				css = transform || "none";
+			if (filter && filter.enabled && !transform) {
 				var	a = filter.M11, c = filter.M12, e = filter.DX,
 					b = filter.M21, d = filter.M22, f = filter.DY,
 					scaleX, scaleY, shear, negate, rotate;
@@ -1697,12 +1681,12 @@ Pseudo.DOM.addMethods("*",(function(){
 					if (rotate !== 0) css += "rotate("+ rotate +"deg) ";
 				};
 			};
-			return css.trim();
+			return element.style.PseudoTransform = css.trim();
 		};
 		WRITERS["transform"] = function(element,value) {
-			var filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], results = { "PseudoTransform": "" };
 			if (!filter) {
-				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\"auto expand\")";
+				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand')";
 				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
 			};
 			var	matches = value.match(FILTER_TRANSFORMS),
@@ -1715,11 +1699,12 @@ Pseudo.DOM.addMethods("*",(function(){
 				transform = ORDERED_TRANSFORMS[i];
 				for (j=0; j<c; j++) if (matches[j].indexOf(transform +"(") === 0) {
 					values = matches[j].substring(matches[j].indexOf("(")+1,matches[j].indexOf(")")).split(/\s*,\s*/);
+					results["PseudoTransform"] += matches[j] +" ";
 					break;
 				};
 				if (!values.length) { /* nope */ }
 				else if (transform === "matrix") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,parseFloat(values[2]) || 0,parseFloat(values[4]) || 0],[parseFloat(values[1]) || 0,parseFloat(values[3]) || 1,parseFloat(values[5]) || 0],[0,0,1]]);
-				else if (transform === "translate") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,parseFloat(values[1]) || 0],[0,0,1]]);
+				else if (transform === "translate") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,parseFloat(values[1]) || parseFloat(values[0]) || 0],[0,0,1]]);
 				else if (transform === "translateX") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,0],[0,0,1]]);
 				else if (transform === "translateY") result = MATRIX_MULTIPLY(result,[[1,0,0],[0,1,parseFloat(values[0]) || 0],[0,0,1]]);
 				else if (transform === "scale") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,parseFloat(values[1]) || 1,0],[0,0,1]]);
@@ -1740,28 +1725,77 @@ Pseudo.DOM.addMethods("*",(function(){
 			filter.M21 = result[1][0];
 			filter.M22 = result[1][1];
 			filter.DY = result[1][2];
-			
-			// DX,DY do not work with "SizingMethod = auto expand", but we store them anyway for better reference
-			// TODO, figure out a way to use margin or top/left; see 
-		//	WRITERS["transform-origin"](this,READERS["transform-origin"](this) || "50% 50%");
-			return { "filter": "progid:DXImageTransform.Microsoft.Matrix(M11="+ filter.M11 +",M12="+ filter.M12 +",M21="+ filter.M21 +",M22="+ filter.M22 +",DX="+ filter.DX +",DY="+ filter.DY +",SizingMethod=\"auto expand\")" };
+			// DX,DY do not work with "SizingMethod = auto expand"
+			// we store them here for the transform-origin helper
+			results["PseudoTransform"] = results["PseudoTransform"].trim();
+			Pseudo.extend(results,WRITERS["transform-origin"](element,READERS["transform-origin"](element) || "50% 50%"));
+			results["filter"] = "progid:DXImageTransform.Microsoft.Matrix(M11="+ filter.M11 +",M12="+ filter.M12 +",M21="+ filter.M21 +",M22="+ filter.M22 +",DX="+ filter.DX +",DY="+ filter.DY +",SizingMethod='auto expand')";
+			return results;
 		};
 		READERS["transform-origin"] = function(element) {
-			var filter = element.filters["DXImageTransform.Microsoft.Matrix"];
-			return filter ? filter.DX +"px "+ filter.DY +"px" : "";
+			return element.style.PseudoTransformOrigin || "50% 50%";
 		};
+		// http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
 		WRITERS["transform-origin"] = function(element,value) {
 			var	filter = element.filters["DXImageTransform.Microsoft.Matrix"],
-				enabled = filter ? filter.enabled : false;
+				enabled = filter ? filter.enabled : false,
+				values = value.trim().split(/\s+/g);
+			if (values.length < 2) values.push(values[0]);
 			if (!filter) {
-				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod=\"auto expand\")";
+				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand')";
 				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
 			};
-			filter.enabled = false;	// disabled to get coords/dimensions for calc
 			
-			// TODO: http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
+			filter.enabled = false;	// disabled to get coords/dimensions
+			var	style = element.getStyle({ "left": "", "top": "", "border-width": "" }),
+				border = style["border-width"].split(/\s+/g).map(parseFloat),
+				a = filter.M11, c = filter.M12,
+				b = filter.M21, d = filter.M22,
+				x = (element.offsetWidth - (border[1] || 0) - (border[3] || 0)) / 2,
+				y = (element.offsetHeight - (border[0] || 0) - (border[2] || 0)) / 2,
+				e = VALUE_COORD(values[0],x * 2),
+				f = VALUE_COORD(values[1],y * 2);
+			x -= e;	// translated center
+			y -= f;
+			e += (a * x) + (c * y) + filter.DX;	// apply matrix + origin + translation
+			f += (b * x) + (d * y) + filter.DY;
+			filter.enabled = true;	// enabled to subtract transformed coords/dimensions
+			e -= (element.offsetWidth - (border[1] || 0) - (border[3] || 0)) / 2;
+			f -= (element.offsetHeight - (border[0] || 0) - (border[2] || 0)) / 2;
 			
-			filter.enabled = enabled;
+			element.style.left = e + (parseFloat(style.left) || 0) +"px";
+			element.style.top = f + (parseFloat(style.top) || 0) +"px";
+			filter.enabled = enabled;	// set original status
+			return {
+				"PseudoTransformOrigin": element.style.PseudoTransformOrigin = values.join(" "),
+				"PseudoTransformCoords": element.style.PseudoTransformCoords = e+" "+f
+			};
+		};
+		READERS["left"] = function(element) {
+			var	coords = element.style.PseudoTransformCoords,
+				x = coords ? parseFloat(coords.split(" ")[0]) : 0,
+				left = GETSTYLE(element,"left");
+			return !x ? left : (parseFloat(left) || 0) - x +"px";
+		};
+		WRITERS["left"] = function(element,value) {
+			var	coords = element.style.PseudoTransformCoords,
+				x = coords ? parseFloat(coords.split(" ")[0]) : 0;
+			if (value === "auto") value = x +"px";
+			else if (x) value = x + (parseFloat(value) || 0) +"px";
+			return { "left": element.style.left = value };
+		};
+		READERS["top"] = function(element) {
+			var	coords = element.style.PseudoTransformCoords,
+				y = coords ? parseFloat(coords.split(" ")[1]) : 0,
+				top = GETSTYLE(element,"top");
+			return !y ? top : (parseFloat(top) || 0) - y +"px";
+		};
+		WRITERS["top"] = function(element,value) {
+			var	coords = element.style.PseudoTransformCoords,
+				y = coords ? parseFloat(coords.split(" ")[1]) : 0;
+			if (value === "auto") value = y +"px";
+			else if (y) value = y + (parseFloat(value) || 0) +"px";
+			return { "top": element.style.top = value };
 		};
 	})(); else (function(){
 		var PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
@@ -1769,37 +1803,40 @@ Pseudo.DOM.addMethods("*",(function(){
 			Pseudo.Browser.Webkit ? ["-webkit-","webkit"] : 
 			Pseudo.Browser.Opera ? ["-o-","O"] : null;
 		if (PREFIX) {
-			var	div = document.createElement("div"),
-				styles = ["border-radius","opacity","outline","transform","transform-origin"];
+			var styles = ["border-radius","opacity","outline","transform","transform-origin"];
 			styles.each(function(name) {
-				if (typeof div.style[name] === "string") return;
-				READERS[name] = function(element) {
-					return GETSTYLE(element,PREFIX[0] + name);
-				};
+				if (typeof DIV.style[name] === "string") return;
+				READERS[name] = function(element) { return GETSTYLE(element,PREFIX[0] + name.dasherize()) };
 				WRITERS[name] = function(element,value) {
 					var result = {}, prop = PREFIX[1] + name.camelize().capitalize();
 					element.style[prop] = result[prop] = value;
 					return result;
 				};
 			});
-			div = null;
 		};
 	})();
-	
+	if (typeof DIV.style["float"] !== "string") {
+		READERS["float"] = function(element) { return this.style["cssFloat"] || GETSTYLE(this,"cssFloat") };
+		WRITERS["float"] = function(element,value) {
+			var result = {};
+			result["cssFloat"] = element.style["cssFloat"] = value;
+			return result;
+		};
+	};
+	DIV = null;
 	return {
 		// returns array or object containing styles applied
 		"getStyle": this.HELPERS_READ_ATTRIBUTE["style"] = function getStyle(property) {
-			var properties = arguments.length > 1 ? Array.from(arguments).flatten() : [property];
-			if (properties.length > 1) {
-				var i = 0, l = properties.length, results = new Array(properties.length);
-				for (;i<l; i++) results[i] = this.getStyle(properties[i]);
+			if (arguments.length > 1) {
+				var props = Array.from(arguments).flatten(), i = 0, l = props.length, results = new Array(l);
+				for (;i<l; i++) results[i] = this.getStyle(props[i]);
 				return results;
 			} else if (Object.className(property) === "Object") {
 				for (var name in property) property[name] = this.getStyle(name);
 				return property;
 			} else {
-				var name = property.camelize()
-				return READERS[name] ? READERS[name](this) : this.style[property] || GETSTYLE(this,property);
+				property = property.dasherize();
+				return READERS[property] ? READERS[property](this) : this.style[property.camelize()] || GETSTYLE(this,property);
 			};
 		},
 		// returns object containing styles applied
@@ -1807,7 +1844,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			var results = {};
 			if (Object.className(property) === "Object") {
 				for (var name in property) Pseudo.extend(results,this.setStyle(name,property[name]));
-			} else if (property.contains(";")) {
+			} else if (property.contains(":") || property.contains(";")) {
 				Pseudo.extend(results,this.setStyle(STYLES_OBJECT(property)));
 			} else {
 				var name = property.camelize(), value = String(object);
@@ -1942,6 +1979,48 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 				"handler": handler,
 				"capture": !!capture && DOM
 			}) > -1;
+		}
+	};
+}).call(Pseudo.DOM));
+Pseudo.DOM.addMethods("form",(function(){
+	var	REDUCE_DATA = function(returned,input,index,array) {
+			if (!input.name || input.nodeName === "FIELDSET") {
+				return returned;
+			} else if (input.nodeName === "TEXTAREA") {
+				returned[input.name] = input.value;
+			} else if (input.nodeName === "SELECT") {
+			} else if (input.nodeName === "BUTTON") {
+				returned[input.name] = input.getAttribute("value") || input.textContent;
+			} else if (input.nodeName === "INPUT") {
+				// for each type
+			};
+			return returned;
+		},
+		REDUCE_STRING = function(returned,input,index,array) {
+		},
+		REDUCE_QUERY = function(returned,input,index,array) {
+		};
+	return {
+		"disable": function disable() {
+			Array.from(this.elements).filter(function(input) {
+				if (input.nodeName === "FIELDSET") return;
+				input.__enabled = !input.disabled;
+				input.disabled = true;
+			});
+		},
+		"enable": function enable() {
+			Array.from(this.elements).filter(function(input) {
+				if (input.nodeName === "FIELDSET") return;
+				input.disabled = !input.__enabled;
+			});
+		},
+		"data": function data(format) {
+			var data = Array.from(this.elements).reduce(REDUCE_DATA,{}), keys;
+			if (format === "joined" || format === "query") {
+				keys = Object.keys(data);
+				keys.reduce(REDUCE_STRING,data);
+			};
+			return format === "query" ? keys.reduce(REDUCE_QUERY,data) : data;
 		}
 	};
 }).call(Pseudo.DOM));
@@ -2149,9 +2228,9 @@ Pseudo.Ajax.Request = Class.create(null,{
 /***********************
 *** Globals ************
 ***********************/
-window.$ = document.getElementById;
-window.$$ = document.query.bind(document);
-window.$A = Array.from;
+var	$ = document.getElementById,
+	$$ = document.query.bind(document),
+	$A = Array.from;
 if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
 	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
 	(function IEDOMContentLoaded(){
