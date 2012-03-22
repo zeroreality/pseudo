@@ -1327,13 +1327,13 @@ var Class = (function(){
 			if (DOM_PROPS) Object.defineProperty(this,"__pseudo",{ "enumerable": false })
 			this.__constructor.apply(this,SLICE.call(arguments,0));
 		};
-		Klass.prototype.__constructor = Pseudo.um;
 		if ($super) {
 			var Quasi = function() {};
 			Quasi.prototype = $super && $super.prototype;
 			Klass.prototype = new Quasi();
 			if (!DOM_PROPS && $super.__properties) Klass.__properties = Object.clone($super.__properties);
 		};
+		if (!Klass.prototype.__constructor) Klass.prototype.__constructor = Pseudo.um;
 		return Klass.prototype.constructor = Klass;
 	};
 	function create($super,properties,methods,factory,aliases) {
@@ -1707,10 +1707,10 @@ Pseudo.DOM.addMethods("*",(function(){
 				else if (transform === "translate") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,parseFloat(values[1]) || parseFloat(values[0]) || 0],[0,0,1]]);
 				else if (transform === "translateX") result = MATRIX_MULTIPLY(result,[[1,0,parseFloat(values[0]) || 0],[0,1,0],[0,0,1]]);
 				else if (transform === "translateY") result = MATRIX_MULTIPLY(result,[[1,0,0],[0,1,parseFloat(values[0]) || 0],[0,0,1]]);
-				else if (transform === "scale") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,parseFloat(values[1]) || 1,0],[0,0,1]]);
+				else if (transform === "scale") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,parseFloat(values[1]) || parseFloat(values[0]) || 1,0],[0,0,1]]);
 				else if (transform === "scaleX") result = MATRIX_MULTIPLY(result,[[parseFloat(values[0]) || 1,0,0],[0,1,0],[0,0,1]]);
 				else if (transform === "scaleY") result = MATRIX_MULTIPLY(result,[[1,0,0],[0,parseFloat(values[0]) || 1,0],[0,0,1]]);
-				else if (transform === "skew") result = MATRIX_MULTIPLY(result,[[1,VALUE_RADIANS(values[0]),0],[VALUE_RADIANS(values[1]),1,0],[0,0,1]]);
+				else if (transform === "skew") result = MATRIX_MULTIPLY(result,[[1,VALUE_RADIANS(values[0]),0],[VALUE_RADIANS(values[1] || values[0]),1,0],[0,0,1]]);
 				else if (transform === "skewX") result = MATRIX_MULTIPLY(result,[[1,VALUE_RADIANS(values[0]),0],[0,1,0],[0,0,1]]);
 				else if (transform === "skewY") result = MATRIX_MULTIPLY(result,[[1,0,0],[VALUE_RADIANS(values[0]),1,0],[0,0,1]]);
 				else if (transform === "rotate") {
@@ -1782,7 +1782,8 @@ Pseudo.DOM.addMethods("*",(function(){
 				x = coords ? parseFloat(coords.split(" ")[0]) : 0;
 			if (value === "auto") value = x +"px";
 			else if (x) value = x + (parseFloat(value) || 0) +"px";
-			return { "left": element.style.left = value };
+			element.style.left = value;
+			return { "left": element.style.left };
 		};
 		READERS["top"] = function(element) {
 			var	coords = element.style.PseudoTransformCoords,
@@ -1795,32 +1796,44 @@ Pseudo.DOM.addMethods("*",(function(){
 				y = coords ? parseFloat(coords.split(" ")[1]) : 0;
 			if (value === "auto") value = y +"px";
 			else if (y) value = y + (parseFloat(value) || 0) +"px";
-			return { "top": element.style.top = value };
+			element.style.top = value;
+			return { "top": element.style.top };
 		};
 	})(); else (function(){
-		var PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
+		var PREFIX_FUNCS, PREFIX_FILTER, PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
 			Pseudo.Browser.Gecko ? ["-moz-","Moz"] : 
 			Pseudo.Browser.Webkit ? ["-webkit-","webkit"] : 
 			Pseudo.Browser.Opera ? ["-o-","O"] : null;
 		if (PREFIX) {
-			var styles = ["border-radius","opacity","outline","transform","transform-origin"];
-			styles.each(function(name) {
-				if (typeof DIV.style[name] === "string") return;
+			PREFIX_FILTER = function(name) { if (typeof DIV.style[name] !== "string" && typeof DIV.style[PREFIX[0] + name.dasherize()] === "string") PREFIXER(name) },
+			PREFIX_FUNCS = function(name) {
 				READERS[name] = function(element) { return GETSTYLE(element,PREFIX[0] + name.dasherize()) };
 				WRITERS[name] = function(element,value) {
 					var result = {}, prop = PREFIX[1] + name.camelize().capitalize();
-					element.style[prop] = result[prop] = value;
+					element.style[prop] = value;
+					result[prop] = element.style[prop];
 					return result;
 				};
-			});
+			};
+		//	for (var each in DIV.style) if (each.startsWith(PREFIX[1])) PREFIXER(each.capitalize().dasherize().pruneLeft(PREFIX[0]));
+			[	"animation","animation-delay","animation-direction","animation-duration","animation-fill-mode",
+				"animation-iteration-count","animation-name","animation-play-state","animation-timing-function",
+				"background-size","border-radius","border-bottom-left-radius","border-bottom-right-radius",
+				"border-top-left-radius","border-top-right-radius","box-align","box-direction","box-flex",
+				"box-ordinal-group","box-orient","box-pack","box-sizing","box-shadow","column-count",
+				"column-gap","column-rule","column-rule-color","column-rule-width","column-width","columns",
+				"font-size-adjust","font-stretch","marker-offset","text-decoration-color","hyphens","opacity",
+				"outline","perspective","perspective-origin","text-align-last","text-autospace","text-overflow",
+				"text-size-adjust","transform","transform-origin","transform-origin-x","transform-origin-y",
+				"transform-style","transition","transition-property","transition-duration",
+				"transition-timing-function","transition-delay","user-select"	].each(PREFIX_FILTER);
 		};
 	})();
 	if (typeof DIV.style["float"] !== "string") {
 		READERS["float"] = function(element) { return this.style["cssFloat"] || GETSTYLE(this,"cssFloat") };
 		WRITERS["float"] = function(element,value) {
-			var result = {};
-			result["cssFloat"] = element.style["cssFloat"] = value;
-			return result;
+			element.style["cssFloat"] = value;
+			return { "cssFloat": element.style["cssFloat"] };
 		};
 	};
 	DIV = null;
@@ -1983,16 +1996,51 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	};
 }).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("form",(function(){
-	var	REDUCE_DATA = function(returned,input,index,array) {
-			if (!input.name || input.nodeName === "FIELDSET") {
-				return returned;
+	var	TOGGLE_OFF = function(input) {
+			if (input.nodeName === "FIELDSET") return;
+			input.__enabled = !input.disabled;
+			input.disabled = true;
+		},
+		TOGGLE_ON = function(input) {
+			if (input.nodeName === "FIELDSET") return;
+			input.disabled = !input.__enabled;
+			delete input.__enabled;
+		},
+		REDUCE_DATA = function(returned,input,index,array) {
+			var name = input.name, value, type = input.nodeName;
+			if (!name || type === "FIELDSET") {
+				value = undefined;
 			} else if (input.nodeName === "TEXTAREA") {
-				returned[input.name] = input.value;
+				value = input.value;
 			} else if (input.nodeName === "SELECT") {
 			} else if (input.nodeName === "BUTTON") {
-				returned[input.name] = input.getAttribute("value") || input.textContent;
+				value = input.getAttribute("value") || input.textContent;
 			} else if (input.nodeName === "INPUT") {
-				// for each type
+				type = input.getAttribute("type");
+				// html4
+				if (type === "submit" || type === "button" || type === "reset") value = undefined;
+				else if (type === "text" || type === "password") value = input.value;
+				else if ((type === "radio" || type === "checkbox") && input.checked) value = input.value || index;
+				// html5
+				else if (type === "color") value = input.value;
+				else if (type === "date") value = input.value;
+				else if (type === "datetime") value = input.value;
+				else if (type === "datetime-local") value = input.value;
+				else if (type === "email") value = input.value;
+				else if (type === "month") value = input.value;
+				else if (type === "number" || type === "range") value = parseFoat(input.value);
+				else if (type === "search") value = input.value;
+				else if (type === "tel") value = input.value;
+				else if (type === "time") value = input.value;
+				else if (type === "url") value = input.value;
+				else if (type === "week") value = parseFoat(input.value);
+				// catch-all
+				else value = input.value;
+			};
+			if (!Object.isNothing(value)) {
+				if (!returned[name]) returned[name] = value;
+				else if (Array.isArray(returned[name])) returned[name].push(value);
+				else returned[name] = [returned[name],value];
 			};
 			return returned;
 		},
@@ -2001,19 +2049,8 @@ Pseudo.DOM.addMethods("form",(function(){
 		REDUCE_QUERY = function(returned,input,index,array) {
 		};
 	return {
-		"disable": function disable() {
-			Array.from(this.elements).filter(function(input) {
-				if (input.nodeName === "FIELDSET") return;
-				input.__enabled = !input.disabled;
-				input.disabled = true;
-			});
-		},
-		"enable": function enable() {
-			Array.from(this.elements).filter(function(input) {
-				if (input.nodeName === "FIELDSET") return;
-				input.disabled = !input.__enabled;
-			});
-		},
+		"disable": function disable() { Array.from(this.elements).each(TOGGLE_OFF) },
+		"enable": function enable() { Array.from(this.elements).each(TOGGLE_ON) },
 		"data": function data(format) {
 			var data = Array.from(this.elements).reduce(REDUCE_DATA,{}), keys;
 			if (format === "joined" || format === "query") {
