@@ -1366,11 +1366,11 @@ var Class = (function(){
 *** DOM ****************
 ***********************/
 var DOM = (function(){
-	var	WIN = window.DOMWindow || window.Window || window.constructor,
-		DOC = window.HTMLDocument || window.Document || document.constructor,
-		ELEM = window.HTMLElement || window.Element,
+	var	WIN = Object.getPrototypeOf(window),
+		DOC = Object.getPrototypeOf(document),
+		ELEM = (window.HTMLElement || window.Element).prototype,
 		CUSTOM = {};
-	
+	if (WIN === Object.prototype) WIN = window;	// opera
 	return this.DOM = {
 		"CUSTOM_EVENTS": CUSTOM,
 		"Document": DOC,
@@ -1378,36 +1378,34 @@ var DOM = (function(){
 		"Window": WIN,
 		"querySelector": (function(){
 			var i = 0, name, names = ["querySelector","mozQuerySelector","webkitQuerySelector","msQuerySelector","oQuerySelector"];
-			for (;name=names[i];i++) if (ELEM.prototype[name]) return name;
+			for (;name=names[i];i++) if (ELEM[name]) return name;
 		})() || "",
 		"querySelectorAll": (function(){
 			var i = 0, name, names = ["querySelectorAll","mozQuerySelectorAll","webkitQuerySelectorAll","msQuerySelectorAll","oQuerySelectorAll"];
-			for (;name=names[i];i++) if (ELEM.prototype[name]) return name;
+			for (;name=names[i];i++) if (ELEM[name]) return name;
 		})() || "",
 		"matchesSelector": (function(){
 			var i = 0, name, names = ["matchesSelector","mozMatchesSelector","webkitMatchesSelector","msMatchesSelector","oMatchesSelector"];
-			for (;name=names[i];i++) if (ELEM.prototype[name]) return name;
+			for (;name=names[i];i++) if (ELEM[name]) return name;
 		})() || "",
 		"addEvent": function addEvent(nodeName,type) {
 			if (!nodeName) nodeName = "*";
+			else nodeName = nodeName.toLowerCase();
 			if (!CUSTOM[nodeName]) CUSTOM[nodeName] = [type];
 			else CUSTOM[nodeName].push(type);
 			return CUSTOM[nodeName];
 		},
 		"addMethods": function addMethods(nodeName,methods) {
-			var klass;
-			if (!nodeName || nodeName === "*") klass = ELEM;
-			else if (nodeName === "#document") klass = DOC;
-			else if (nodeName === "#window") klass = WIN;
+			var proto;
+			if (!nodeName || nodeName === "*") proto = ELEM;
+			else if (nodeName === "#document") proto = DOC;
+			else if (nodeName === "#window") proto = WIN;
 			else if (nodeName.contains(",")) {
 				var nodeNames = nodeName.split(","), i = 0, l = nodeNames.length;
 				for (;i<l;i++) addMethods(nodeNames[i],methods);
 				return;
-			} else klass = document.createElement(nodeName).constructor;
-			return Pseudo.augment(klass.prototype,methods);
-		},
-		"addProperties": function addProperties(nodeName,properties) {
-			// augment getters/setters?
+			} else proto = Object.getPrototypeOf(document.createElement(nodeName));
+			return Pseudo.augment(proto,methods);
 		}
 	};	
 }).call(Pseudo);
@@ -1640,10 +1638,8 @@ Pseudo.DOM.addMethods("*",(function(){
 		
 	//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
 		READERS["transform"] = function(element) {
-			var	transform = element.style.PseudoTransform,
-				filter = element.filters["DXImageTransform.Microsoft.Matrix"],
-				css = transform || "none";
-			if (filter && filter.enabled && !transform) {
+			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], css = "none";
+			if (filter && filter.enabled) {
 				var	a = filter.M11, c = filter.M12, e = filter.DX,
 					b = filter.M21, d = filter.M22, f = filter.DY,
 					scaleX, scaleY, shear, negate, rotate;
@@ -1681,10 +1677,10 @@ Pseudo.DOM.addMethods("*",(function(){
 					if (rotate !== 0) css += "rotate("+ rotate +"deg) ";
 				};
 			};
-			return element.style.PseudoTransform = css.trim();
+			return css.trim();
 		};
 		WRITERS["transform"] = function(element,value) {
-			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], results = { "PseudoTransform": "" };
+			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], results = {};
 			if (!filter) {
 				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand')";
 				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
@@ -1699,7 +1695,6 @@ Pseudo.DOM.addMethods("*",(function(){
 				transform = ORDERED_TRANSFORMS[i];
 				for (j=0; j<c; j++) if (matches[j].indexOf(transform +"(") === 0) {
 					values = matches[j].substring(matches[j].indexOf("(")+1,matches[j].indexOf(")")).split(/\s*,\s*/);
-					results["PseudoTransform"] += matches[j] +" ";
 					break;
 				};
 				if (!values.length) { /* nope */ }
@@ -1727,7 +1722,6 @@ Pseudo.DOM.addMethods("*",(function(){
 			filter.DY = result[1][2];
 			// DX,DY do not work with "SizingMethod = auto expand"
 			// we store them here for the transform-origin helper
-			results["PseudoTransform"] = results["PseudoTransform"].trim();
 			Pseudo.extend(results,WRITERS["transform-origin"](element,READERS["transform-origin"](element) || "50% 50%"));
 			results["filter"] = "progid:DXImageTransform.Microsoft.Matrix(M11="+ filter.M11 +",M12="+ filter.M12 +",M21="+ filter.M21 +",M22="+ filter.M22 +",DX="+ filter.DX +",DY="+ filter.DY +",SizingMethod='auto expand')";
 			return results;
@@ -1898,19 +1892,20 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		element.removeEventListener(type,pair.handler,pair.capture);
 	};
 	function MSIE_ON(element,type,handler) {
-		var	handlers = element.__handlers[type],
-			i = 0, l = handlers.length,
+		var	name = element.nodeName.toLowerCase(),
+			handlers = element.__handlers[type], i = 0, l = handlers.length,
 			pair = { "handler": handler, "capture": false, "wrapped": HANDLER_WRAP(element,type,handler) };
-		if (CUSTOM[element.nodeName] && CUSTOM[element.nodeName].contains(type)) type = "dataavailable";
+		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
 		for (;i<l;i++) element.detachEvent("on"+ type,handlers[i].wrapped);
 		handlers.push(pair);
 		for (;i>-1;i--) element.attachEvent("on"+ type,handlers[i].wrapped);
 	};
 	function MSIE_OFF(element,type,handler) {
-		var	handlers = element.__handlers[type],
+		var	name = element.nodeName.toLowerCase(),
+			handlers = element.__handlers[type],
 			pair = { "handler": handler, "capture": false },
 			index = handlers.filterIndex(HANDLER_FIND,pair);
-		if (CUSTOM[element.nodeName] && CUSTOM[element.nodeName].contains(type)) type = "dataavailable";
+		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
 		pair = handlers[index];
 		handlers.removeAt(index);
 		element.detachEvent("on"+ type,pair.wrapped);
@@ -1981,10 +1976,10 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			this.dispatchEvent(e);
 			return e;
 		} : function MSIE_FIRE(type,bubbles) {
-			var e = document.createEventObject();
+			var e = document.createEventObject(), name = this.nodeName.toLowerCase();
 			e.__type = type;
 			e.bubbles = !!bubbles;
-			this.fireEvent(CUSTOM[this.nodeName] && CUSTOM[this.nodeName].contains(type) ? "ondataavailable" : type,e);
+			this.fireEvent(CUSTOM[name] && CUSTOM[name].contains(type) ? "ondataavailable" : type,e);
 			return e;
 		},
 		"has": function has(type,handler,capture) {
