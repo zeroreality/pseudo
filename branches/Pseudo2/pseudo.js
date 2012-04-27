@@ -1365,17 +1365,20 @@ var Class = (function(){
 /***********************
 *** DOM ****************
 ***********************/
-var DOM = (function(){
+Pseudo.DOM = (function(){
 	var	WIN = Object.getPrototypeOf(window),
 		DOC = Object.getPrototypeOf(document),
 		ELEM = (window.HTMLElement || window.Element).prototype,
+		FRAG = Object.getPrototypeOf(document.createDocumentFragment()),
 		CUSTOM = {};
 	if (WIN === Object.prototype) WIN = window;	// opera
-	return this.DOM = {
+	if (DOC === Object.prototype) DOC = document;
+	return {
 		"CUSTOM_EVENTS": CUSTOM,
-		"Document": DOC,
-		"Element": ELEM,
-		"Window": WIN,
+		"Document": window.HTMLDocument || window.Document || DOC.constructor,
+		"Element": window.HTMLElement || window.Element || ELEM.constructor,
+		"Fragment": window.DocumentFragment || FRAG.constructor,
+		"Window": window.DOMWindow || window.Window || WIN.constructor,
 		"querySelector": (function(){
 			var i = 0, name, names = ["querySelector","mozQuerySelector","webkitQuerySelector","msQuerySelector","oQuerySelector"];
 			for (;name=names[i];i++) if (ELEM[name]) return name;
@@ -1408,7 +1411,7 @@ var DOM = (function(){
 			return Pseudo.augment(proto,methods);
 		}
 	};	
-}).call(Pseudo);
+})();
 Pseudo.DOM.addMethods("#document",{
 	"element": function element(nodeName,attributes,handlers) {
 		var name, elem = this.createElement(nodeName);
@@ -1419,7 +1422,7 @@ Pseudo.DOM.addMethods("#document",{
 	}
 });
 Pseudo.DOM.addMethods("*,#document",(function(){
-	var	SLICE = Array.prototype.slice;
+	var SLICE = Array.prototype.slice;
 	return {
 		"query": function(selector1,selector2,selectorN) {
 			var selectors = SLICE.call(arguments,0).flatten().join(",");
@@ -1471,7 +1474,12 @@ Pseudo.DOM.addMethods("*",(function(){
 			return !isBuggy ? {} : {
 				"select":	["<select>","</select>"]
 			};
-		})());
+		})()),
+		SELECTORS = function(args) {
+			var selectors = SLICE.call(args,0).invoke("trim").join(",");
+			if (selectors.indexOf(",,") > -1) throw new Error("Blank selector is invalid");
+			return selectors || "*";
+		};
 	return {
 		// html
 		"amputate": function() { return this.parentNode.removeChild(this) },
@@ -1522,15 +1530,20 @@ Pseudo.DOM.addMethods("*",(function(){
 			if (deep) element.append(this.innerHTML);
 			return element;
 		},
+		"root": function root() {
+			var parent = this;
+			while (parent.parentNode instanceof Pseudo.DOM.Element) parent = parent.parentNode;
+			return parent || this;
+		},
 		"transplant": function(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
 		"up": Pseudo.DOM.matchesSelector ? function upMatches(selector1,selector2,selectorN) {
-			var element = this.parentNode, selectors = SLICE.call(arguments,0).join(",");
-			while (element instanceof Pseudo.DOM.Element) {
-				if (!element.matchesSelector(selectors)) element = element.parentNode;
-			};
-			return element || undefined;
+			var elem = this.parentNode, selectors = SELECTORS(arguments);
+			while (elem instanceof Pseudo.DOM.Element) if (!elem[Pseudo.DOM.matchesSelector](selectors)) elem = elem.parentNode;
+			return elem || undefined;
 		} : function upOwnerAll(selector1,selector2,selectorN) {
-			var element = this.parentNode, parents = this.ownerDocument.query(SLICE.call(arguments,0));
+			var elem = this.parentNode, selectors = SELECTORS(arguments), parents;
+			if (selectors === "*") parents = [elem];
+			else parents = this.root().query(selectors);
 			while (element instanceof Pseudo.DOM.Element) {
 				if (parents.contains(element)) break;
 				else element = element.parentNode;
@@ -1865,8 +1878,10 @@ Pseudo.DOM.addMethods("*",(function(){
 Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	var	CUSTOM = this.CUSTOM_EVENTS,
 		DOM = document.addEventListener ? true : false,
+		EVENT = window.Event.prototype,
 		EVENT_ON = DOM ? DOM_ON : MSIE_ON,
 		EVENT_OFF = DOM ? DOM_OFF : MSIE_OFF,
+		EVENT_FIX = ["load","error","click"],
 		CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
 		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" };
 	
@@ -1912,11 +1927,17 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	};
 	
 	// extend the Event
-	Pseudo.expand(window.Event.prototype,{
-		"cancel": function cancel() {
-			if (this.stopPropagation) this.stopPropagation();
-			this.cancelBubble = true;
-			this.__cancelled = true;
+	Pseudo.expand(EVENT,{
+		"cancel": EVENT.stopPropagation || function cancel() { this.cancelBubble = true },
+		"prevent": EVENT.preventDefault || function prevent() { this.returnValue = false },
+		"stop": function stop() {
+			this.cancel();
+			this.prevent();
+		},
+		"element": function element() {
+			var target = this.target || this.srcElement, current = this.currentTarget;
+			if (current && current.nodeName === "INPUT" && current.type === "radio" && EVENT_FIX.contains(this.type)) target = current;
+			return target;
 		},
 		"click": function click() {
 			var button = CLICK_WHICH[this.which] || CLICK_BUTTON[this.button];
@@ -1931,15 +1952,6 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 				"x": this.pageX || this.clientX + document.body.scrollLeft - (document.body.clientLeft || 0),
 				"y": this.pageY || this.clientY + document.body.scrollTop - (document.body.clientTop || 0)
 			};
-		},
-		"prevent": function prevent() {
-			if (this.preventDefault) this.preventDefault();
-			this.returnValue = false;
-			this.__preventted = true;
-		},
-		"stop": function stop() {
-			this.cancel();
-			this.prevent();
 		}
 	});
 	
@@ -1982,7 +1994,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			this.fireEvent(CUSTOM[name] && CUSTOM[name].contains(type) ? "ondataavailable" : type,e);
 			return e;
 		},
-		"has": function has(type,handler,capture) {
+		"uses": function uses(type,handler,capture) {
 			return this.__handlers[type].filterIndex(HANDLER_FIND,{
 				"handler": handler,
 				"capture": !!capture && DOM
@@ -1991,31 +2003,29 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	};
 }).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("form",(function(){
-	var	TOGGLE_OFF = function(input) {
-			if (input.nodeName === "FIELDSET") return;
-			input.__enabled = !input.disabled;
-			input.disabled = true;
-		},
-		TOGGLE_ON = function(input) {
-			if (input.nodeName === "FIELDSET") return;
-			input.disabled = !input.__enabled;
-			delete input.__enabled;
-		},
-		REDUCE_DATA = function(returned,input,index,array) {
+	var	TOGGLE_STATE = function(input) { input.__enabled = !input.disabled },
+		TOGGLE_OFF = function(input) { input.disabled = true },
+		TOGGLE_ON = function(input) { input.disabled = false },
+		TOGGLE_REVERT = function(input) { input.disabled = "__enabled" in input ? !input.__enabled : false },
+		DATA_SELECT_MULTI = function(option) { return option.selected },
+		DATA_SELECT_VALUE = function(option) { return !option ? undefined : (option.value || option.text || option.innerHTML) },
+		DATA_REDUCE = function(returned,input,index,array) {
 			var name = input.name, value, type = input.nodeName;
-			if (!name || type === "FIELDSET") {
+			if (!name || type === "FIELDSET" || input.disabled) {
 				value = undefined;
-			} else if (input.nodeName === "TEXTAREA") {
+			} else if (type === "TEXTAREA") {
 				value = input.value;
-			} else if (input.nodeName === "SELECT") {
-			} else if (input.nodeName === "BUTTON") {
-				value = input.getAttribute("value") || input.textContent;
-			} else if (input.nodeName === "INPUT") {
+			} else if (type === "SELECT") {
+				if (!input.multiple) value = DATA_SELECT_VALUE(input.options[input.selectedIndex]);
+				else value = $A(input.options).filter(DATA_SELECT_MULTI).map(DATA_SELECT_VALUE);
+			} else if (type === "BUTTON") {
+				value = undefined;	//input.getAttribute("value") || input.textContent;
+			} else if (type === "INPUT") {
 				type = input.getAttribute("type");
 				// html4
 				if (type === "submit" || type === "button" || type === "reset") value = undefined;
 				else if (type === "text" || type === "password") value = input.value;
-				else if ((type === "radio" || type === "checkbox") && input.checked) value = input.value || index;
+				else if (type === "radio" || type === "checkbox") value = input.checked ? input.value : undefined;
 				// html5
 				else if (type === "color") value = input.value;
 				else if (type === "date") value = input.value;
@@ -2039,20 +2049,30 @@ Pseudo.DOM.addMethods("form",(function(){
 			};
 			return returned;
 		},
-		REDUCE_STRING = function(returned,input,index,array) {
+		DATA_JOINED = function(data,key,index,array) {
+			var value = data[key];
+			if (!Array.isArray(value)) data[key] = String(value);
+			else data[key] = value.flatten().join(",");
+			return data;
 		},
-		REDUCE_QUERY = function(returned,input,index,array) {
+		DATA_QUERY = function(key,index,array) {
+			var value = this[key];
+			if (!Array.isArray(value)) return key +"="+ value;		//escape(value);
+			else return key +"="+ value.flatten().join("&"+ key +"=");	//.map(escape).join("&"+ key +"=");
 		};
 	return {
-		"disable": function disable() { Array.from(this.elements).each(TOGGLE_OFF) },
-		"enable": function enable() { Array.from(this.elements).each(TOGGLE_ON) },
+		"disable": function disable(noState) {
+			var elements = Array.from(this.elements);
+			if (!noState) elements.each(TOGGLE_STATE);
+			elements.each(TOGGLE_OFF);
+		},
+		"enable": function enable(noState) { Array.from(this.elements).each(!!noState ? TOGGLE_ON : TOGGLE_REVERT) },
+		"state": function state() { Array.from(this.elements).each(TOGGLE_STATE) },
 		"data": function data(format) {
-			var data = Array.from(this.elements).reduce(REDUCE_DATA,{}), keys;
-			if (format === "joined" || format === "query") {
-				keys = Object.keys(data);
-				keys.reduce(REDUCE_STRING,data);
-			};
-			return format === "query" ? keys.reduce(REDUCE_QUERY,data) : data;
+			var data = Array.from(this.elements).reduce(DATA_REDUCE,{}), keys;
+			if (format === "joined" || format === "query") keys = Object.keys(data);
+			if (format === "joined") keys.reduce(DATA_JOINED,data);
+			return format === "query" ? keys.map(DATA_QUERY,data).join("&") : data;
 		}
 	};
 }).call(Pseudo.DOM));
@@ -2072,10 +2092,10 @@ var Ajax = (function(){
 		XML_SERIALIZER = !DOM_DOC ? null : new XMLSerializer();
 	
 	// ajax
-	function XMLHTTP_DOM(ns,name) {
+	function XMLHTTP_DOM() {
 		return new XMLHttpRequest();
 	};
-	function XMLHTTP_MSIE(ns,name) {
+	function XMLHTTP_MSIE() {
 		var xhr;
 		if (MSIE_XHR) {
 			xhr = new ActiveXObject(MSIE_XHR);
