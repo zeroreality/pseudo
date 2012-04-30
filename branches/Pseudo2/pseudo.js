@@ -899,7 +899,7 @@ var Pseudo = (function(){
 		"delay": function delay(options,arg1,arg2,argN) {
 			var method = this, args = SLICE.call(arguments,1), context = { "scope": window, "timeout": 16 };	// intel+ie limit: 15.6ms
 			if (typeof options === "number") context.timeout = options;
-			else if (options) Object.extend(context,options);
+			else if (options) Pseudo.extend(context,options);
 			return window.setTimeout(function() { return method.apply(context.scope,args) },context.timeout);
 		},
 		"defer": window.setImmediate ? function immediate(scope,arg1,arg2,argN) {
@@ -1166,7 +1166,7 @@ var Pseudo = (function(){
 /***********************
 *** Classing ***********
 ***********************/
-var Class = (function(){
+(function(){
 	var	SLICE = Array.prototype.slice,
 		DOM_PROPS = (function(){
 			var success = false, klass, instance;
@@ -1190,7 +1190,7 @@ var Class = (function(){
 	function KlassEvent(scope,type,extras) {
 		this.target = scope;
 		this.type = type;
-		this.fired = false;
+		this.stopped = this.fired = false;
 		if (extras) Pseudo.expand(this,extras);
 	};
 	function HANDLER_FIND(pair) { return pair.handler === this };
@@ -1219,7 +1219,7 @@ var Class = (function(){
 			} else if (handler instanceof Function) {
 				if (!this.__handlers) this.__handlers = {};
 				if (!this.__handlers[type]) this.__handlers[type] = [];
-				if (!this.has(type,handler)) this.__handlers[type].push({
+				if (!this.uses(type,handler)) this.__handlers[type].push({
 					"handler": handler,
 					"wrapped": HANDLER_WRAP(this,handler)
 				});
@@ -1250,7 +1250,7 @@ var Class = (function(){
 			};
 			return this;
 		},
-		"has": function has(type,handler) {
+		"uses": function uses(type,handler) {
 			if (this.__handlers && this.__handlers[type]) {
 				var handlers = this.__handlers[type], i = 0, h;
 				for (;h=handlers[i];i++) if (h.handler === handler) return true;
@@ -1365,7 +1365,7 @@ var Class = (function(){
 /***********************
 *** DOM ****************
 ***********************/
-Pseudo.DOM = (function(){
+(function(){
 	var	WIN = Object.getPrototypeOf(window),
 		DOC = Object.getPrototypeOf(document),
 		ELEM = (window.HTMLElement || window.Element).prototype,
@@ -1373,7 +1373,7 @@ Pseudo.DOM = (function(){
 		CUSTOM = {};
 	if (WIN === Object.prototype) WIN = window;	// opera
 	if (DOC === Object.prototype) DOC = document;
-	return {
+	return this.DOM = {
 		"CUSTOM_EVENTS": CUSTOM,
 		"Document": window.HTMLDocument || window.Document || DOC.constructor,
 		"Element": window.HTMLElement || window.Element || ELEM.constructor,
@@ -1411,28 +1411,52 @@ Pseudo.DOM = (function(){
 			return Pseudo.augment(proto,methods);
 		}
 	};	
-})();
-Pseudo.DOM.addMethods("#document",{
-	"element": function element(nodeName,attributes,handlers) {
-		var name, elem = this.createElement(nodeName);
-		elem.__pseudo = Pseudo.unique();
-		if (attributes) for (name in attributes) elem.write(name,attributes[name]);
-		if (handlers) for (name in handlers) elem.on(name,handlers[name]);
-		return elem;
-	}
-});
-Pseudo.DOM.addMethods("*,#document",(function(){
-	var SLICE = Array.prototype.slice;
+}).call(Pseudo);
+Pseudo.DOM.addMethods("*",(function(){
+	var	SLICE = Array.prototype.slice,
+		API = Pseudo.DOM.matchesSelector,
+		SELECTORS = function(args) {
+			var selectors = SLICE.call(args,0).invoke("trim").join(",");
+			if (selectors.indexOf(",,") > -1) throw new Error("Blank selector is invalid");
+			return selectors || "*";
+		};
 	return {
-		"query": function(selector1,selector2,selectorN) {
+		"contains": document.compareDocumentPosition ? function containsCompare(element) {
+			return !!(this.compareDocumentPosition(element) & 16);
+		} : function containsQueryAll(element) {
+			return this.query(element.nodeName).contains(element);
+		},
+		"descendantOf": function descendantOf(element) { return element.contains(this) },
+		"matches": API ? function matchesSelector(selector1,selector2,selectorN) {
+			return this[API](SELECTORS(arguments));
+		} : function matchesQueryAll(selector1,selector2,selectorN) {
+			return this.root().query(SELECTORS(arguments)).contains(this);
+		},
+		"query": function query(selector1,selector2,selectorN) {
 			var selectors = SLICE.call(arguments,0).flatten().join(",");
 			return Array.from(this[Pseudo.DOM.querySelectorAll](selectors));
+		},
+		"up": API ? function upMatches(selector1,selector2,selectorN) {
+			var elem = this.parentNode, selectors = SELECTORS(arguments);
+			while (elem instanceof Pseudo.DOM.Element) if (!elem[API](selectors)) elem = elem.parentNode;
+			return elem || undefined;
+		} : function upQueryAll(selector1,selector2,selectorN) {
+			var elem = this.parentNode, selectors = SELECTORS(arguments), parents;
+			if (selectors === "*") parents = [elem];
+			else parents = this.root().query(selectors);
+			while (element instanceof Pseudo.DOM.Element) {
+				if (parents.contains(element)) break;
+				else element = element.parentNode;
+			};
+			return element || undefined;
 		}
-	};	
+	};
 }).call(Pseudo));
 Pseudo.DOM.addMethods("*",(function(){
 	var	NOTBLANK = /[^\s]+/m,
 		SLICE = Array.prototype.slice,
+		ELEM = Pseudo.DOM.Element,
+		FRAG = Pseudo.DOM.Fragment,
 		READERS = this.HELPERS_READ_ATTRIBUTE = {
 			"for": function() { return this.htmlFor },
 			"class": function() { return this.className }
@@ -1442,6 +1466,8 @@ Pseudo.DOM.addMethods("*",(function(){
 			"class": function(value) { this.className = value },
 			"innerHTML": function(value) { this.update(value) }
 		},
+		CLASS_ADDER = function(className) { if (!this.contains(className)) this.push(className) },
+		CLASS_REMOVER = function(className) { this.remove(className) },
 		INNERHTML = this.HELPERS_INNERHTML = Pseudo.extend((function(){
 			var isBuggy = true, element = document.createElement("tr");
 			element.innerHTML = "<td>test</td>";
@@ -1474,18 +1500,13 @@ Pseudo.DOM.addMethods("*",(function(){
 			return !isBuggy ? {} : {
 				"select":	["<select>","</select>"]
 			};
-		})()),
-		SELECTORS = function(args) {
-			var selectors = SLICE.call(args,0).invoke("trim").join(",");
-			if (selectors.indexOf(",,") > -1) throw new Error("Blank selector is invalid");
-			return selectors || "*";
-		};
+		})());
 	return {
 		// html
-		"amputate": function() { return this.parentNode.removeChild(this) },
-		"append": function(value) {
+		"amputate": function amputate() { return this.parentNode.removeChild(this) },
+		"append": function append(value) {
 		//	if (value instanceof Element || value instanceof DocumentFragment) {
-			if (value instanceof window.Element || window.DocumentFragment && value instanceof window.DocumentFragment) {
+			if (value instanceof ELEM || FRAG && value instanceof FRAG) {
 				this.appendChild(value);
 			} else if (value instanceof Array) {
 				for (var i=0,l=value.length; i<l; i++) this.append(value[i]);
@@ -1510,7 +1531,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			};
 			return this;
 		},
-		"clean": function(deep) {
+		"clean": function clean(deep) {
 			var i = this.childNodes.length, kid, type;
 			while (i--) {
 				kid = this.childNodes[i];
@@ -1518,48 +1539,30 @@ Pseudo.DOM.addMethods("*",(function(){
 				else if (kid.nodeType === 1 && deep) kid.clean(true);
 			};
 		},
-		"clear": function() { while(this.lastChild) this.removeChild(this.lastChild) },
-		"contains": document.compareDocumentPosition ? function(element) {
-			return !!(this.compareDocumentPosition(element) & 16);
-		} : function(element) {
-			return this.query(element.nodeName).contains(element);
-		},
-		"copy": function(deep) {
+		"clear": function clear() { while(this.lastChild) this.removeChild(this.lastChild) },
+		"copy": function copy(deep) {
 			var element = this.cloneNode(false);
 			element.__pseudo = Pseudo.unique();
 			if (deep) element.append(this.innerHTML);
 			return element;
 		},
+		"insertAfter": function insertAfter(parent,element) { return this.insertBefore(parent,element && element.nextSibling || null) },
 		"root": function root() {
 			var parent = this;
-			while (parent.parentNode instanceof Pseudo.DOM.Element) parent = parent.parentNode;
+			while (parent.parentNode instanceof ELEM) parent = parent.parentNode;
 			return parent || this;
 		},
-		"transplant": function(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
-		"up": Pseudo.DOM.matchesSelector ? function upMatches(selector1,selector2,selectorN) {
-			var elem = this.parentNode, selectors = SELECTORS(arguments);
-			while (elem instanceof Pseudo.DOM.Element) if (!elem[Pseudo.DOM.matchesSelector](selectors)) elem = elem.parentNode;
-			return elem || undefined;
-		} : function upOwnerAll(selector1,selector2,selectorN) {
-			var elem = this.parentNode, selectors = SELECTORS(arguments), parents;
-			if (selectors === "*") parents = [elem];
-			else parents = this.root().query(selectors);
-			while (element instanceof Pseudo.DOM.Element) {
-				if (parents.contains(element)) break;
-				else element = element.parentNode;
-			};
-			return element || undefined;
-		},
-		"update": function(value) {
+		"transplant": function transplant(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
+		"update": function update(value) {
 			this.clear();
 			this.append(value);
 		},
 		
 		// attributes
-		"coords": function(parent) {
+		"coords": function coords(parent) {
 			var top = 0, left = 0, element = this;
 			if (!parent) parent = document.documentElement;
-			while (element instanceof Pseudo.DOM.Element) {
+			while (element instanceof ELEM) {
 				top += element.offsetTop;
 				left += element.offsetLeft;
 				element = element.offsetParent;
@@ -1567,13 +1570,24 @@ Pseudo.DOM.addMethods("*",(function(){
 			};
 			return { "top": top, "left": left, "width": this.offsetWidth, "height": this.offsetHeight };
 		},
-		"isHidden": function() { return this.getStyle("display") === "none" },
-		"read": function(name) { return READERS[name] ? READERS[name].call(this) : this.getAttribute(name) },
-		"write": function(name,value) { return WRITERS[name] ? WRITERS[name].call(this,value) : this.setAttribute(name,value) },
+		"isHidden": function isHidden() { return this.getStyle("display") === "none" },
+		"read": function read(name) { return READERS[name] ? READERS[name].call(this) : this.getAttribute(name) },
+		"write": function write(name,value) { return WRITERS[name] ? WRITERS[name].call(this,value) : this.setAttribute(name,value) },
 		
 		// style	;	hack in element.classList
-		"hide": function() { this.style.display = "none" },
-		"show": function() { this.style.display = "" },
+		"hide": function hide() { this.style.display = "none" },
+		"show": function show() { this.style.display = "" },
+		"hasClass": function hasClass(className) { return this.className.split(/\s+/gm).contains(className) },
+		"addClass": function addClass(className1,className2,classNameN) {
+			var classNames = !this.className ? [] : this.className.trim().split(/\s+/gm);
+			SLICE.call(arguments,0).flatten().each(CLASS_ADDER,classNames);
+			this.className = classNames.join(" ");
+		},
+		"removeClass": function removeClass(className1,className2,classNameN) {
+			var classNames = !this.className ? [] : this.className.trim().split(/\s+/gm);
+			SLICE.call(arguments,0).flatten().each(CLASS_REMOVER,classNames);
+			this.className = classNames.join(" ");
+		},
 		
 		// clean-up
 		"dispose": function() {
@@ -1812,7 +1826,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			Pseudo.Browser.Webkit ? ["-webkit-","webkit"] : 
 			Pseudo.Browser.Opera ? ["-o-","O"] : null;
 		if (PREFIX) {
-			PREFIX_FILTER = function(name) { if (typeof DIV.style[name] !== "string" && typeof DIV.style[PREFIX[0] + name.dasherize()] === "string") PREFIXER(name) },
+			PREFIX_FILTER = function(name) { if (typeof DIV.style[name] !== "string" && typeof DIV.style[PREFIX[1] + name.camelize().capitalize()] === "string") PREFIX_FUNCS(name) },
 			PREFIX_FUNCS = function(name) {
 				READERS[name] = function(element) { return GETSTYLE(element,PREFIX[0] + name.dasherize()) };
 				WRITERS[name] = function(element,value) {
@@ -1875,6 +1889,21 @@ Pseudo.DOM.addMethods("*",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
+Pseudo.DOM.addMethods("#document",(function(){
+	var ELEM = Pseudo.DOM.Element.prototype;
+	return {
+		"element": function element(nodeName,attributes,handlers) {
+			var name, elem = this.createElement(nodeName);
+			elem.__pseudo = Pseudo.unique();
+			if (attributes) for (name in attributes) elem.write(name,attributes[name]);
+			if (handlers) for (name in handlers) elem.on(name,handlers[name]);
+			return elem;
+		},
+		// copy from Element.prototype
+		"contains": ELEM.contains,
+		"query": ELEM.query
+	};
+}).call(Pseudo));
 Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	var	CUSTOM = this.CUSTOM_EVENTS,
 		DOM = document.addEventListener ? true : false,
@@ -1883,7 +1912,14 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		EVENT_OFF = DOM ? DOM_OFF : MSIE_OFF,
 		EVENT_FIX = ["load","error","click"],
 		CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
-		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" };
+		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" },
+		KEY_CODES = this.KEY_CODES = {
+			"BACK": 8, "BACKSPACE": 8, "TAB": 9, "ENTER": 13, "SHIFT": 16, "CTRL": 17, "ALT": 18, "PAUSE": 19,
+			"BREAK": 19, "ESCAPE": 27, "PAGEUP": 33, "PAGEDOWN": 34, "END": 35, "HOME": 36, "LEFT": 37,
+			"UP": 38, "RIGHT": 39, "DOWN": 40, "INSERT": 45, "DELETE": 46,
+			// not standard
+			"LEFT_WINDOWS": 91, "RIGHT_WINDOWS": 92, "CONTEXT": 93, "NUMLOCK": 144, "SCROLLLOCK": 145
+		};
 	
 	// events
 	function HANDLER_FIND(pair) { return pair.handler === this.handler && pair.capture === this.capture };
@@ -2080,8 +2116,10 @@ Pseudo.DOM.addMethods("form",(function(){
 /***********************
 *** Ajax ***************
 ***********************/
-var Ajax = (function(){
-	var	DOM_XHR = XMLHttpRequest ? true : false,
+(function(){
+	var	ELEM = Pseudo.DOM.Element,
+		FRAG = Pseudo.DOM.Fragment,
+		DOM_XHR = window.XMLHttpRequest ? true : false,
 		DOM_DOC = document.implementation && window.DOMParser && window.XMLSerializer ? true : false,
 		DOCUMENT = DOM_DOC ? DOCUMENT_DOM : DOCUMENT_MSIE,
 		MSIE_XHR = "",
@@ -2091,48 +2129,17 @@ var Ajax = (function(){
 		XML_PARSER = !DOM_DOC ? null : new DOMParser(),
 		XML_SERIALIZER = !DOM_DOC ? null : new XMLSerializer();
 	
-	// ajax
-	function XMLHTTP_DOM() {
-		return new XMLHttpRequest();
-	};
-	function XMLHTTP_MSIE() {
-		var xhr;
-		if (MSIE_XHR) {
-			xhr = new ActiveXObject(MSIE_XHR);
-		} else {
-			for (var i=0; MSIE_XHR=MSXHR_TYPES[i]; i++) {
-				try { xhr = new ActiveXObject(x) } catch(e) {};
-				if (xhr) break;
-			};
-		};
-		return xhr;
-	};
-	
 	// xml
 	function DOCUMENT_DOM(ns,name) {
-		return document.implementation.createDocument(ns, name, null);
+		return document.implementation.createDocument(ns,name,null);
 	};
-	function GETINNER_DOM(element) {
-		var i = 0, c, childs = element.childNodes, inner = new Array(childs.length);
-		for (; c=childs[i]; i++) inner[i] = XML_SERIALIZER.serializeToString(c);
-		return inner.join("");
-	};
-	function SETINNER_DOM(element,innerXml) {
-		while (element.hasChildNodes()) element.removeChild(element.lastChild);
-		if (innerXml && innerXml.length) {
-			var i = 0, n, nodes = XML_PARSER.parseFromString(innerXml,"text/xml");
-			for (; n=nodes.childNodes[i]; i++) element.appendChild(element.ownerDocument.importNode(n,true));
-		};
-		return element;
-	};
-	
 	function DOCUMENT_MSIE(ns,name) {
 		var doc;
-		if (MSXML_TYPE) {
-			doc = new ActiveXObject(MSXML_TYPE);
+		if (MSIE_DOC) {
+			doc = new ActiveXObject(MSIE_DOC);
 		} else {
-			for (var i=0; MSXML_TYPE=MSXML_TYPES[i]; i++) {
-				try { doc = new ActiveXObject(x) } catch(e) {};
+			for (var i=0; MSIE_DOC=MSIE_DOCS[i]; i++) {
+				try { doc = new ActiveXObject(MSIE_DOC) } catch(e) {};
 				if (doc) break;
 			};
 		};
@@ -2140,15 +2147,8 @@ var Ajax = (function(){
 		if (name) doc.loadXML(!ns ? "<"+ name +" />" : "<a0:"+ name +" xmlns:a0=\""+ ns +"\" />");
 		return doc;
 	};
-	function GETINNER_MSIE(element) {
-		return element.xml;
-	};
-	function SETINNER_MSIE(element,innerXml) {
-		element.loadXML(innerXml || "");
-		return element;
-	};
 	
-	// extendered
+	// ajax
 	function getStatus(xhr) {
 		var status = { "code": 0, "text": "", "body": "" };
 		try {
@@ -2170,17 +2170,52 @@ var Ajax = (function(){
 			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
 			"X-Requested-With": "XMLHttpRequest", "X-Pseudo-Version": Pseudo.version
 		},
-		"transport": DOM_XHR ? XMLHTTP_DOM : XMLHTTP_MSIE,
+		"transport": DOM_XHR ? function transportNative() {
+			return new XMLHttpRequest();
+		} : function transportActiveX() {
+			var xhr;
+			if (MSIE_XHR) {
+				xhr = new ActiveXObject(MSIE_XHR);
+			} else {
+				for (var i=0; MSIE_XHR=MSXHR_TYPES[i]; i++) {
+					try { xhr = new ActiveXObject(x) } catch(e) {};
+					if (xhr) break;
+				};
+			};
+			return xhr;
+		},
 		"doc": function doc(namespaceURI,documentElementName,contents) {
-			var xml = DOCUMENT(ns || "", name || "", null);
+			var xml = DOCUMENT(namespaceURI || "", documentElementName || "", null);
 			if (contents) {
-				if (contents instanceof Element) {
-					
+				if (contents instanceof ELEM || FRAG && contents instanceof FRAG) {
+					// sort out some kind of cross-browser import node method
 				} else {
-					
+					this.setInnerXml(xml,contents);
 				};
 			};
 			return xml;
+		},
+		"getInnerXml": DOM_DOC ? function getInnerDom(element) {
+			var i = 0, c, childs = element.childNodes, inner = new Array(childs.length);
+			for (; c=childs[i]; i++) inner[i] = XML_SERIALIZER.serializeToString(c);
+			return inner.join("");
+		} : function getInnerMsie(element) {
+			var i = 0, c, childs = element.childNodes, inner = new Array(childs.length);
+			for (; c=childs[i]; i++) inner[i] = c.xml;
+			return inner.join("");
+		},
+		"setInnerXml": DOM_DOC ? function setInnerDom(element,innerXml) {
+			while (element.hasChildNodes()) element.removeChild(element.lastChild);
+			innerXml = String(innerXml);
+			if (innerXml.length) {
+				var	i = 0, n, doc = element.ownerDocument || element,
+					nodes = XML_PARSER.parseFromString(innerXml,"text/xml").childNodes;
+				for (; n=nodes[i]; i++) element.appendChild(doc.importNode(n,true));
+			};
+		} : function setInnerMsie(element,innerXml) {
+			if (Object.isNothing(innerXml)) innerXml = "";
+			else innerXml = String(innerXml);
+			element.loadXML(innerXml);
 		},
 		
 		"getStatus": getStatus,
@@ -2197,19 +2232,19 @@ var Ajax = (function(){
 		}
 	};	
 }).call(Pseudo);
-Pseudo.Ajax.Request = Class.create(null,{
+Pseudo.Ajax.Request = Pseudo.Class.create(null,{
 	// properties go here
 },{
 	"constructor": function(url,data,options,callbacks,headers) {
 		this.__xhr = Ajax.transport();
 		this.__doc = Ajax.doc();
 		this.__callback = this.constructor.callback.bind(this);
-		options = Object.extend(options||{},this.constructor.defaults);
+		options = Pseudo.expand(options||{},this.constructor.defaults);
 		
 		this.url = String(url);
-		this.data = String(data);
+		this.data = Object.isNothing(data) ? null : String(data);
 		this.sync = !!options.sync;
-		this.method = !options.method ? "AUTO" : String(options.method).toUpperCase();
+		this.method = !options.method ? "auto" : String(options.method).toLowerCase();
 		this.headers = Pseudo.expand(headers||{},Pseudo.Ajax.Headers);
 		
 		if (callbacks) for (var each in callbacks) this.on(each,callbacks[each]);
@@ -2235,9 +2270,9 @@ Pseudo.Ajax.Request = Class.create(null,{
 			if (event.stopped) return;
 			
 			this.__runSyncAfter = !!this.sync;
-			for (var each in this.headers) this.__xhr.setRequestHeader(each,this.headers[each]);
 			this.__xhr.onreadystatechange = this.__callback;
-			this.__xhr.open(this.method,this.url,!this.sync);
+			this.__xhr.open(this.method === "auto" ? (this.data ? "post" : "get") : this.method,this.url,!this.sync);
+			for (var each in this.headers) this.__xhr.setRequestHeader(each,this.headers[each]);
 			try { this.__xhr.send(this.data) }
 			catch(x) { /* IE require the .send() for sync requests, Chrome/Safari throw error */ };
 			if (this.__runSyncAfter) this.__callback();
@@ -2257,16 +2292,16 @@ Pseudo.Ajax.Request = Class.create(null,{
 		"autofire": false
 	},
 	"callback": function() {
-		if (this.__xhr.readyState >= 3) {
-			this.fire("loading",{
-				"progress": Ajax.getProgress(this.__xhr),
-				"status": Ajax.getStatus(this.__xhr)
-			});
-		} else if (this.__xhr.readyState === 4) {
+		this.fire("loading",{
+			"progress": Ajax.getProgress(this.__xhr),
+			"status": Ajax.getStatus(this.__xhr)
+		});
+		if (this.__xhr.readyState === 4) {
 			this.__runSyncAfter = false;
 			var ok = Ajax.isResponseOK(this.__xhr);
 			Ajax.setInnerXml(this.__doc,ok ? this.__xhr.responseText : "");
 			this.fire("loaded",{
+				"errored": !ok,
 				"xml": this.__doc.documentElement || null,
 				"text": this.__xhr.responseText,
 				"status": Ajax.getStatus(this.__xhr)
@@ -2280,9 +2315,13 @@ Pseudo.Ajax.Request = Class.create(null,{
 /***********************
 *** Globals ************
 ***********************/
-var	$ = document.getElementById,
+var	Ajax = Pseudo.Ajax,
+//	Browser = Pseudo.Browser,
+	Class = Pseudo.Class,
+//	DOM = Pseudo.DOM,
+	$ = document.getElementById,
 	$$ = document.query.bind(document),
-	$A = Array.from;
+	$A = Pseudo.Array.from;
 if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
 	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
 	(function IEDOMContentLoaded(){
