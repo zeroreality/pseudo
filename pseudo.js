@@ -145,9 +145,9 @@ var Pseudo = (function(){
 				$super = Object.getPrototypeOf(object);
 			for (;i<l;i++) for (name in sources[i]) {
 				property = Object.clone(sources[i][name]);
-				if (current = Object.getOwnPropertyDescriptor(object,name)) Pseudo.expand(property,current);
-				if (ancestor = Object.getOwnPropertyDescriptor($super,name)) Pseudo.expand(property,ancestor);
-				Pseudo.expand(property,PROPERTY);
+				if (current = Object.getOwnPropertyDescriptor(object,name)) expand(property,current);
+				if (ancestor = Object.getOwnPropertyDescriptor($super,name)) expand(property,ancestor);
+				expand(property,PROPERTY);
 				
 				if (OVERLOADABLE(property["get"])) property["get"] = overload(
 					current && current["get"] || ancestor && ancestor["get"],
@@ -157,7 +157,7 @@ var Pseudo = (function(){
 					current && current["set"] || ancestor && ancestor["set"],
 					property["set"]
 				);
-				Object.defineProperty(object,name,Pseudo.expand(property,current,ancestor));
+				Object.defineProperty(object,name,expand(property,current,ancestor));
 			};
 			return object;
 		}
@@ -259,9 +259,7 @@ var Pseudo = (function(){
 ***********************/
 (function(){
 	var	SLICE = Array.prototype.slice,
-	//	FILTER_NATURAL = /[a-z]+|\d+(?:\.\d+)*/gim,
 		FILTER_NATURAL =/[a-z]+|[0-9]+/gim,
-	//	FILTER_WHITESPACE = /\s+/g,
 		HELPER_MAX = function(prev,next) { return prev > next ? prev : next },
 		HELPER_MIN = function(prev,next) { return prev < next ? prev : next },
 		HELPER_SUM = function(prev,next) { return prev+next };
@@ -284,10 +282,6 @@ var Pseudo = (function(){
 			while (length--) results[length] = object[length];
 			return results;
 		},
-	/*	"whitespace": function whitespace(string) {
-			if (Object.isNothing(string) || string === "") return [];
-			return String(string).split(FILTER_WHITESPACE);
-		},	*/
 		"natural": function natural(a,b) {
 			if (!a && !b) return 0;
 			var first = a.match(FILTER_NATURAL), second = b.match(FILTER_NATURAL);
@@ -515,9 +509,7 @@ var Pseudo = (function(){
 ***********************/
 (function(){
 	var	SLICE = Array.prototype.slice,
-		PROTOTYPE = Date.prototype,
-		NATIVE_DATE = Date,
-		NATIVE_CONSTRUCTOR = PROTOTYPE.constructor || NATIVE_DATE,
+		NATIVE = window.Date,
 		INVALID = new Date("invalid"),
 		INVALID_MESSAGE = "Invalid Date",
 		FILTER_ISO = /^(\\d{4}|[\+\-]\\d{6})(?:-(\\d{2})(?:-(\\d{2})(?:T(\\d{2}):(\\d{2})(?::(\\d{2})(?:\\.(\\d{3}))?)?(?:Z|(?:([-+])(\\d{2}):(\\d{2})))?)?)?)?$/,
@@ -591,36 +583,24 @@ var Pseudo = (function(){
 			};
 		};
 	
-	// extension functions
-	function getTimezoneOffset() { return -new Date().getTimezoneOffset() };
-	function now() { return new Date().getTime() };
-	function today() {
-		var date = new Date();
-		date.setHours(0,0,0,0);
-		return date;
-	};
-	function tomorrow() {
-		var date = today();
-		date.setDate(date.getDate()+1);
-		return date;
-	};
-	function yesterday() {
-		var date = today();
-		date.setDate(date.getDate()-1);
-		return date;
-	};
-	
 	// compatibility methods
 	function DateTime(year,month,date,hour,minute,second,fraction) {
-		/*
-		
-		
-		extended parsing for ISO strings
-		this is not yet implemented
-		
-		
-		*/
-		NATIVE_CONSTRUCTOR.apply(this,SLICE.call(arguments,0));
+		var args = SLICE.call(arguments,0), date = this;
+		if (this instanceof NATIVE) {
+			if (args.length === 1 && typeof year === "string") {
+				return new NATIVE(Date.parse(Y));
+			} else switch (args.length) {
+				case 7: return new NATIVE(year,month,date,hour,minute,second,fraction);
+				case 6: return new NATIVE(year,month,date,hour,minute,second);
+				case 5: return new NATIVE(year,month,date,hour,minute);
+				case 4: return new NATIVE(year,month,date,hour);
+				case 3: return new NATIVE(year,month,date);
+				case 2: return new NATIVE(year,month);
+				case 1: return new NATIVE(year);
+				case 0: return new NATIVE();
+			};
+		};
+		return NATIVE.apply(this,SLICE.call(arguments,0));
 	};
 	function parse(string) {
 		var matches = FILTER_ISO.exec(string);
@@ -639,170 +619,29 @@ var Pseudo = (function(){
 			year = +matches[0];
 			if (year >= 0 && year <= 99) {
 				matches[0] = year + 400;
-				return NATIVE_DATE.UTC.apply(this,matches) + offset - 12622780800000;
+				return NATIVE.UTC.apply(this,matches) + offset - 12622780800000;
 			};
-			return NATIVE_DATE.UTC.apply(this,matches) + offset;
+			return NATIVE.UTC.apply(this,matches) + offset;
 		};
-		return PROTOTYPE.parse.apply(this,SLICE(arguments,0));
+		return NATIVE.prototype.parse.apply(this,SLICE(arguments,0));
 	};
-	function toISOString() {
-		var result = "", year = this.getUTCFullYear(), absy = Math.abs(year).toString();
-		if (year > 9999) result = "+";
-		else if (year < 0) result = "-";
-		return result + ("00000"+ absy).slice(absy.length === 4 ? -4 : -6) +"-"+
-			(this.getUTCMonth()+1).zeroPad(2) +"-"+ this.getUTCDate().zeroPad(2) +"T"+
-			this.getUTCHours().zeroPad(2) +":"+ this.getUTCMinutes().zeroPad(2) +":"+
-			this.getUTCSeconds().zeroPad(2) +"."+ this.getUTCMilliseconds().zeroPad(0,3) +"Z";
-	};
-	function toJSON() { return this.toISOString() };
-	
-	// extension methods
-	function copy() { return new Date(this.valueOf()) };
-	function context(comparer,levels) {
-		if (!(comparer instanceof Date) || isNaN(comparer.valueOf())) comparer = new Date();
-		if (isNaN(levels)) levels = 2;
-		
-		var	i = 0, s = 0, criteria, next,
-			descriptor = [],
-			method = levels-s === 1 ? "round" : "floor",
-			difference = this.valueOf() - comparer.valueOf(),
-			before = difference < 0,
-			absolute = Math.abs(difference);
-		
-		for (;criteria=HELPER_COMPARE[i];i++) {
-			if (absolute >= criteria.value) {
-				var value = Math[method](absolute/criteria.value);
-				descriptor.push({
-					"value": before ? -value : value,
-					"type": criteria.type,
-					"name": criteria.name
-				});
-				absolute -= value * criteria.value;
-				s++;
-			};
-			if (levels <= s || absolute < 1000) break;
-			else if (levels-s === 1) method = "round";
-		};
-		
-		i = descriptor.length;
-		while (i-- > 1) {
-			criteria = descriptor[i];
-			next = descriptor[i-1];
-			if (criteria.value * MILLI_PER[criteria.type] === MILLI_PER[next.type]) {
-				next.value++;
-				descriptor.pop();
-			} else { break };
-		};
-		return descriptor;
-	};
-	function contextString(comparer,levels) {
-		var array = this.context(comparer,levels), i = array.length, results = new Array(i);
-		while (i--) {
-			results[i] = [
-				Math.abs(array[i].value),
-				Math.abs(array[i].value) > 1 ? array[i].name : array[i].name.toUpperCase()
-			].join(" ");
-		};
-		return results.join(", ");
-	};
-	function getDayName() { return NAMES_DAY[this.getDay()] };
-	function getMonthName() { return NAMES_MONTH[this.getMonth()] };
-	function toFormat(string,invalid) {
-		if (isNaN(this.valueOf())) return arguments.length > 1 ? invalid : INVALID_MESSAGE;
-		return String(string).separate(FILTER_FORMAT).forEach(HELPER_FORMAT,this).join("");
+	if (!Date.parse || Date.parse("+275760-09-13T00:00:00.000Z") !== 8.64e15) {
+		DateTime.prototype = NATIVE.prototype;
+		DateTime.prototype.constructor = NATIVE;
+		window.Date = DateTime;
 	};
 	
-	// comparers
-	function diff(type,compare) {
-		if (type === Date.Month || type === Date.Week) {
-			var value = 0, comparer = compare.copy(), incrementer = this > compare ? 1 : -1;
-			while (incrementer > 0 && this > comparer || incrementer < 0 && this < comparer) {
-				comparer.add(type,incrementer);
-				value++;
-			};
-			return value * -incrementer;
-		} else {
-			return Math.round((compare.valueOf() - this.valueOf()) / Date.MillisecondsPer[type]);
-		};
-	};
-	function isToday() { return this.isSameDay(new Date()) };
-	function isAfter(compare) { return this.valueOf() > compare.valueOf() };
-	function isBefore(compare) { return this.valueOf() < compare.valueOf() };
-	function isSameYear(compare) { return this.getFullYear() === compare.getFullYear() };
-	function isSameMonth(compare) { return this.isSameYear(compare) && this.getMonth() === compare.getMonth() };
-	function isSameDay(compare) { return this.isSameMonth(compare) && this.getDate() === compare.getDate() };
-	
-	// value getters
-	function getHoursBase12() {
-		var hours = this.getHours();
-		return hours === 0 ? 12 : hours % 12;
-	};
-	function getFirstDay() {
-		var day = new Date(this.valueOf());
-		day.setDate(1);
-		return day.getDay();
-	};
-	function getLastDay() { return this.getLastDate().getDay() };
-	function getLastDate() {
-		var last = new Date(this.valueOf());
-		last.setDate(1);
-		last.setMonth(1+last.getMonth());
-		last.setDate(0);
-		return last.getDate();
-	};
-	
-	// value setters
-	function adder(type,value) {
-		value = String(value).toNumber();
-		if (!value) return this;
-		switch (type) {
-			case Date.Year:		this.setYear(this.getFullYear()+value);				break;
-			case Date.Month:		this.setMonth(this.getMonth()+value);				break;
-			case Date.Week:		this.setDate(this.getDate()+(value*7));				break;
-			case Date.Day:			this.setDate(this.getDate()+value);				break;
-			case Date.Hour:		this.setHours(this.getHours()+value);				break;
-			case Date.Minute:		this.setMinutes(this.getMinutes()+value);			break;
-			case Date.Second:		this.setSeconds(this.getSeconds()+value);			break;
-			case Date.Millisecond:	this.setMilliseconds(this.getMilliseconds()+value);	break;
-		};
-		return this;
-	};
-	function copy() { return new Date(this.valueOf()) };
-	function getter(type) {
-		switch (type) {
-			case Date.Year:		return this.getYear();
-			case Date.Month:		return this.getMonth();
-			case Date.Week:		return this.getWeek();
-			case Date.Day:			return this.getDate();
-			case Date.Hour:		return this.getHours();
-			case Date.Minute:		return this.getMinutes();
-			case Date.Second:		return this.getSeconds();
-			case Date.Millisecond:	return this.getMilliseconds();
-		};
-	};
-	function setter(type,value) {
-		value = String(value).toNumber();
-		if (!value) return this;
-		switch (type) {
-			case Date.Year:		this.setYear(value);		break;
-			case Date.Month:		this.setMonth(value);		break;
-			case Date.Week:		this.setWeek(value);		break;
-			case Date.Day:			this.setDate(value);		break;
-			case Date.Hour:		this.setHours(value);		break;
-			case Date.Minute:		this.setMinutes(value);		break;
-			case Date.Second:		this.setSeconds(value);		break;
-			case Date.Millisecond:	this.setMilliseconds(value);	break;
-		};
-		return this;
-	};
-	function setWeek(value) {
-		var copy = this.copy(), day = copy.getDay();
-		copy.setMonth(0,1);
-		copy.setDate(copy.getDate()+(value*7));
-		this.setMonth(copy.getMonth(),copy.getDate());
+	// extensions
+	function today() {
+		var date = new Date();
+		date.setHours(0,0,0,0);
+		return date;
 	};
 	
 	this.expand(Date,this.Date = {
+		"Days": NAMES_DAY,
+		"Months": NAMES_MONTH,
+		
 		"Year":		"yyyy",
 		"Month":		"MM",
 		"Day":		"dd",
@@ -812,45 +651,174 @@ var Pseudo = (function(){
 		"Millisecond":	"fff",
 		
 		// extensions
-		"getTimezoneOffset": getTimezoneOffset,
-		"now": now,
+		"now": function now() { return new Date().getTime() },
 		"today": today,
-		"tomorrow": tomorrow,
-		"yesterday": yesterday
+		"tomorrow": function tomorrow() {
+			var date = today();
+			date.setDate(date.getDate()+1);
+			return date;
+		},
+		"yesterday": function yesterday() {
+			var date = today();
+			date.setDate(date.getDate()-1);
+			return date;
+		}
 	});
-	this.expand(Date.prototype,this.Date.Prototypes = {
+	this.Date.Native = NATIVE;
+	this.expand(NATIVE.prototype,this.Date.Prototypes = {
 		// compatibility
-		"constructor": DateTime,
 		"parse": parse,
-		"toISOString": toISOString,
-		"toJSON": toJSON,
+		"toISOString": function toISOString() {
+			var result = "", year = this.getUTCFullYear(), absy = Math.abs(year).toString();
+			if (year > 9999) result = "+";
+			else if (year < 0) result = "-";
+			return result + ("00000"+ absy).slice(absy.length === 4 ? -4 : -6) +"-"+
+				(this.getUTCMonth()+1).zeroPad(2) +"-"+ this.getUTCDate().zeroPad(2) +"T"+
+				this.getUTCHours().zeroPad(2) +":"+ this.getUTCMinutes().zeroPad(2) +":"+
+				this.getUTCSeconds().zeroPad(2) +"."+ this.getUTCMilliseconds().zeroPad(0,3) +"Z";
+		},
+		"toJSON": function toJSON() { return this.toISOString() },
 		
 		// extensions
-		"copy": copy,
-		"context": context,
-		"contextString": contextString,
-		"getDayName": getDayName,
-		"getMonthName": getMonthName,
-		"toFormat": toFormat,
+		"copy": function copy() { return new Date(this.valueOf()) },
+		"context": function context(comparer,levels) {
+			if (!(comparer instanceof Date) || isNaN(comparer.valueOf())) comparer = new Date();
+			if (isNaN(levels)) levels = 2;
+			
+			var	i = 0, s = 0, criteria, next,
+				descriptor = [],
+				method = levels-s === 1 ? "round" : "floor",
+				difference = this.valueOf() - comparer.valueOf(),
+				before = difference < 0,
+				absolute = Math.abs(difference);
+			
+			for (;criteria=HELPER_COMPARE[i];i++) {
+				if (absolute >= criteria.value) {
+					var value = Math[method](absolute/criteria.value);
+					descriptor.push({
+						"value": before ? -value : value,
+						"type": criteria.type,
+						"name": criteria.name
+					});
+					absolute -= value * criteria.value;
+					s++;
+				};
+				if (levels <= s || absolute < 1000) break;
+				else if (levels-s === 1) method = "round";
+			};
+			
+			i = descriptor.length;
+			while (i-- > 1) {
+				criteria = descriptor[i];
+				next = descriptor[i-1];
+				if (criteria.value * MILLI_PER[criteria.type] === MILLI_PER[next.type]) {
+					next.value++;
+					descriptor.pop();
+				} else { break };
+			};
+			return descriptor;
+		},
+		"contextString": function contextString(comparer,levels) {
+			var array = this.context(comparer,levels), i = array.length, results = new Array(i);
+			while (i--) results[i] = [
+				Math.abs(array[i].value),
+				Math.abs(array[i].value) > 1 ? array[i].name : array[i].name.toUpperCase()
+			].join(" ");
+			return results.join(", ");
+		},
+		"getDayName": function getDayName() { return NAMES_DAY[this.getDay()] },
+		"getMonthName": function getMonthName() { return NAMES_MONTH[this.getMonth()] },
+		"toFormat": function toFormat(string,invalid) {
+			if (isNaN(this.valueOf())) return arguments.length > 1 ? invalid : INVALID_MESSAGE;
+			return String(string).separate(FILTER_FORMAT).forEach(HELPER_FORMAT,this).join("");
+		},
 		
 		// comparers
-		"diff": diff,
-		"isAfter": isAfter,
-		"isBefore": isBefore,
-		"isSameDay": isSameDay,
-		"isSameMonth": isSameMonth,
-		"isSameYear": isSameYear,
-		"isToday": isToday,
+		"diff": function diff(type,compare) {
+			if (type === Date.Month || type === Date.Week) {
+				var value = 0, comparer = compare.copy(), incrementer = this > compare ? 1 : -1;
+				while (incrementer > 0 && this > comparer || incrementer < 0 && this < comparer) {
+					comparer.add(type,incrementer);
+					value++;
+				};
+				return value * -incrementer;
+			} else {
+				return Math.round((compare.valueOf() - this.valueOf()) / MILLI_PER[type]);
+			};
+		},
+		"isAfter": function isAfter(compare) { return this.valueOf() > compare.valueOf() },
+		"isBefore": function isBefore(compare) { return this.valueOf() < compare.valueOf() },
+		"isSameDay": function isSameDay(compare) { return this.isSameMonth(compare) && this.getDate() === compare.getDate() },
+		"isSameMonth": function isSameMonth(compare) { return this.isSameYear(compare) && this.getMonth() === compare.getMonth() },
+		"isSameYear": function isSameYear(compare) { return this.getFullYear() === compare.getFullYear() },
+		"isToday": function isToday() { return this.isSameDay(new Date()) },
 			
 		// value getters/setters
-		"getFirstDay": getFirstDay,
-		"getHoursBase12": getHoursBase12,
-		"getLastDate": getLastDate,
-		"getLastDay": getLastDay,
-		"add": adder,
-		"get": getter,
-		"set": setter,
-		"setWeek": setWeek
+		"getFirstDay": function getFirstDay() {
+			var day = new Date(this.valueOf());
+			day.setDate(1);
+			return day.getDay();
+		},
+		"getHoursBase12": function getHoursBase12() {
+			var hours = this.getHours();
+			return hours === 0 ? 12 : hours % 12;
+		},
+		"getLastDate": function getLastDate() {
+			var last = new Date(this.valueOf());
+			last.setDate(1);
+			last.setMonth(1+last.getMonth());
+			last.setDate(0);
+			return last.getDate();
+		},
+		"getLastDay": function getLastDay() { return this.getLastDate().getDay() },
+		"add": function adder(type,value) {
+			value = String(value).toNumber();
+			if (!value) return this;
+			switch (type) {
+				case Date.Year:		this.setYear(this.getFullYear()+value);				break;
+				case Date.Month:		this.setMonth(this.getMonth()+value);				break;
+				case Date.Week:		this.setDate(this.getDate()+(value*7));				break;
+				case Date.Day:			this.setDate(this.getDate()+value);				break;
+				case Date.Hour:		this.setHours(this.getHours()+value);				break;
+				case Date.Minute:		this.setMinutes(this.getMinutes()+value);			break;
+				case Date.Second:		this.setSeconds(this.getSeconds()+value);			break;
+				case Date.Millisecond:	this.setMilliseconds(this.getMilliseconds()+value);	break;
+			};
+			return this;
+		},
+		"get": function getter(type) {
+			switch (type) {
+				case Date.Year:		return this.getYear();
+				case Date.Month:		return this.getMonth();
+				case Date.Week:		return this.getWeek();
+				case Date.Day:			return this.getDate();
+				case Date.Hour:		return this.getHours();
+				case Date.Minute:		return this.getMinutes();
+				case Date.Second:		return this.getSeconds();
+				case Date.Millisecond:	return this.getMilliseconds();
+			};
+		},
+		"set": function setter(type,value) {
+			value = String(value).toNumber();
+			if (!value) return this;
+			switch (type) {
+				case Date.Year:		this.setYear(value);		break;
+				case Date.Month:		this.setMonth(value);		break;
+				case Date.Week:		this.setWeek(value);		break;
+				case Date.Day:			this.setDate(value);		break;
+				case Date.Hour:		this.setHours(value);		break;
+				case Date.Minute:		this.setMinutes(value);		break;
+				case Date.Second:		this.setSeconds(value);		break;
+				case Date.Millisecond:	this.setMilliseconds(value);	break;
+			};
+			return this;
+		},
+		"setWeek": function setWeek(value) {
+			var copy = this.copy(), day = copy.getDay();
+			copy.setMonth(0,1);
+			copy.setDate(copy.getDate()+(value*7));
+			this.setMonth(copy.getMonth(),copy.getDate());
+		}
 	});
 }).call(Pseudo);
 
@@ -922,9 +890,11 @@ var Pseudo = (function(){
 ***********************/
 (function(){
 	var	R2D = 180/Math.PI,
+		G2R = Math.PI/200,
 		D2R = Math.PI/180;
 	
 	this.expand(Math,this.Math = {
+		"GradiansToRadians": G2R,
 		"DegreesToRadians": D2R,
 		"RadiansToDegrees": R2D,
 		"roundTo": function roundTo(number,places) {
@@ -1212,7 +1182,7 @@ var Pseudo = (function(){
 		for (;p=handlers[i];i++) meta.detachEvent("ondataavailable",p.wrapped);
 		document.head.removeChild(meta);
 	};
-	Pseudo.extend(PROTOTYPES,{
+	this.extend(PROTOTYPES,{
 		"on": function on(type,handler) {
 			if (handler instanceof Array) {
 				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
@@ -1275,7 +1245,7 @@ var Pseudo = (function(){
 	});
 	
 	// properties
-	Pseudo.extend(PROTOTYPES,{
+	this.extend(PROTOTYPES,{
 		"getValue": DOM_PROPS ? function getValueNative(name) {
 			return this[name];
 		} : function getValueProto(name) {
@@ -1292,7 +1262,7 @@ var Pseudo = (function(){
 	});
 	
 	// methods
-	Pseudo.extend(FACTORY,{
+	this.extend(FACTORY,{
 		"addMethods": function(methods) {
 			Pseudo.augment(this.prototype,methods);
 			return this;
@@ -1349,7 +1319,7 @@ var Pseudo = (function(){
 		return Klass;
 	};
 	
-	return this.Class = {
+	this.Class = {
 		"Factory": FACTORY,
 		"Prototypes": PROTOTYPES,
 		"Properties": PROPERTIES,
@@ -1373,7 +1343,7 @@ var Pseudo = (function(){
 		CUSTOM = {};
 	if (WIN === Object.prototype) WIN = window;	// opera
 	if (DOC === Object.prototype) DOC = document;
-	return this.DOM = {
+	this.DOM = {
 		"CUSTOM_EVENTS": CUSTOM,
 		"Document": window.HTMLDocument || window.Document || DOC.constructor,
 		"Element": window.HTMLElement || window.Element || ELEM.constructor,
@@ -1412,9 +1382,51 @@ var Pseudo = (function(){
 		}
 	};	
 }).call(Pseudo);
+(function(){
+	var	KEY_CODES = {
+			"BACK": 8, "BACKSPACE": 8, "TAB": 9, "ENTER": 13, "SHIFT": 16, "CTRL": 17, "ALT": 18, "PAUSE": 19,
+			"BREAK": 19, "ESCAPE": 27, "PAGEUP": 33, "PAGEDOWN": 34, "END": 35, "HOME": 36, "LEFT": 37,
+			"UP": 38, "RIGHT": 39, "DOWN": 40, "INSERT": 45, "DELETE": 46,
+			// not standard
+			"LEFT_WINDOWS": 91, "RIGHT_WINDOWS": 92, "CONTEXT": 93, "NUMLOCK": 144, "SCROLLLOCK": 145
+		};
+		
+	this.expand(Event,this.Event = {
+		"Keys": KEY_CODES
+	});
+	this.expand(Event.prototype,this.Event.Prototypes = {
+		"cancel": Event.prototype.stopPropagation || function cancel() { this.cancelBubble = true },
+		"prevent": Event.prototype.preventDefault || function prevent() { this.returnValue = false },
+		"stop": function stop() {
+			this.cancel();
+			this.prevent();
+		},
+		"element": function element() {
+			var target = this.target || this.srcElement, current = this.currentTarget;
+			if (current && current.nodeName === "INPUT" && current.type === "radio" && EVENT_FIX.contains(this.type)) target = current;
+			return target;
+		},
+		"click": function click() {
+			var button = CLICK_WHICH[this.which] || CLICK_BUTTON[this.button];
+			if (button === "left") {
+				if (this.type === "contextmenu") button = "right";
+				else if (this.metaKey === true) button = "middle";
+			};
+			return button || "";
+		},
+		"pointer": function pointer() {
+			return {
+				"x": this.pageX || this.clientX + document.body.scrollLeft - (document.body.clientLeft || 0),
+				"y": this.pageY || this.clientY + document.body.scrollTop - (document.body.clientTop || 0)
+			};
+		}
+	});
+}).call(Pseudo);
 Pseudo.DOM.addMethods("*",(function(){
 	var	SLICE = Array.prototype.slice,
-		API = Pseudo.DOM.matchesSelector,
+		ELEM = this.Element,
+		QUERY = this.querySelectorAll,
+		MATCH = this.matchesSelector,
 		SELECTORS = function(args) {
 			var selectors = SLICE.call(args,0).invoke("trim").join(",");
 			if (selectors.indexOf(",,") > -1) throw new Error("Blank selector is invalid");
@@ -1427,36 +1439,36 @@ Pseudo.DOM.addMethods("*",(function(){
 			return this.query(element.nodeName).contains(element);
 		},
 		"descendantOf": function descendantOf(element) { return element.contains(this) },
-		"matches": API ? function matchesSelector(selector1,selector2,selectorN) {
-			return this[API](SELECTORS(arguments));
+		"matches": MATCH ? function matchesSelector(selector1,selector2,selectorN) {
+			return this[MATCH](SELECTORS(arguments));
 		} : function matchesQueryAll(selector1,selector2,selectorN) {
 			return this.root().query(SELECTORS(arguments)).contains(this);
 		},
 		"query": function query(selector1,selector2,selectorN) {
 			var selectors = SLICE.call(arguments,0).flatten().join(",");
-			return Array.from(this[Pseudo.DOM.querySelectorAll](selectors));
+			return Array.from(this[QUERY](selectors));
 		},
-		"up": API ? function upMatches(selector1,selector2,selectorN) {
+		"up": MATCH ? function upMatches(selector1,selector2,selectorN) {
 			var elem = this.parentNode, selectors = SELECTORS(arguments);
-			while (elem instanceof Pseudo.DOM.Element) if (!elem[API](selectors)) elem = elem.parentNode;
+			while (elem instanceof ELEM) if (!elem[MATCH](selectors)) elem = elem.parentNode;
 			return elem || undefined;
 		} : function upQueryAll(selector1,selector2,selectorN) {
 			var elem = this.parentNode, selectors = SELECTORS(arguments), parents;
 			if (selectors === "*") parents = [elem];
 			else parents = this.root().query(selectors);
-			while (element instanceof Pseudo.DOM.Element) {
+			while (element instanceof ELEM) {
 				if (parents.contains(element)) break;
 				else element = element.parentNode;
 			};
 			return element || undefined;
 		}
 	};
-}).call(Pseudo));
+}).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("*",(function(){
 	var	NOTBLANK = /[^\s]+/m,
 		SLICE = Array.prototype.slice,
-		ELEM = Pseudo.DOM.Element,
-		FRAG = Pseudo.DOM.Fragment,
+		ELEM = this.Element,
+		FRAG = this.Fragment,
 		READERS = this.HELPERS_READ_ATTRIBUTE = {
 			"for": function() { return this.htmlFor },
 			"class": function() { return this.className }
@@ -1574,7 +1586,7 @@ Pseudo.DOM.addMethods("*",(function(){
 		"read": function read(name) { return READERS[name] ? READERS[name].call(this) : this.getAttribute(name) },
 		"write": function write(name,value) { return WRITERS[name] ? WRITERS[name].call(this,value) : this.setAttribute(name,value) },
 		
-		// style	;	hack in element.classList
+		// style
 		"hide": function hide() { this.style.display = "none" },
 		"show": function show() { this.style.display = "" },
 		"hasClass": function hasClass(className) { return this.className.split(/\s+/gm).contains(className) },
@@ -1590,12 +1602,11 @@ Pseudo.DOM.addMethods("*",(function(){
 		},
 		
 		// clean-up
-		"dispose": function() {
+		"dispose": function dispose() {
 			this.off();
-		//	delete this.__handlers;
 			for (var prop in this) {
 				if (prop === "__pseudo") continue;
-				else if (prop.startsWith("__") || Object.className(prop) !== "String") delete this[prop];
+				else if (prop.startsWith("__")) delete this[prop];
 			};
 		}
 	};
@@ -1890,7 +1901,7 @@ Pseudo.DOM.addMethods("*",(function(){
 	};
 }).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("#document",(function(){
-	var ELEM = Pseudo.DOM.Element.prototype;
+	var ELEM = this.Element.prototype;
 	return {
 		"element": function element(nodeName,attributes,handlers) {
 			var name, elem = this.createElement(nodeName);
@@ -1903,23 +1914,15 @@ Pseudo.DOM.addMethods("#document",(function(){
 		"contains": ELEM.contains,
 		"query": ELEM.query
 	};
-}).call(Pseudo));
+}).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	var	CUSTOM = this.CUSTOM_EVENTS,
 		DOM = document.addEventListener ? true : false,
-		EVENT = window.Event.prototype,
 		EVENT_ON = DOM ? DOM_ON : MSIE_ON,
 		EVENT_OFF = DOM ? DOM_OFF : MSIE_OFF,
 		EVENT_FIX = ["load","error","click"],
 		CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
-		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" },
-		KEY_CODES = this.KEY_CODES = {
-			"BACK": 8, "BACKSPACE": 8, "TAB": 9, "ENTER": 13, "SHIFT": 16, "CTRL": 17, "ALT": 18, "PAUSE": 19,
-			"BREAK": 19, "ESCAPE": 27, "PAGEUP": 33, "PAGEDOWN": 34, "END": 35, "HOME": 36, "LEFT": 37,
-			"UP": 38, "RIGHT": 39, "DOWN": 40, "INSERT": 45, "DELETE": 46,
-			// not standard
-			"LEFT_WINDOWS": 91, "RIGHT_WINDOWS": 92, "CONTEXT": 93, "NUMLOCK": 144, "SCROLLLOCK": 145
-		};
+		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" };
 	
 	// events
 	function HANDLER_FIND(pair) { return pair.handler === this.handler && pair.capture === this.capture };
@@ -1962,39 +1965,10 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		element.detachEvent("on"+ type,pair.wrapped);
 	};
 	
-	// extend the Event
-	Pseudo.expand(EVENT,{
-		"cancel": EVENT.stopPropagation || function cancel() { this.cancelBubble = true },
-		"prevent": EVENT.preventDefault || function prevent() { this.returnValue = false },
-		"stop": function stop() {
-			this.cancel();
-			this.prevent();
-		},
-		"element": function element() {
-			var target = this.target || this.srcElement, current = this.currentTarget;
-			if (current && current.nodeName === "INPUT" && current.type === "radio" && EVENT_FIX.contains(this.type)) target = current;
-			return target;
-		},
-		"click": function click() {
-			var button = CLICK_WHICH[this.which] || CLICK_BUTTON[this.button];
-			if (button === "left") {
-				if (this.type === "contextmenu") button = "right";
-				else if (this.metaKey === true) button = "middle";
-			};
-			return button || "";
-		},
-		"pointer": function pointer() {
-			return {
-				"x": this.pageX || this.clientX + document.body.scrollLeft - (document.body.clientLeft || 0),
-				"y": this.pageY || this.clientY + document.body.scrollTop - (document.body.clientTop || 0)
-			};
-		}
-	});
-	
 	return {
 		"on": function on(type,handler,capture) {
 			if (handler instanceof Array) {
-				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
+				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i],capture);
 			} else if (handler instanceof Function) {
 				if (!this.__handlers) this.__handlers = {};
 				if (!this.__handlers[type]) this.__handlers[type] = [];
@@ -2008,9 +1982,9 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			if (!arguments.length) {
 				if (this.__handlers) for (type in this.__handlers) this.off(type);
 			} else if (arguments.length === 1) {
-				if (this.__handlers && this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy());
+				if (this.__handlers && this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy(),capture);
 			} else if (handler instanceof Array) {
-				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler);
+				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler || handler[i],typeof capture === "boolean" ? capture : handler[i].capture);
 			} else if (handler instanceof Function) {
 				EVENT_OFF(this,type,handler,!!capture);
 			} else {
@@ -2018,12 +1992,12 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			};
 			return this;
 		},
-		"fire": DOM ? function DOM_FIRE(type,bubbles,cancelable) {
+		"fire": DOM ? function fireDom(type,bubbles,cancelable) {
 			var e = document.createEvent("Event");
 			e.initEvent(type,!!bubbles,!!cancelable);
 			this.dispatchEvent(e);
 			return e;
-		} : function MSIE_FIRE(type,bubbles) {
+		} : function fireMsie(type,bubbles) {
 			var e = document.createEventObject(), name = this.nodeName.toLowerCase();
 			e.__type = type;
 			e.bubbles = !!bubbles;
@@ -2117,8 +2091,8 @@ Pseudo.DOM.addMethods("form",(function(){
 *** Ajax ***************
 ***********************/
 (function(){
-	var	ELEM = Pseudo.DOM.Element,
-		FRAG = Pseudo.DOM.Fragment,
+	var	ELEM = this.DOM.Element,
+		FRAG = this.DOM.Fragment,
 		DOM_XHR = window.XMLHttpRequest ? true : false,
 		DOM_DOC = document.implementation && window.DOMParser && window.XMLSerializer ? true : false,
 		DOCUMENT = DOM_DOC ? DOCUMENT_DOM : DOCUMENT_MSIE,
@@ -2164,11 +2138,11 @@ Pseudo.DOM.addMethods("form",(function(){
 		return parseInt(content);
 	};
 	
-	return this.Ajax = {
+	this.Ajax = {
 		"Headers": {
 		//	"Accept": "text/javascript, text/html, application/xml, text/xml, */*",
 			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-			"X-Requested-With": "XMLHttpRequest", "X-Pseudo-Version": Pseudo.version
+			"X-Requested-With": "XMLHttpRequest", "X-Pseudo-Version": this.version
 		},
 		"transport": DOM_XHR ? function transportNative() {
 			return new XMLHttpRequest();
@@ -2187,11 +2161,8 @@ Pseudo.DOM.addMethods("form",(function(){
 		"doc": function doc(namespaceURI,documentElementName,contents) {
 			var xml = DOCUMENT(namespaceURI || "", documentElementName || "", null);
 			if (contents) {
-				if (contents instanceof ELEM || FRAG && contents instanceof FRAG) {
-					// sort out some kind of cross-browser import node method
-				} else {
-					this.setInnerXml(xml,contents);
-				};
+				if (!(contents instanceof ELEM)) this.setInnerXml(xml,contents);
+				else xml.appendChild(xml.importNode(n,true));
 			};
 			return xml;
 		},
