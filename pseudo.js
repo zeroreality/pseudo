@@ -1077,7 +1077,7 @@ var Pseudo = (function(){
 					prevIndex = 0,
 					compare = new RegExp(search.source,(!search.global ? "g" : "") + search.flags());
 				while (match = compare.exec(this)) {
-					if (compare.lastIndex - match[0].length > 0)
+					if (compare.lastIndex - match[0].length > prevIndex) 
 						results.push(this.substring(prevIndex,compare.lastIndex - match[0].length));
 					results.push(match[0]);
 					prevIndex = compare.lastIndex;
@@ -1564,6 +1564,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			while (parent.parentNode instanceof ELEM) parent = parent.parentNode;
 			return parent || this;
 		},
+		"supplant": function supplant(element) { this.parentNode.replaceChild(this,element) },
 		"transplant": function transplant(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
 		"update": function update(value) {
 			this.clear();
@@ -1637,7 +1638,11 @@ Pseudo.DOM.addMethods("*",(function(){
 	};
 	
 	if (Pseudo.Browser.IE8) (function(){
-		var	MATRIX_MULTIPLY = function(orig,mod) {
+		var	FILTER_TRANSFORMS = /\b[a-z]+\([^\)]+\)/gi,
+			FILTER_FILTERS = /\s*progid\:DXImageTransform\.Microsoft\./gim,
+			FILTER_FILTERS_PARAMS = /[^=\(,]+=[^,\)]+/gim,
+			
+			MATRIX_MULTIPLY = function(orig,mod) {
 				var i = 0, j, k, result = [[0,0,0],[0,0,0],[0,0,0]];
 				for (; i<3; i++) for (j=0; j<3; j++) for (k=0; k<3; k++) result[i][j] += orig[i][k] * mod[k][j];
 				return result;
@@ -1654,36 +1659,51 @@ Pseudo.DOM.addMethods("*",(function(){
 				else if (value === "center") return size / 2;
 				else if (value === "right" || value === "bottom") return size;
 				else if (value.contains("%")) return size * (parseFloat(value) / 100);
-				size = parseFloat(value);
-				return !isNaN(size) ? size : size / 2;
+				else return !isNaN(value=parseFloat(value)) ? value : size / 2;
 			},
 			ORDERED_TRANSFORMS = ["matrix","translate","translateX","translateY","scale","scaleX","scaleY","rotate","skew","skewX","skewY"],
-			FILTER_TRANSFORMS = /\b[a-z]+\([^\)]+\)/gi;
+			GET_FILTER = function(filter) { return filter.substring(0,this.length) === this.toString() },
+			GET_FILTER_VALUES = function(element,name) {
+				var	filter = GETSTYLE(element,"filter").split(FILTER_FILTERS).filterFirst(GET_FILTER,name),
+					args = filter && filter.match(FILTER_FILTERS_PARAMS) || [],
+					i = 0,
+					l = args.length,
+					arg = [],
+					parms = {};
+				if (filter) for (; i<l; i++) {
+					arg = args[i].toLowerCase().split("=");
+					parms[arg[0]] = arg.slice(1).join("");
+				};
+				return parms;
+			};
 		
 		READERS["opacity"] = function(element) {
-			var filter = element.filters["DXImageTransform.Microsoft.Alpha"];
-			return filter ? (filter.opacity / 100).toString() : "";
+			var filter = GET_FILTER_VALUES(element,"Alpha"), value = "";
+			if (!("enabled" in filter) || filter.enabled === "true") value = filter.opacity || "100";
+			return (parseFloat(value) / 100).toString();
 		};
 		WRITERS["opacity"] = function(element,value) {
-			var filter = element.filters["DXImageTransform.Microsoft.Alpha"];
-			if (!filter) {
-				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Alpha(Style=0)";
-				filter = element.filters["DXImageTransform.Microsoft.Alpha"];
-			};
-			filter.opacity = Math.round(parseFloat(value) * 100);
-			return { "filter": element.style.filter };
+			var	filters = element.style.filter.split(FILTER_FILTERS),
+				alpha = filters.filterFirst(GET_FILTER,"Alpha"),
+				percent = Math.round(parseFloat(value) * 100);
+			if (alpha) filters.remove(alpha);
+			if (percent < 0) percent = 0;
+			else if (isNaN(percent) || percent > 100) percent = 100;
+			filters.push(alpha = "progid:DXImageTransform.Microsoft.Alpha(opacity="+ percent +",enabled="+ (percent === 100 ? "false" : "true") +",style=0)");
+			element.style.filter = filters.join(" ");
+			return { "filter": alpha };
 		};
 		
 	//	http://lists.w3.org/Archives/Public/www-style/2010Jun/0602.html
 		READERS["transform"] = function(element) {
-			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], css = "none";
-			if (filter && filter.enabled) {
-				var	a = filter.M11, c = filter.M12, e = filter.DX,
-					b = filter.M21, d = filter.M22, f = filter.DY,
-					scaleX, scaleY, shear, negate, rotate;
+			var filter = GET_FILTER_VALUES(element,"Matrix"), css = "none";
+			if (!("enabled" in filter) || filter.enabled === "true") {
+				var	a = parseFloat(filter.m11) || 0, c = parseFloat(filter.m12) || 0, e = parseFloat(filter.dx) || 0,
+					b = parseFloat(filter.m21) || 0, d = parseFloat(filter.m22) || 0, f = parseFloat(filter.dy) || 0;
 				if ((a * d) - (b * c) === 0) {
 					css = "matrix("+ a +","+ b +","+ c +","+ d +","+ e +","+ f +")";
 				} else {
+					var scaleX, scaleY, shear, negate, rotate;
 					scaleX = Math.sqrt((a*a) + (b*b));
 					a /= scaleX;
 					b /= scaleX;
@@ -1718,16 +1738,15 @@ Pseudo.DOM.addMethods("*",(function(){
 			return css.trim();
 		};
 		WRITERS["transform"] = function(element,value) {
-			var filter = element.filters["DXImageTransform.Microsoft.Matrix"], results = {};
-			if (!filter) {
-				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand')";
-				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
-			};
-			var	matches = value.match(FILTER_TRANSFORMS),
-				transform, values,
+			var	filters = element.style.filter.split(FILTER_FILTERS),
+				matrix = filters.filterFirst(GET_FILTER,"Matrix"),
+				matches = value.match(FILTER_TRANSFORMS),
+				transform, values = [],
 				j = 0, c = matches ? matches.length : 0,
 				i = 0, l = ORDERED_TRANSFORMS.length,
-				result = [[1,0,0],[0,1,0],[0,0,1]];
+				result = [[1,0,0],[0,1,0],[0,0,1]],
+				results = {};
+			if (matrix) filters.remove(matrix);
 			if (c) for (; i<l; i++) {
 				values = [];
 				transform = ORDERED_TRANSFORMS[i];
@@ -1751,57 +1770,63 @@ Pseudo.DOM.addMethods("*",(function(){
 					result = MATRIX_MULTIPLY(result,[[Math.cos(rad),-Math.sin(rad),0],[Math.sin(rad),Math.cos(rad),0],[0,0,1]]);
 				};
 			};
-			filter.enabled = !(result[0][0] === 1 && result[1][1] === 1 && result[0][1] === 0 && result[1][0] === 0);
-			filter.M11 = result[0][0];
-			filter.M12 = result[0][1];
-			filter.DX = result[0][2];
-			filter.M21 = result[1][0];
-			filter.M22 = result[1][1];
-			filter.DY = result[1][2];
 			// DX,DY do not work with "SizingMethod = auto expand"
 			// we store them here for the transform-origin helper
-			Pseudo.extend(results,WRITERS["transform-origin"](element,READERS["transform-origin"](element) || "50% 50%"));
-			results["filter"] = "progid:DXImageTransform.Microsoft.Matrix(M11="+ filter.M11 +",M12="+ filter.M12 +",M21="+ filter.M21 +",M22="+ filter.M22 +",DX="+ filter.DX +",DY="+ filter.DY +",SizingMethod='auto expand')";
-			return results;
+			filters.push(results.filter = ["progid:DXImageTransform.Microsoft.Matrix(M11=",result[0][0],",M12=",result[0][1],",DX=",result[0][2],",M21=",result[1][0],",M22=",result[1][1],",DY=",result[1][2],",Enabled=",result[0][0] === 1 && result[1][1] === 1 && result[0][1] === 0 && result[1][0] === 0 ? "false" : "true",",SizingMethod='auto expand')"].join(""));
+			element.style.filter = filters.join(" ");
+			// proper page flow requires the position to be not static
+			// this can (and should) be set by the you, the programmer (might remove this line)
+			if (GETSTYLE(element,"position") === "static") element.style.position = results.position = "relative";
+			return Pseudo.extend(results,WRITERS["transform-origin"](element,element.style.PseudoTransformOrigin || "50% 50%"));
 		};
 		READERS["transform-origin"] = function(element) {
 			return element.style.PseudoTransformOrigin || "50% 50%";
 		};
 		// http://someguynameddylan.com/lab/transform-origin-in-internet-explorer.php
 		WRITERS["transform-origin"] = function(element,value) {
-			var	filter = element.filters["DXImageTransform.Microsoft.Matrix"],
-				enabled = filter ? filter.enabled : false,
-				values = value.trim().split(/\s+/g);
+			var	control = element.filters["DXImageTransform.Microsoft.Matrix"],
+				filter = GET_FILTER_VALUES(element,"Matrix"),
+				enabled = !("enabled" in filter) || filter.enabled === "true",
+				values = value.trim().toLowerCase().split(/\s+/g), 
+				results = {};
 			if (values.length < 2) values.push(values[0]);
-			if (!filter) {
-				element.style.filter = (element.style.filter ? " " : "") +"progid:DXImageTransform.Microsoft.Matrix(SizingMethod='auto expand')";
-				filter = element.filters["DXImageTransform.Microsoft.Matrix"];
+			results.PseudoTransformOrigin = values.join(" ");
+			if (control) {
+				control.enabled = false;
+				var	left = parseFloat(GETSTYLE(element,"left")) || 0,
+					top = parseFloat(GETSTYLE(element,"top")) || 0,
+					border = GETSTYLE(element,"border-width").split(/\s+/g).map(parseFloat);
+				border.length = 4;
+				if (isNaN(border[0])) border[0] = 0;
+				if (isNaN(border[1])) border[1] = border[0] || 0;
+				if (isNaN(border[2])) border[2] = border[0] || 0;
+				if (isNaN(border[3])) border[3] = border[1] || border[0] || 0;
+				var	a = filter.m11, c = filter.m12,
+					b = filter.m21, d = filter.m22,
+					x = (element.offsetWidth - border[1] - border[3]) / 2,
+					y = (element.offsetHeight - border[0] - border[2]) / 2,
+					e = VALUE_COORD(values[0],x * 2),
+					f = VALUE_COORD(values[1],y * 2);
+				x -= e;	// translated center
+				y -= f;
+				e += (a * x) + (c * y) + filter.dx;	// apply matrix + origin + translation
+				f += (b * x) + (d * y) + filter.dy;
+				control.enabled = true;	// enabled to subtract transformed coords/dimensions
+				e -= (element.offsetWidth - (border[1] || 0) - (border[3] || 0)) / 2;
+				f -= (element.offsetHeight - (border[0] || 0) - (border[2] || 0)) / 2;
+				
+				element.style.left = e + left +"px";
+				element.style.top = f + top +"px";
+				control.enabled = enabled;	// set original status
+				results.PseudoTransformCoords = e +" "+ f;
+				
+				// proper page flow requires the position to be not static
+				// this can (and should) be set by the you, the programmer (might remove this line)
+				if (GETSTYLE(element,"position") === "static") element.style.position = results.position = "relative";
 			};
-			
-			filter.enabled = false;	// disabled to get coords/dimensions
-			var	style = element.getStyle({ "left": "", "top": "", "border-width": "" }),
-				border = style["border-width"].split(/\s+/g).map(parseFloat),
-				a = filter.M11, c = filter.M12,
-				b = filter.M21, d = filter.M22,
-				x = (element.offsetWidth - (border[1] || 0) - (border[3] || 0)) / 2,
-				y = (element.offsetHeight - (border[0] || 0) - (border[2] || 0)) / 2,
-				e = VALUE_COORD(values[0],x * 2),
-				f = VALUE_COORD(values[1],y * 2);
-			x -= e;	// translated center
-			y -= f;
-			e += (a * x) + (c * y) + filter.DX;	// apply matrix + origin + translation
-			f += (b * x) + (d * y) + filter.DY;
-			filter.enabled = true;	// enabled to subtract transformed coords/dimensions
-			e -= (element.offsetWidth - (border[1] || 0) - (border[3] || 0)) / 2;
-			f -= (element.offsetHeight - (border[0] || 0) - (border[2] || 0)) / 2;
-			
-			element.style.left = e + (parseFloat(style.left) || 0) +"px";
-			element.style.top = f + (parseFloat(style.top) || 0) +"px";
-			filter.enabled = enabled;	// set original status
-			return {
-				"PseudoTransformOrigin": element.style.PseudoTransformOrigin = values.join(" "),
-				"PseudoTransformCoords": element.style.PseudoTransformCoords = e+" "+f
-			};
+			element.style.PseudoTransformOrigin = results.PseudoTransformOrigin;
+			element.style.PseudoTransformCoords = results.PseudoTransformCoords;
+			return results;
 		};
 		READERS["left"] = function(element) {
 			var	coords = element.style.PseudoTransformCoords,
