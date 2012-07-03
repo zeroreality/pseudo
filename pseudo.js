@@ -24,6 +24,7 @@ var Pseudo = (function(){
 //	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
 	BROWSER["Mobile"] = /\bAndroid\s+[\d.]+;|\b(?:iP[ao]d|iPhone);|IEMobile.[\d\.]+|\bPlayBook;|Opera\s(?:Mini|Mobi)\/[\d\.]+/.test(navigator.userAgent);
 	if (BROWSER.IE) {
+		// ScriptEngineMajorVersion(); IE9=9, IE9 imposter as IE8=9, IE8=5
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
 		BROWSER["IE"+ parseInt(BROWSER_VERSION)] = true;
 	} else if (BROWSER.Opera = (Object.prototype.toString.call(window.opera||Object) === "[object Opera]")) {
@@ -513,7 +514,7 @@ var Pseudo = (function(){
 		INVALID = new Date("invalid"),
 		INVALID_MESSAGE = "Invalid Date",
 		FILTER_ISO = /^(\\d{4}|[\+\-]\\d{6})(?:-(\\d{2})(?:-(\\d{2})(?:T(\\d{2}):(\\d{2})(?::(\\d{2})(?:\\.(\\d{3}))?)?(?:Z|(?:([-+])(\\d{2}):(\\d{2})))?)?)?)?$/,
-		FILTER_FORMAT = /\\?(\\|y{1,4}|d{1,4}|M{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|f{1,6}|t{1,3}|T{1,3})/gm,
+		FILTER_FORMAT = /\\.|y{1,4}|d{1,4}|M{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|f{1,6}|t{1,3}|T{1,3}/gm,
 		NAMES_DAY = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
 		NAMES_MONTH = ["January","February","March","April","May","June","July","August","September","October","November","December"],
 		MILLI_PER = {
@@ -536,50 +537,49 @@ var Pseudo = (function(){
 			{ "type": "ss",  "name": "seconds", "value": MILLI_PER.ss },
 			{ "type": "fff",  "name": "milliseconds", "value": MILLI_PER.fff }
 		],
-		HELPER_FORMAT_MILLI = function(milliseconds,length) {
-			return parseFloat("0." + milliseconds).zeroPad(0,length).substring(2);
-		},
-		HELPER_FORMAT = function(piece,index,pieces) {
+		HELPER_COMPARE_PREFIX = { "before": "", "after": "", "now": "" },
+		HELPER_COMPARE_SUFFIX = { "before": "until", "after": "ago", "now": "now" },
+		HELPER_FORMAT = function(piece) {
 			if (!piece) return;
-			if (piece.startsWith("\\")) return pieces[index] = piece.substring(1);
+			if (piece.startsWith("\\")) return piece.substring(1);
 			switch (piece) {
 				case "yyyy":
-				case "yyy":	pieces[index] = this.getFullYear();break;
-				case "yy":	pieces[index] = this.getFullYear().toString().right(2);break;
-				case "y":		pieces[index] = this.getFullYear().toString().right(1);break;
-				case "MMMM":	pieces[index] = this.getMonthName();break;
-				case "MMM":	pieces[index] = this.getMonthName().left(3);break;
+				case "yyy":	return this.getFullYear();
+				case "yy":
+				case "y":		return this.getFullYear().toString().right(piece.length);
+				case "MMMM":	return this.getMonthName();
+				case "MMM":	return this.getMonthName().left(3);
 				case "MM":
-				case "M":		pieces[index] = (this.getMonth()+1).zeroPad(piece.length);break;
-				case "dddd":	pieces[index] = this.getDayName();break;
-				case "ddd":	pieces[index] = this.getDayName().left(3);break;
+				case "M":		return (this.getMonth()+1).zeroPad(piece.length);
+				case "dddd":	return this.getDayName();
+				case "ddd":	return this.getDayName().left(3);
 				case "dd":
-				case "d":		pieces[index] = this.getDate().zeroPad(piece.length);break;
+				case "d":		return this.getDate().zeroPad(piece.length);
 				case "HH":
-				case "H":		pieces[index] = this.getHours().zeroPad(piece.length);break;
+				case "H":		return this.getHours().zeroPad(piece.length);
 				case "hh":
-				case "h":		pieces[index] = this.getHoursBase12().zeroPad(piece.length);break;
+				case "h":		return this.getHoursBase12().zeroPad(piece.length);
 				case "mm":
-				case "m":		pieces[index] = this.getMinutes().zeroPad(piece.length);break;
+				case "m":		return this.getMinutes().zeroPad(piece.length);
 				case "ssss":
 				case "sss":
 				case "ss":
-				case "s":		pieces[index] = this.getSeconds().zeroPad(piece.length);break;
+				case "s":		return this.getSeconds().zeroPad(piece.length);
 				case "ffffff":
 				case "fffff":
 				case "ffff":
 				case "fff":
 				case "ff":
-				case "f":		pieces[index] = parseFloat("0."+ this.getMilliseconds()).zeroPad(0,piece.length).substring(2);break;
+				case "f":		return parseFloat("0."+ this.getMilliseconds()).zeroPad(0,piece.length).substring(2);
 				case "TTTT":
-				case "TTT":	pieces[index] = this.getHours() > 11 ? "P.M." : "A.M.";break;
+				case "TTT":	return this.getHours() > 11 ? "P.M." : "A.M.";
 				case "tttt":
-				case "ttt":	pieces[index] = this.getHours() > 11 ? "p.m." : "a.m.";break;
-				case "TT":	pieces[index] = this.getHours() > 11 ? "PM" : "AM";break;
-				case "tt":	pieces[index] = this.getHours() > 11 ? "pm" : "am";break;
-				case "T":		pieces[index] = this.getHours() > 11 ? "P" : "A";break;
-				case "t":		pieces[index] = this.getHours() > 11 ? "p" : "a";break;
-				default:		pieces[index] = piece;
+				case "ttt":	return this.getHours() > 11 ? "p.m." : "a.m.";
+				case "TT":	return this.getHours() > 11 ? "PM" : "AM";
+				case "tt":	return this.getHours() > 11 ? "pm" : "am";
+				case "T":		return this.getHours() > 11 ? "P" : "A";
+				case "t":		return this.getHours() > 11 ? "p" : "a";
+				default:		return piece;
 			};
 		};
 	
@@ -627,7 +627,7 @@ var Pseudo = (function(){
 	};
 	if (!Date.parse || Date.parse("+275760-09-13T00:00:00.000Z") !== 8.64e15) {
 		DateTime.prototype = NATIVE.prototype;
-		DateTime.prototype.constructor = NATIVE;
+		DateTime.prototype.constructor = NATIVE && NATIVE.constructor || NATIVE;
 		window.Date = DateTime;
 	};
 	
@@ -685,7 +685,7 @@ var Pseudo = (function(){
 			if (!(comparer instanceof Date) || isNaN(comparer.valueOf())) comparer = new Date();
 			if (isNaN(levels)) levels = 2;
 			
-			var	i = 0, s = 0, criteria, next,
+			var	i = 0, s = 0, value, criteria, next,
 				descriptor = [],
 				method = levels-s === 1 ? "round" : "floor",
 				difference = this.valueOf() - comparer.valueOf(),
@@ -694,7 +694,7 @@ var Pseudo = (function(){
 			
 			for (;criteria=HELPER_COMPARE[i];i++) {
 				if (absolute >= criteria.value) {
-					var value = Math[method](absolute/criteria.value);
+					value = Math[method](absolute/criteria.value);
 					descriptor.push({
 						"value": before ? -value : value,
 						"type": criteria.type,
@@ -703,7 +703,7 @@ var Pseudo = (function(){
 					absolute -= value * criteria.value;
 					s++;
 				};
-				if (levels <= s || absolute < 1000) break;
+				if (levels <= s || absolute < 1) break;
 				else if (levels-s === 1) method = "round";
 			};
 			
@@ -718,19 +718,21 @@ var Pseudo = (function(){
 			};
 			return descriptor;
 		},
-		"contextString": function contextString(comparer,levels) {
-			var array = this.context(comparer,levels), i = array.length, results = new Array(i);
-			while (i--) results[i] = [
-				Math.abs(array[i].value),
-				Math.abs(array[i].value) > 1 ? array[i].name : array[i].name.toUpperCase()
-			].join(" ");
-			return results.join(", ");
+		"contextString": function contextString(comparer,levels,suffix,prefix) {
+			if (!prefix) prefix = HELPER_COMPARE_PREFIX;
+			if (!suffix) suffix = HELPER_COMPARE_SUFFIX;
+			var	array = this.context(comparer,levels),
+				i = array.length,
+				results = new Array(i),
+				context = i === 0 ? "now" : array[0].value > 0 ? "after" : "before";
+			while (i--) results[i] = Math.abs(array[i].value) +" "+ array[i].name;
+			return (prefix[context] +" "+ results.join(", ") +" "+ suffix[context]).trim();
 		},
 		"getDayName": function getDayName() { return NAMES_DAY[this.getDay()] },
 		"getMonthName": function getMonthName() { return NAMES_MONTH[this.getMonth()] },
 		"toFormat": function toFormat(string,invalid) {
 			if (isNaN(this.valueOf())) return arguments.length > 1 ? invalid : INVALID_MESSAGE;
-			return String(string).separate(FILTER_FORMAT).forEach(HELPER_FORMAT,this).join("");
+			return String(string).separate(FILTER_FORMAT).map(HELPER_FORMAT,this).join("");
 		},
 		
 		// comparers
@@ -931,7 +933,7 @@ var Pseudo = (function(){
 			var strings = this.toString(radix || 10).split(".");
 			if (decimals && strings.length === 1) strings.push("0");
 			if (strings[0].length < length) strings[0] = "0".repeat(length - strings[0].length) + strings[0];
-			if (strings[1] && strings[1].length < decimals) strings[1] = "0".repeat(decimals - strings[1].length) + strings[1];
+			if (strings[1] && strings[1].length < decimals) strings[1] += "0".repeat(decimals - strings[1].length);
 			return strings.join(".");
 		}
 	});
@@ -955,24 +957,19 @@ var Pseudo = (function(){
 	this.expand(String.prototype,this.String.Prototypes = {
 		// compatibility
 		"concat": function concat(arg1,arg2,argN) { return this + SLICE.call(arguments,0).join("") },
-		"slice": function slice(start,end) {return SLICE.call(this.split(""),start,end) },
+		"slice": function slice(start,end) { return SLICE.call(this.split(""),start,end) },
 		"substr": function substr(start,length) { return this.substring(start,start+length) },
 		"trim": function trim() { return !this.length ? "" : this.replace(FILTER_TRIM_BOTH,"") },
 		
 		// extentions
-		"contains": function contains(string) { return this.indexOf(string) > -1 },	// needs RegExp variant,
+		"contains": function contains(object) { return (object instanceof RegExp ? this.search(object) : this.indexOf(object)) > -1 },
 		"count": function count(string) { return this.split(string).length - 1 },
 		"reverse": function reverse() { return this.split("").reverse().join("") },
-		"startsWith": function startsWith(object) {
-			if (object instanceof RegExp) {
-				return new RegExp("^(?:"+ object.source +")").test(this);
-			} else {
-				return this.indexOf(object) === 0;
-			};
-		},
+		"startsWith": function startsWith(object) { return (object instanceof RegExp ? this.search(object) : this.indexOf(object)) === 0 },
 		"endsWith": function endsWith(object) {
 			if (object instanceof RegExp) {
-				return new RegExp("(?:"+ object.source +")$").test(this);
+				if (object.source[object.source.length-1] !== "$") object = new RegExp("(?:"+ object.source +")$");
+				return object.test(this);
 			} else {
 				var last = this.lastIndexOf(object);
 				return last > -1 && last === this.length - object.toString().length;
@@ -994,7 +991,8 @@ var Pseudo = (function(){
 				dashing.push(matches[0].toLowerCase());
 				lastIndex = FILTER_DASHERIZE.lastIndex;
 			};
-			FILTER_DASHERIZE.reset();
+		//	FILTER_DASHERIZE.reset();
+			FILTER_DASHERIZE.lastIndex = 0;
 			dashing.push(this.substring(lastIndex));
 			return dashing.join("").toLowerCase();
 		},
@@ -1043,7 +1041,7 @@ var Pseudo = (function(){
 			if (isNaN(length)) length = this.length / 2;
 			truncation = Object.isNothing(truncation) ? "&hellip;" : String(truncation);
 			if (!bothEnds) return this.left(length) + truncation;
-			else return this.left(Math.round(length/2)) + truncation + this.right(Math.floor(length/2));
+			else return this.left(Math.round(length/2)) + truncation + this.right(length-Math.round(length/2));
 		},
 		
 		// comparison
@@ -1057,14 +1055,8 @@ var Pseudo = (function(){
 			for (;i<l;i++) result[i] = this.charCodeAt(i);
 			return result;
 		},
-		"left": function left(length) {
-			if (!length) return this.toString();
-			return length > 0 ? this.substring(0,length) : this.slice(-length);
-		},
-		"right": function right(length) {
-			if (!length) return this.toString();
-			return length > 0 ? this.slice(-length) : this.substring(0,length+this.length);
-		},
+		"left": function left(length) { return length < 0 ? this.slice(-length) : this.substring(0,length) },
+		"right": function left(length) { return length < 0 ? this.substring(0,length+this.length) : this.slice(-length) },
 		"repeat": function repeat(number) {
 			var i = 0, self = new Array(number);
 			for (;i<number;i++) self[i] = this;
@@ -1127,7 +1119,8 @@ var Pseudo = (function(){
 			].join("");
 		},
 		"reset": function reset() {
-			this.exec("");
+		//	this.exec("");
+			this.lastIndex = 0;
 			return this;
 		}
 	});
@@ -1184,7 +1177,9 @@ var Pseudo = (function(){
 	};
 	this.extend(PROTOTYPES,{
 		"on": function on(type,handler) {
-			if (handler instanceof Array) {
+			if (typeof type === "object") {
+				for (var each in type) this.on(each,type[each]);
+			} else if (handler instanceof Array) {
 				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
 			} else if (handler instanceof Function) {
 				if (!this.__handlers) this.__handlers = {};
@@ -1199,12 +1194,15 @@ var Pseudo = (function(){
 			return this;
 		},
 		"off": function off(type,handler) {
-			if (!arguments.length) {
-				if (this.__handlers) for (type in this.__handlers) this.off(type);
-			} else if (arguments.length === 1) {
-				if (this.__handlers && this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy());
+			if (!this.__handlers) {
+				// do nothing I guess
+			} else if (!arguments.length) {
+				for (type in this.__handlers) this.off(type);
+			} else if (!handler) {
+				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].gather("handler"));
+				else if (typeof type === "object") for (var each in type) this.off(each,type[each]);
 			} else if (handler instanceof Array) {
-				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler);
+				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i]);
 			} else if (handler instanceof Function) {
 				var	index = -1,
 					handlers = this.__handlers && this.__handlers[type],
@@ -1221,8 +1219,8 @@ var Pseudo = (function(){
 			return this;
 		},
 		"uses": function uses(type,handler) {
-			if (this.__handlers && this.__handlers[type]) {
-				var handlers = this.__handlers[type], i = 0, h;
+			var i = 0, h, handlers = null;
+			if (this.__handlers && (handlers=this.__handlers[type])) {
 				for (;h=handlers[i];i++) if (h.handler === handler) return true;
 			};
 			return false;
@@ -1238,7 +1236,7 @@ var Pseudo = (function(){
 			};
 			return event;
 		},
-		"dispose": function dispose(name) {
+		"dispose": function dispose() {
 			this.off();
 			return this;
 		}
@@ -1383,7 +1381,10 @@ var Pseudo = (function(){
 	};	
 }).call(Pseudo);
 (function(){
-	var	KEY_CODES = {
+	var	FIX_EVENT = ["load","error","click"],
+		FIX_CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
+		FIX_CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" },
+		KEY_CODES = {
 			"BACK": 8, "BACKSPACE": 8, "TAB": 9, "ENTER": 13, "SHIFT": 16, "CTRL": 17, "ALT": 18, "PAUSE": 19,
 			"BREAK": 19, "ESCAPE": 27, "PAGEUP": 33, "PAGEDOWN": 34, "END": 35, "HOME": 36, "LEFT": 37,
 			"UP": 38, "RIGHT": 39, "DOWN": 40, "INSERT": 45, "DELETE": 46,
@@ -1403,11 +1404,11 @@ var Pseudo = (function(){
 		},
 		"element": function element() {
 			var target = this.target || this.srcElement, current = this.currentTarget;
-			if (current && current.nodeName === "INPUT" && current.type === "radio" && EVENT_FIX.contains(this.type)) target = current;
+			if (current && current.nodeName === "INPUT" && current.type === "radio" && FIX_EVENT.contains(this.type)) target = current;
 			return target;
 		},
 		"click": function click() {
-			var button = CLICK_WHICH[this.which] || CLICK_BUTTON[this.button];
+			var button = FIX_CLICK_WHICH[this.which] || FIX_CLICK_BUTTON[this.button];
 			if (button === "left") {
 				if (this.type === "contextmenu") button = "right";
 				else if (this.metaKey === true) button = "middle";
@@ -1651,6 +1652,7 @@ Pseudo.DOM.addMethods("*",(function(){
 				var r = 0;
 				if (n.indexOf("deg") > -1) r = parseFloat(n) * Math.DegreesToRadians;
 				else if (n.indexOf("grad") > -1) r = parseFloat(n) * Math.GradiansToRadians;
+				else if (n.indexOf("turn") > -1) r = (parseFloat(n) * 360) * Math.DegreesToRadians;
 				else r = parseFloat(n);
 				return r || 0;
 			},
@@ -1942,12 +1944,9 @@ Pseudo.DOM.addMethods("#document",(function(){
 }).call(Pseudo.DOM));
 Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	var	CUSTOM = this.CUSTOM_EVENTS,
-		DOM = document.addEventListener ? true : false,
-		EVENT_ON = DOM ? DOM_ON : MSIE_ON,
-		EVENT_OFF = DOM ? DOM_OFF : MSIE_OFF,
-		EVENT_FIX = ["load","error","click"],
-		CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
-		CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" };
+		W3C = document.addEventListener ? true : false,
+		EVENT_ON = W3C ? W3C_ON : MSIE_ON,
+		EVENT_OFF = W3C ? W3C_OFF : MSIE_OFF;
 	
 	// events
 	function HANDLER_FIND(pair) { return pair.handler === this.handler && pair.capture === this.capture };
@@ -1959,12 +1958,12 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			return handler.call(element,e);
 		};
 	};
-	function DOM_ON(element,type,handler,capture) {
+	function W3C_ON(element,type,handler,capture) {
 		var pair = { "handler": handler, "capture": capture };
 		element.__handlers[type].push(pair);
 		element.addEventListener(type,pair.handler,pair.capture);
 	};
-	function DOM_OFF(element,type,handler,capture) {
+	function W3C_OFF(element,type,handler,capture) {
 		var	pair = { "handler": handler, "capture": capture },
 			index = element.__handlers[type].filterIndex(HANDLER_FIND,pair);
 		element.__handlers[type].removeAt(index);
@@ -1992,7 +1991,9 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 	
 	return {
 		"on": function on(type,handler,capture) {
-			if (handler instanceof Array) {
+			if (typeof type === "object") {
+				for (var each in type) this.on(each,type[each],capture);
+			} else if (handler instanceof Array) {
 				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i],capture);
 			} else if (handler instanceof Function) {
 				if (!this.__handlers) this.__handlers = {};
@@ -2004,10 +2005,13 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			return this;
 		},
 		"off": function off(type,handler,capture) {
-			if (!arguments.length) {
-				if (this.__handlers) for (type in this.__handlers) this.off(type);
-			} else if (arguments.length === 1) {
-				if (this.__handlers && this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy(),capture);
+			if (!this.__handlers) {
+				// do nothing I guess
+			} else if (!arguments.length) {
+				for (type in this.__handlers) this.off(type);
+			} else if (!handler) {
+				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy(),capture);
+				else if (typeof type === "object") for (var each in type) this.off(each,type[each],capture);
 			} else if (handler instanceof Array) {
 				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler || handler[i],typeof capture === "boolean" ? capture : handler[i].capture);
 			} else if (handler instanceof Function) {
@@ -2017,7 +2021,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 			};
 			return this;
 		},
-		"fire": DOM ? function fireDom(type,bubbles,cancelable) {
+		"fire": W3C ? function fireDom(type,bubbles,cancelable) {
 			var e = document.createEvent("Event");
 			e.initEvent(type,!!bubbles,!!cancelable);
 			this.dispatchEvent(e);
@@ -2032,7 +2036,7 @@ Pseudo.DOM.addMethods("*,#document,#window",(function(){
 		"uses": function uses(type,handler,capture) {
 			return this.__handlers[type].filterIndex(HANDLER_FIND,{
 				"handler": handler,
-				"capture": !!capture && DOM
+				"capture": !!capture && W3C
 			}) > -1;
 		}
 	};
