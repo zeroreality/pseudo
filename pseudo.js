@@ -14,7 +14,9 @@ var Pseudo = (function(){
 		SLICE = Array.prototype.slice,
 		VALUEOF = Function.prototype.valueOf,
 		TOSTRING = Function.prototype.toString,
-		PROPERTY = { "configurable": true, "enumerable": true };
+		PROPERTY = { "configurable": true, "enumerable": true },
+		GUID_FILTER = /[xy]/g,
+		GUID_PATTERN = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
 	
 	// seed for guid & increment
 	for (var i = 0, l = SEED.length; i < l; i++) x += SEED.charCodeAt(i);
@@ -67,6 +69,10 @@ var Pseudo = (function(){
 		for (;i<l;i++) if (sources[i]) for (prop in sources[i]) object[prop] = sources[i][prop];
 		return object;
 	};
+	function guidReplacer(xy) {
+		var rand = Math.random() * 16 | 0;
+		return (xy == "x" ? rand : (rand & 0x3 | 0x8)).toString(16);
+	};
 	
 	return {
 		"version": VERSION,
@@ -103,17 +109,7 @@ var Pseudo = (function(){
 		},
 		"expand": expand,
 		"extend": extend,
-		"guid": function guid() {
-			var id = new Date().valueOf().toString(16) + SEED;
-			while (id.length < 32) id += Math.random().toString(16).substring(2);
-			return [
-				id.substring(0,8),
-				id.substring(8,12),
-				id.substring(12,16),
-				id.substring(16,20),
-				id.substring(20,32)
-			].join("-");
-		},
+		"guid": function guid() { return GUID_PATTERN.replace(GUID_FILTER,guidReplacer) },
 		"tryThese": function tryThese(func1,func2,funcN) {
 			var i = 0, prevEx, prevFunc, func, funcs = SLICE.call(arguments,0);
 			for (;func=functions[i];i++) {
@@ -555,6 +551,8 @@ var Pseudo = (function(){
 				case "ddd":	return this.getDayName().left(3);
 				case "dd":
 				case "d":		return this.getDate().zeroPad(piece.length);
+				case "ww":
+				case "w":		return this.getWeek().zeroPad(piece.length);
 				case "HH":
 				case "H":		return this.getHours().zeroPad(piece.length);
 				case "hh":
@@ -644,7 +642,8 @@ var Pseudo = (function(){
 		
 		"Year":		"yyyy",
 		"Month":		"MM",
-		"Day":		"dd",
+ 		"Week":		"ww",
+  	"Day":		"dd",
 		"Hour":		"hh",
 		"Minute":		"mm",
 		"Second":		"ss",
@@ -773,13 +772,18 @@ var Pseudo = (function(){
 			return last.getDate();
 		},
 		"getLastDay": function getLastDay() { return this.getLastDate().getDay() },
+		"getWeek": function getWeek() {
+			var copy = new Date(this.valueOf());
+			copy.setMonth(0,0);
+			return (copy.diff(Date.Day,this) / 7).ceil();
+		},
 		"add": function adder(type,value) {
 			value = String(value).toNumber();
 			if (!value) return this;
 			switch (type) {
 				case Date.Year:		this.setYear(this.getFullYear()+value);				break;
 				case Date.Month:		this.setMonth(this.getMonth()+value);				break;
-				case Date.Week:		this.setDate(this.getDate()+(value*7));				break;
+				case Date.Week:		this.setWeek(this.getWeek()+value);				break;
 				case Date.Day:			this.setDate(this.getDate()+value);				break;
 				case Date.Hour:		this.setHours(this.getHours()+value);				break;
 				case Date.Minute:		this.setMinutes(this.getMinutes()+value);			break;
@@ -816,10 +820,13 @@ var Pseudo = (function(){
 			return this;
 		},
 		"setWeek": function setWeek(value) {
-			var copy = this.copy(), day = copy.getDay();
+			var copy = new Date(this.valueOf()), day;
 			copy.setMonth(0,1);
-			copy.setDate(copy.getDate()+(value*7));
-			this.setMonth(copy.getMonth(),copy.getDate());
+			copy.setDate(value * 7);
+			day = copy.getDay() - this.getDay();
+			console.log(day);
+			this.setMonth(copy.getMonth(),copy.getDate() + day);
+			return this.valueOf();
 		}
 	});
 }).call(Pseudo);
@@ -1156,6 +1163,54 @@ var Pseudo = (function(){
 		this.stopped = this.fired = false;
 		if (extras) Pseudo.expand(this,extras);
 	};
+	function KlassListener(klass,type,handler) {
+		this.target = klass;
+		this.active = false;
+		this.__handlers = {};
+		this.on(type,handler);
+	};
+	KlassListener.prototype = {
+		"dispose": function dispose() {
+			this.stop();
+			this.__handlers = null;
+		},
+		"on": function on(type,handler) {
+			if (typeof type === "object") {
+				for (var each in type) this.on(each,type[each]);
+			} else if (handler instanceof Array) {
+				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
+			} else if (handler instanceof Function) {
+				if (!this.__handlers[type]) this.__handlers[type] = [];
+				if (!this.__handlers[type].contains(handler)) this.__handlers[type].push(handler);
+			};
+		},
+		"off": function off(type,handler) {
+			if (!this.__handlers) {
+				// do nothing I guess
+			} else if (!arguments.length) {
+				for (var each in this.__handlers) this.off(each);
+			} else if (!handler) {
+				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy());
+				else if (typeof type === "object") for (var each in type) this.off(each,type[each].copy());
+			} else if (handler instanceof Array) {
+				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i]);
+			} else if (handler instanceof Function) {
+				this.__handlers[type].remove(handler);
+			};
+		},
+		"start": function start() {
+			if (this.active) return false;
+			for (var each in this.__handlers) this.target.on(each,this.__handlers[each]);
+			return this.active = true;
+		},
+		"stop": function stop() {
+			if (!this.active) return false;
+			for (var each in this.__handlers) this.target.off(each,this.__handlers[each]);
+			return !(this.active = false);
+		}
+	};
+	
+	// events utility
 	function HANDLER_FIND(pair) { return pair.handler === this };
 	function HANDLER_WRAP(scope,handler) { return function wrapped(e) { return handler.call(scope,e.event) } };
 	function TRIGGER_DOM(event,meta,handlers) {
@@ -1176,6 +1231,21 @@ var Pseudo = (function(){
 		document.head.removeChild(meta);
 	};
 	this.extend(PROTOTYPES,{
+		"dispose": function dispose() {
+			this.off();
+			return this;
+		},
+		"fire": function fire(type,extras) {
+			var event = new KlassEvent(this,type,extras);
+			if (this.__handlers && this.__handlers[type]) {
+				if (!this.__machine) this.__machine = {};
+				if (this.__machine[type]) throw new Error("Recursion");
+				this.__machine[type] = document.createElement("meta");
+				TRIGGER(event,this.__machine[type],this.__handlers[type]);
+				event.fired = delete this.__machine[type];
+			};
+			return event;
+		},
 		"on": function on(type,handler) {
 			if (typeof type === "object") {
 				for (var each in type) this.on(each,type[each]);
@@ -1197,7 +1267,7 @@ var Pseudo = (function(){
 			if (!this.__handlers) {
 				// do nothing I guess
 			} else if (!arguments.length) {
-				for (type in this.__handlers) this.off(type);
+				for (var each in this.__handlers) this.off(each);
 			} else if (!handler) {
 				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].gather("handler"));
 				else if (typeof type === "object") for (var each in type) this.off(each,type[each]);
@@ -1224,21 +1294,6 @@ var Pseudo = (function(){
 				for (;h=handlers[i];i++) if (h.handler === handler) return true;
 			};
 			return false;
-		},
-		"fire": function fire(type,extras) {
-			var event = new KlassEvent(this,type,extras);
-			if (this.__handlers && this.__handlers[type]) {
-				if (!this.__machine) this.__machine = {};
-				if (this.__machine[type]) throw new Error("Recursion");
-				this.__machine[type] = document.createElement("meta");
-				TRIGGER(event,this.__machine[type],this.__handlers[type]);
-				event.fired = delete this.__machine[type];
-			};
-			return event;
-		},
-		"dispose": function dispose() {
-			this.off();
-			return this;
 		}
 	});
 	
@@ -1318,12 +1373,24 @@ var Pseudo = (function(){
 	};
 	
 	this.Class = {
+		"Event": KlassEvent,
+		"Listener": KlassListener,
+		
 		"Factory": FACTORY,
 		"Prototypes": PROTOTYPES,
 		"Properties": PROPERTIES,
 		
-		"klass": createKlass,
 		"create": create,
+		"klass": createKlass,
+		"listen": function listen(klass,type,handler,once,notAuto) {
+			var listener = new KlassListener(klass,type,handler);
+			if (!!once) {
+				var each, onetime = listener.dispose.bind(listener);
+				for (each in listener.__handlers) listener.__handlers[each].push(onetime);
+			};
+			if (!notAuto) listener.start();
+			return listener;
+		},
 		"singleton": function singleton($super,properties,methods,factory,aliases) {
 			return Pseudo.extend(new create($super,properties,methods,factory,aliases)(),factory || {});
 		}
@@ -1518,7 +1585,6 @@ Pseudo.DOM.addMethods("*",(function(){
 		// html
 		"amputate": function amputate() { return this.parentNode.removeChild(this) },
 		"append": function append(value) {
-		//	if (value instanceof Element || value instanceof DocumentFragment) {
 			if (value instanceof ELEM || FRAG && value instanceof FRAG) {
 				this.appendChild(value);
 			} else if (value instanceof Array) {
@@ -1549,7 +1615,7 @@ Pseudo.DOM.addMethods("*",(function(){
 			while (i--) {
 				kid = this.childNodes[i];
 				if (kid.nodeType === 3 && !NOTBLANK.test(kid.textContent)) this.removeChild(kid);
-				else if (kid.nodeType === 1 && deep) kid.clean(true);
+				else if (deep && kid.nodeType === 1) kid.clean(true);
 			};
 		},
 		"clear": function clear() { while(this.lastChild) this.removeChild(this.lastChild) },
@@ -1573,16 +1639,27 @@ Pseudo.DOM.addMethods("*",(function(){
 		},
 		
 		// attributes
-		"coords": function coords(parent) {
-			var top = 0, left = 0, element = this;
-			if (!parent) parent = document.documentElement;
+		"coords": function coords(ancestor) {
+			var	element = this, parent = element,
+				xyTop = 0, xyLeft = 0, scTop = 0, scLeft = 0,
+				w = element.offsetWidth, h = element.offsetHeight;
+			if (!(ancestor instanceof ELEM)) ancestor = document.documentElement;
 			while (element instanceof ELEM) {
-				top += element.offsetTop;
-				left += element.offsetLeft;
-				element = element.offsetParent;
-				if (element === parent) break;
+				xyTop += element.offsetTop || 0;
+				xyLeft += element.offsetLeft || 0;
+				parent = element;
+				while (parent instanceof ELEM && parent !== ancestor && parent !== element.offsetParent) {
+					parent = parent.parentNode;
+					scTop += parent.scrollTop || 0;
+					scLeft += parent.scrollLeft || 0;
+				};
+				element = parent;
+				if (element === ancestor) break;
 			};
-			return { "top": top, "left": left, "width": this.offsetWidth, "height": this.offsetHeight };
+			return {
+				"top": xyTop, "left": xyLeft, "width": w, "height": h,
+				"scrollTop": scTop, "scrollLeft": scLeft
+			};
 		},
 		"isHidden": function isHidden() { return this.getStyle("display") === "none" },
 		"read": function read(name) { return READERS[name] ? READERS[name].call(this) : this.getAttribute(name) },
