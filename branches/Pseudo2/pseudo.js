@@ -8,15 +8,13 @@ var Pseudo = (function(){
 	var	x = 0,
 		SEED = document.location.toString(),
 		VERSION = 2,
-		BROWSER = { "IE": /*@cc_on!@*/!1, "Opera": false, "Gecko": false, "Webkit": false, "Mobile": false },
+		BROWSER = { "IE": false, "Opera": false, "Gecko": false, "Webkit": false, "Mobile": false },
 		BROWSER_VERSION = NaN,
 		FILTER_OVERLOAD = /^function[^\(]*\(\$.+/im,
 		SLICE = Array.prototype.slice,
 		VALUEOF = Function.prototype.valueOf,
 		TOSTRING = Function.prototype.toString,
-		PROPERTY = { "configurable": true, "enumerable": true },
-		GUID_FILTER = /[xy]/g,
-		GUID_PATTERN = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+		PROPERTY = { "configurable": true, "enumerable": true };
 	
 	// seed for guid & increment
 	for (var i = 0, l = SEED.length; i < l; i++) x += SEED.charCodeAt(i);
@@ -25,10 +23,10 @@ var Pseudo = (function(){
 	// browser/engine
 //	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
 	BROWSER["Mobile"] = /\bAndroid\s+[\d.]+;|\b(?:iP[ao]d|iPhone);|IEMobile.[\d\.]+|\bPlayBook;|Opera\s(?:Mini|Mobi)\/[\d\.]+/.test(navigator.userAgent);
-	if (BROWSER.IE) {
-		// ScriptEngineMajorVersion(); IE9=9, IE9 imposter as IE8=9, IE8=5
+	if (BROWSER.IE = /*@cc_on!@*/!1) {
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
 		BROWSER["IE"+ parseInt(BROWSER_VERSION)] = true;
+		BROWSER["IEcompat"] = parseInt(BROWSER_VERSION) < 9 && ScriptEngineMajorVersion() > 5;
 	} else if (BROWSER.Opera = (Object.prototype.toString.call(window.opera||Object) === "[object Opera]")) {
 		BROWSER_VERSION = window.opera.version();
 		BROWSER["Opera"+ parseInt(BROWSER_VERSION)] = true;
@@ -69,10 +67,6 @@ var Pseudo = (function(){
 		for (;i<l;i++) if (sources[i]) for (prop in sources[i]) object[prop] = sources[i][prop];
 		return object;
 	};
-	function guidReplacer(xy) {
-		var rand = Math.random() * 16 | 0;
-		return (xy == "x" ? rand : (rand & 0x3 | 0x8)).toString(16);
-	};
 	
 	return {
 		"version": VERSION,
@@ -109,10 +103,19 @@ var Pseudo = (function(){
 		},
 		"expand": expand,
 		"extend": extend,
-		"guid": function guid() { return GUID_PATTERN.replace(GUID_FILTER,guidReplacer) },
+		"guid": function guid() {
+			var rand, i = 0, l = 36, id = new Array(36);
+			id[8] = id[13] = id[18] = id[23] = "-";
+			id[14] = "4";
+			for(; i<l; i++) if (i === 8 || i === 13 || i === 14 || i === 18 || i === 23) { continue } else {
+				rand = Math.random() * 16 | 0;
+				id[i] = (i === 19 ? rand & 0x3 | 0x8 : rand).toString(16);
+			};
+			return id.join("");
+		},
 		"tryThese": function tryThese(func1,func2,funcN) {
 			var i = 0, prevEx, prevFunc, func, funcs = SLICE.call(arguments,0);
-			for (;func=functions[i];i++) {
+			for (;func=funcs[i];i++) {
 				try { return func.call(this,i,prevEx,prevFunc) }
 				catch (exception) { prevEx = exception };
 				prevFunc = func;
@@ -429,12 +432,12 @@ var Pseudo = (function(){
 				args[1] = i;
 				results[i] = callback.apply(this,args);
 			};
-			return this;
+			return results;
 		},
 		"invoke": function invoke(methodName,arg1,arg2,argN) {
 			var i = 0, l = this.length, results = new Array(l), args = SLICE.call(arguments,1);
 			for (;i<l;i++) results[i] = this[i][methodName].apply(this[i],args);
-			return this;
+			return results;
 		},
 		"gather": function gather(propertyName) {
 			var i = 0, l = this.length, result = new Array(l);
@@ -642,8 +645,8 @@ var Pseudo = (function(){
 		
 		"Year":		"yyyy",
 		"Month":		"MM",
- 		"Week":		"ww",
-  	"Day":		"dd",
+		"Week":		"ww",
+		"Day":		"dd",
 		"Hour":		"hh",
 		"Minute":		"mm",
 		"Second":		"ss",
@@ -1151,7 +1154,8 @@ var Pseudo = (function(){
 			};
 			return success;
 		})(),
-		TRIGGER = document.addEventListener ? TRIGGER_DOM : TRIGGER_MSIE,
+		TRIGGER = document.addEventListener ? HANDLER_TRIGGER_DOM : HANDLER_TRIGGER_MSIE,
+		REMOVE = document.addEventListener ? HANDLER_REMOVE_DOM : HANDLER_REMOVE_MSIE,
 		FACTORY = {},
 		PROTOTYPES = {},
 		PROPERTIES = {};
@@ -1182,6 +1186,8 @@ var Pseudo = (function(){
 			} else if (handler instanceof Function) {
 				if (!this.__handlers[type]) this.__handlers[type] = [];
 				if (!this.__handlers[type].contains(handler)) this.__handlers[type].push(handler);
+			} else {
+				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
 		},
 		"off": function off(type,handler) {
@@ -1196,6 +1202,8 @@ var Pseudo = (function(){
 				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i]);
 			} else if (handler instanceof Function) {
 				this.__handlers[type].remove(handler);
+			} else {
+				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
 		},
 		"start": function start() {
@@ -1213,7 +1221,7 @@ var Pseudo = (function(){
 	// events utility
 	function HANDLER_FIND(pair) { return pair.handler === this };
 	function HANDLER_WRAP(scope,handler) { return function wrapped(e) { return handler.call(scope,e.event) } };
-	function TRIGGER_DOM(event,meta,handlers) {
+	function HANDLER_TRIGGER_DOM(event,meta,handlers) {
 		var i = 0, p, e = document.createEvent("Event");
 		for (;p=handlers[i];i++) meta.addEventListener("dataavailable",p.wrapped,false);
 		e.initEvent("dataavailable",false,true);
@@ -1221,7 +1229,7 @@ var Pseudo = (function(){
 		meta.dispatchEvent(e);
 		for (i=0;p=handlers[i];i++) meta.removeEventListener("dataavailable",p.wrapped,false);
 	};
-	function TRIGGER_MSIE(event,meta,handlers) {
+	function HANDLER_TRIGGER_MSIE(event,meta,handlers) {
 		var i = handlers.length - 1, p, e = document.createEventObject();
 		document.head.appendChild(meta);
 		for (;p=handlers[i];i--) meta.attachEvent("ondataavailable",p.wrapped);
@@ -1230,6 +1238,8 @@ var Pseudo = (function(){
 		for (;p=handlers[i];i++) meta.detachEvent("ondataavailable",p.wrapped);
 		document.head.removeChild(meta);
 	};
+	function HANDLER_REMOVE_DOM(meta,wrapped) { meta.removeEventListener("dataavailable",wrapped,false) };
+	function HANDLER_REMOVE_MSIE(meta,wrapped) { meta.detachEvent("ondataavailable",wrapped) };
 	this.extend(PROTOTYPES,{
 		"dispose": function dispose() {
 			this.off();
@@ -1259,7 +1269,7 @@ var Pseudo = (function(){
 					"wrapped": HANDLER_WRAP(this,handler)
 				});
 			} else {
-				throw new TypeError();
+				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
 			return this;
 		},
@@ -1279,12 +1289,12 @@ var Pseudo = (function(){
 					machine = this.__machine && this.__machine[type];
 				if (handlers) index = handlers.filterIndex(HANDLER_FIND,handler);
 				if (index > -1) {
-					if (machine) machine.removeEventListener(type,handlers[index].wrapped,false);
+					if (machine) HANDLER_REMOVE(machine,handlers[index].wrapped);
 					handlers.removeAt(index);
 				};
 				if (handlers.length < 1) delete this.__handlers[type];
 			} else {
-				throw new TypeError();
+				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
 			return this;
 		},
@@ -1490,6 +1500,45 @@ var Pseudo = (function(){
 		}
 	});
 }).call(Pseudo);
+(function(div){
+	if ("classList" in div) return;
+	var	PROTO = this.Element.prototype,
+		DESC = {
+			"enumerable": true,
+			"configurable": true,
+			"get": function() { return new DOMTokenList(this) }
+		};
+	function DOMTokenList(element) {
+		var classes = element.className.trim();
+		this.__element = element;
+		if (classes.length > 0) {
+			var names = classes.split(/\s/gm), i = 0, l = names.length;
+			this.length = l;
+			for (; i<l; i++) this[i] = names[i];
+		};
+	};
+	DOMTokenList.prototype = Pseudo.augment([],{
+		"add": function item(className) {
+			if (!this.contains(className)) this.push(className);
+			this.__element.className = this.join(" ");
+		},
+		"item": function item(index) { return this[index] || null },
+		"remove": function item($super,className) {
+			$super.call(this,className);
+			this.__element.className = this.join(" ");
+		},
+		"toggle": function item(className) {
+			this[this.contains(className) ? "remove" : "push"](className);
+			this.__element.className = this.join(" ");
+		},
+		"toString": function item() { return this.join(" ") }
+	});
+	Pseudo.tryThese(
+		function() { Object.defineProperty(PROTO,"classList",DESC) },
+		function() { DESC.enumerable = false; Object.defineProperty(PROTO,"classList",DESC) },
+		function() { PROTO.__defineGetter__("classList",desc["get"]) }
+	);
+}).call(Pseudo.DOM,document.createElement("div"));
 Pseudo.DOM.addMethods("*",(function(){
 	var	SLICE = Array.prototype.slice,
 		ELEM = this.Element,
