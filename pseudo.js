@@ -6,7 +6,6 @@
 "use strict";
 var Pseudo = (function(){
 	var	x = 0,
-		SEED = document.location.toString(),
 		VERSION = 2,
 		BROWSER = { "IE": false, "Opera": false, "Gecko": false, "Webkit": false, "Mobile": false },
 		BROWSER_VERSION = NaN,
@@ -15,10 +14,6 @@ var Pseudo = (function(){
 		VALUEOF = Function.prototype.valueOf,
 		TOSTRING = Function.prototype.toString,
 		PROPERTY = { "configurable": true, "enumerable": true };
-	
-	// seed for guid & increment
-	for (var i = 0, l = SEED.length; i < l; i++) x += SEED.charCodeAt(i);
-	SEED = x.toString(16);
 	
 	// browser/engine
 //	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
@@ -104,12 +99,10 @@ var Pseudo = (function(){
 		"expand": expand,
 		"extend": extend,
 		"guid": function guid() {
-			var rand, i = 0, l = 36, id = new Array(36);
-			id[8] = id[13] = id[18] = id[23] = "-";
-			id[14] = "4";
+			var i = 0, l = 36, r = i, id = [,,,,,,,,"-",,,,,"-","4",,,,"-",,,,,"-",,,,,,,,,,,,,];
 			for(; i<l; i++) if (i === 8 || i === 13 || i === 14 || i === 18 || i === 23) { continue } else {
-				rand = Math.random() * 16 | 0;
-				id[i] = (i === 19 ? rand & 0x3 | 0x8 : rand).toString(16);
+				r = Math.random() * 16 | 0;
+				id[i] = (i !== 19 ? r : r & 0x3 | 0x8).toString(16);
 			};
 			return id.join("");
 		},
@@ -133,7 +126,7 @@ var Pseudo = (function(){
 			if (methods.constructor && !Function.isNative(methods.constructor)) methods.__constructor = methods.constructor;
 			for (name in methods) {
 				if (name === "constructor") continue;
-				if (!OVERLOADABLE(methods[name])) object[name] = methods[name];
+				else if (!OVERLOADABLE(methods[name])) object[name] = methods[name];
 				else object[name] = overload($super && $super[name] || object[name],methods[name]);
 			};
 			return object;
@@ -209,7 +202,6 @@ var Pseudo = (function(){
 			return object;
 		},
 		"defineProperty": function defineProperty(object,propertyName,descriptor) {
-			// stuff?
 			return object;
 		},
 		"getOwnPropertyDescriptor": function getOwnPropertyDescriptor(object,propertyName) {
@@ -239,6 +231,19 @@ var Pseudo = (function(){
 			return cn === "Arguments" || cn === "Object" && !isNaN(object.length) && "callee" in object;
 		},
 		"isNothing": function isNothing(object) { return object === null || object === undefined },
+		"pairs": function pairs(object) {
+			if (typeof object !== "object" && typeof object !== "function" || object === null) throw new TypeError("Object.pairs called on non-object");
+			var results = [], each, pair, i = 0;
+			for (each in object) if (object.hasOwnProperty(each)) {
+				results.push(pair = {});
+				pair[each] = object[each];
+			};
+			if (KEYS_BUG) for (;each=KEYS_DONT[i];i++) if (object.hasOwnProperty(each)) {
+				results.push(pair = {});
+				pair[each] = object[each];
+			};
+			return results;
+		},
 		"prototypeChain": function prototypeChain(object) {
 			var	chain = [],
 				prev,
@@ -425,13 +430,10 @@ var Pseudo = (function(){
 		},
 		
 		// examine
-		"examine": function examine(callback,arg1,arg2,argN) {
-			var i = 0, l = this.length, results = new Array(l), args = [null,-1,this].concat(SLICE.call(arguments,1));
-			for (;i<l;i++) {
-				args[0] = this[i];
-				args[1] = i;
-				results[i] = callback.apply(this,args);
-			};
+		"examine": function examine(callback,scope,arg1,arg2,argN) {
+			var i = 0, l = this.length, results = new Array(l), args = SLICE.call(arguments,2);
+			if (arguments.length < 2) scope = this;
+			for (;i<l;i++) results[i] = callback.apply(scope,[this[i],i,scope].concat(args));
 			return results;
 		},
 		"invoke": function invoke(methodName,arg1,arg2,argN) {
