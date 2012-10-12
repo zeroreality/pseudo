@@ -418,6 +418,11 @@ var Pseudo = (function(){
 		
 		// comparison
 		"contains": function contains(object) { return this.indexOf(object) > -1 },
+		"equals": function equals(other,notDeep) {
+			var i = 0, l = this.length, same = other instanceof this.constructor && other.length === l;
+			for (; same && i<l; i++) same = !notDeep && this[i] instanceof this.constructor ? this[i].equals(other[i]) : this[i] === other[i];
+			return same;
+		},
 		"left": function left(length) {
 			var i = 0, l = Math.max(length,this.length), results = new Array(l);
 			for (;i<l;i++) results[i] = this[i];
@@ -433,7 +438,7 @@ var Pseudo = (function(){
 		"examine": function examine(callback,scope,arg1,arg2,argN) {
 			var i = 0, l = this.length, results = new Array(l), args = SLICE.call(arguments,2);
 			if (arguments.length < 2) scope = this;
-			for (;i<l;i++) results[i] = callback.apply(scope,[this[i],i,scope].concat(args));
+			for (;i<l;i++) results[i] = callback.apply(scope,[this[i],i,this].concat(args));
 			return results;
 		},
 		"invoke": function invoke(methodName,arg1,arg2,argN) {
