@@ -41,7 +41,7 @@ var Pseudo = (function(){
 	};
 	
 	// classing/prototype
-	function OVERLOADABLE(method) {
+	function isOverloadable(method) {
 		return !!(method instanceof Function && FILTER_OVERLOAD.test(method.toString()));
 	};
 	function overload(ancestor,func) {
@@ -118,16 +118,11 @@ var Pseudo = (function(){
 		"unique": function unique() { return x++ },
 		
 		// classing/prototype
-		"overload": overload,
 		"augment": function augment(object,methods) {
-			var	name,
-				method,
-				$super = Object.getPrototypeOf(object);
+			var name, method, $super = Object.getPrototypeOf(object);
 			if (methods.constructor && !Function.isNative(methods.constructor)) methods.__constructor = methods.constructor;
-			for (name in methods) {
-				if (name === "constructor") continue;
-				else if (!OVERLOADABLE(methods[name])) object[name] = methods[name];
-				else object[name] = overload($super && $super[name] || object[name],methods[name]);
+			for (name in methods) if (name !== "constructor") {
+				object[name] = !isOverloadable(methods[name]) ? methods[name] : overload($super && $super[name] || object[name],methods[name]);
 			};
 			return object;
 		},
@@ -142,18 +137,20 @@ var Pseudo = (function(){
 				if (ancestor = Object.getOwnPropertyDescriptor($super,name)) expand(property,ancestor);
 				expand(property,PROPERTY);
 				
-				if (OVERLOADABLE(property["get"])) property["get"] = overload(
+				if (isOverloadable(property["get"])) property["get"] = overload(
 					current && current["get"] || ancestor && ancestor["get"],
 					property["get"]
 				);
-				if (OVERLOADABLE(property["set"])) property["set"] = overload(
+				if (isOverloadable(property["set"])) property["set"] = overload(
 					current && current["set"] || ancestor && ancestor["set"],
 					property["set"]
 				);
 				Object.defineProperty(object,name,expand(property,current,ancestor));
 			};
 			return object;
-		}
+		},
+		"isOverloadable": isOverloadable,
+		"overload": overload
 	};
 })();
 
@@ -173,6 +170,13 @@ var Pseudo = (function(){
 		if (object === undefined) return "undefined";
 		else if (object === null) return "null";
 		else return TOSTRING.call(object).match(FILTER_CLASS)[1];
+	};
+	function pairs(object) {
+		if (typeof object !== "object" && typeof object !== "function" || object === null) throw new TypeError("Object.pairs called on non-object");
+		var results = [], each, i = 0;
+		for (each in object) if (object.hasOwnProperty(each)) results.push({ "name": each, "value": object[each] });
+		if (KEYS_BUG) for (;each=KEYS_DONT[i];i++) if (object.hasOwnProperty(each)) results.push({ "name": each, "value": object[each] });
+		return results;
 	};
 	
 	this.expand(Object,this.Object = {
@@ -226,28 +230,20 @@ var Pseudo = (function(){
 		// extensions
 		"className": className,
 		"clone": function clone(object) { return Pseudo.extend({},object) },
+		"each": function each(object,callback,scope) {
+			var values = pairs(object), i = 0, pair, results = new Array(values.length);
+			if (arguments.length < 3) scope = object;
+			for (;pair=values[i];i++) results[i] = callback.call(scope,pair.value,pair.name,object);
+			return results;
+		},
 		"isArguments": function isArguments(object) {
 			var cn = className(object);
 			return cn === "Arguments" || cn === "Object" && !isNaN(object.length) && "callee" in object;
 		},
 		"isNothing": function isNothing(object) { return object === null || object === undefined },
-		"pairs": function pairs(object) {
-			if (typeof object !== "object" && typeof object !== "function" || object === null) throw new TypeError("Object.pairs called on non-object");
-			var results = [], each, pair, i = 0;
-			for (each in object) if (object.hasOwnProperty(each)) {
-				results.push(pair = {});
-				pair[each] = object[each];
-			};
-			if (KEYS_BUG) for (;each=KEYS_DONT[i];i++) if (object.hasOwnProperty(each)) {
-				results.push(pair = {});
-				pair[each] = object[each];
-			};
-			return results;
-		},
+		"pairs": pairs,
 		"prototypeChain": function prototypeChain(object) {
-			var	chain = [],
-				prev,
-				proto = isNothing(object) ? null : Object.getPrototypeOf(object);
+			var chain = [], prev, proto = isNothing(object) ? null : Object.getPrototypeOf(object);
 			while (proto) {
 				chain.push(proto);
 				prev = proto;
@@ -264,10 +260,10 @@ var Pseudo = (function(){
 ***********************/
 (function(){
 	var	SLICE = Array.prototype.slice,
-		FILTER_NATURAL =/[a-z]+|[0-9]+/gim,
+		FILTER_NATURAL = /[a-z]+|[0-9]+/gim,
 		HELPER_MAX = function(prev,next) { return prev > next ? prev : next },
 		HELPER_MIN = function(prev,next) { return prev < next ? prev : next },
-		HELPER_SUM = function(prev,next) { return prev+next };
+		HELPER_SUM = function(prev,next) { return prev + next };
 	
 	this.expand(Array,this.Array = {
 		// compatibility
@@ -282,7 +278,7 @@ var Pseudo = (function(){
 			if (!object) return [];
 			if ("toArray" in Object(object)) return object.toArray();
 			try { return SLICE.call(object,0) }
-			catch(x) { /* IE throws error for live DOM queries; getElementsByTagName */ };
+			catch(x) { /* IE throws error for DOM queries like getElementsByTagName */ };
 			var length = object.length || 0, results = new Array(length);
 			while (length--) results[length] = object[length];
 			return results;
@@ -1422,48 +1418,129 @@ var Pseudo = (function(){
 		DOC = Object.getPrototypeOf(document),
 		ELEM = (window.HTMLElement || window.Element).prototype,
 		FRAG = Object.getPrototypeOf(document.createDocumentFragment()),
-		CUSTOM = {};
+		DESC = { "enumerable": !!this.Browser.IE8, "configurable": true },
+		CUSTOM_EVENTS = {},
+		CUSTOM_PROPERTIES = {};
 	if (WIN === Object.prototype) WIN = window;	// opera
 	if (DOC === Object.prototype) DOC = document;
+	
+	function findPrefixedSelector(name) {
+		if (ELEM[name]) return name;
+		var base = name.capitalize(), prefix = ["moz","webkit","ms","o"], i = 0, l = prefix.length;
+		for (;i<l&&(name=prefix[i]+base);i++) if (ELEM[name]) return name;
+	};
+	function getNodeProto(nodeName) {
+		var proto = null;
+		if (!nodeName || nodeName === "*") proto = ELEM;
+		else if (nodeName === "#document") proto = DOC;
+		else if (nodeName === "#window") proto = WIN;
+		else proto = Object.getPrototypeOf(document.createElement(nodeName));
+		return proto;
+	};
 	this.DOM = {
-		"CUSTOM_EVENTS": CUSTOM,
+		"CUSTOM_EVENTS": CUSTOM_EVENTS,
+		"CUSTOM_PROPERTIES": CUSTOM_PROPERTIES,
 		"Document": window.HTMLDocument || window.Document || DOC.constructor,
 		"Element": window.HTMLElement || window.Element || ELEM.constructor,
 		"Fragment": window.DocumentFragment || FRAG.constructor,
 		"Window": window.DOMWindow || window.Window || WIN.constructor,
-		"querySelector": (function(){
-			var i = 0, name, names = ["querySelector","mozQuerySelector","webkitQuerySelector","msQuerySelector","oQuerySelector"];
-			for (;name=names[i];i++) if (ELEM[name]) return name;
-		})() || "",
-		"querySelectorAll": (function(){
-			var i = 0, name, names = ["querySelectorAll","mozQuerySelectorAll","webkitQuerySelectorAll","msQuerySelectorAll","oQuerySelectorAll"];
-			for (;name=names[i];i++) if (ELEM[name]) return name;
-		})() || "",
-		"matchesSelector": (function(){
-			var i = 0, name, names = ["matchesSelector","mozMatchesSelector","webkitMatchesSelector","msMatchesSelector","oMatchesSelector"];
-			for (;name=names[i];i++) if (ELEM[name]) return name;
-		})() || "",
-		"addEvent": function addEvent(nodeName,type) {
+		"querySelector": findPrefixedSelector("querySelector") || "",
+		"querySelectorAll": findPrefixedSelector("querySelectorAll") || "",
+		"matchesSelector": findPrefixedSelector("matchesSelector") || "",
+		
+		// methods
+		"addEventType": function addEventType(nodeName,type) {
 			if (!nodeName) nodeName = "*";
 			else nodeName = nodeName.toLowerCase();
-			if (!CUSTOM[nodeName]) CUSTOM[nodeName] = [type];
-			else CUSTOM[nodeName].push(type);
-			return CUSTOM[nodeName];
+			if (!CUSTOM_EVENTS[nodeName]) CUSTOM_EVENTS[nodeName] = [type];
+			else CUSTOM_EVENTS[nodeName].push(type);
+			return CUSTOM_EVENTS[nodeName];
 		},
 		"addMethods": function addMethods(nodeName,methods) {
-			var proto;
-			if (!nodeName || nodeName === "*") proto = ELEM;
-			else if (nodeName === "#document") proto = DOC;
-			else if (nodeName === "#window") proto = WIN;
-			else if (nodeName.contains(",")) {
-				var nodeNames = nodeName.split(","), i = 0, l = nodeNames.length;
-				for (;i<l;i++) addMethods(nodeNames[i],methods);
-				return;
-			} else proto = Object.getPrototypeOf(document.createElement(nodeName));
-			return Pseudo.augment(proto,methods);
+			if (typeof nodeName === "string" && nodeName.contains(",")) {
+				var nodeNames = nodeName.split(","), i = 0, l = nodeNames.length, protos = new Array(l);
+				for (;i<l;i++) protos[i] = addMethods(nodeNames[i],methods);
+				return protos;
+			} else {
+				return [Pseudo.augment(getNodeProto(nodeName),methods)];
+			};
+		},
+		"addProperties": function addProperties(nodeName,properties) {
+			if (typeof nodeName === "string" && nodeName.contains(",")) {
+				var nodeNames = nodeName.split(","), i = 0, l = nodeNames.length, protos = new Array(l);
+				for (;i<l;i++) protos[i] = addProperties(nodeNames[i],properties);
+				return protos;
+			} else {
+				if (!nodeName) nodeName = "*";
+				else nodeName = nodeName.toLowerCase();
+				if (!CUSTOM_PROPERTIES[nodeName]) CUSTOM_PROPERTIES[nodeName] = [];
+				var proto = getNodeProto(nodeName);
+				Object.each(properties,function(value,name) {
+					Pseudo.tryThese(
+						function() { Object.defineProperty(proto,name,Pseudo.expand(value,DESC)) },
+						function() { value.enumerable = false; Object.defineProperty(proto,name,value) },
+						function() { proto.__defineGetter__(name,value["get"]) }
+					);
+					CUSTOM_PROPERTIES[nodeName].push(name);
+				});
+				return [proto];
+			};
 		}
-	};	
+	};
 }).call(Pseudo);
+(function(){
+	// HTML5 shim stuff
+	var	DIV = document.createElement("div"),
+		GETTERS = {
+			"classList": { "get": function() { return new DOMTokenList(this) } },
+			"firstElementChild": { "get": function() { return nextElement(this.firstChild) } },
+			"nextElementSibling": { "get": function() { return nextElement(this.nextSibling) } },
+			"previousElementSibling": { "get": function() { return previousElement(this.previousSibling) } },
+			"lastElementChild": { "get": function() { return previousElement(this.lastChild) } }
+		};
+	
+	// Element|classList
+	function DOMTokenList(element) {
+		var classes = element.className.trim();
+		this.__element = element;
+		if (classes.length > 0) {
+			var names = classes.split(/\s/gm), i = 0, l = names.length;
+			this.length = l;
+			for (; i<l; i++) this[i] = names[i];
+		};
+	};
+	DOMTokenList.prototype = Pseudo.augment([],{
+		"add": function add(className) {
+			if (!this.contains(className)) this.push(className);
+			this.__element.className = this.join(" ");
+		},
+		"item": function item(index) { return this[index] || null },
+		"remove": function remove($super,className) {
+			$super.call(this,className);
+			this.__element.className = this.join(" ");
+		},
+		"toggle": function toggle(className) {
+			this[this.contains(className) ? "remove" : "push"](className);
+			this.__element.className = this.join(" ");
+		},
+		"toString": function toString() { return this.join(" ") }
+	});
+	
+	// Element|*ElementChild/*ElementSibling
+	function nextElement(element) {
+		while (element && element.nodeType !== 1) element = element.nextSibling;
+		return element || null;
+	};
+	function previousElement(element) {
+		while (element && element.nodeType !== 1) element = element.previousSibling;
+		return element || null;
+	};
+	
+	// check if available and add if not
+	Object.pairs(GETTERS).each(function(pair) { if (pair.name in DIV) delete GETTERS[pair.name] });
+	Pseudo.DOM.addProperties("*",GETTERS);
+	DIV = null;
+}).call(Pseudo.DOM);
 (function(){
 	var	FIX_EVENT = ["load","error","click"],
 		FIX_CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
@@ -1507,45 +1584,6 @@ var Pseudo = (function(){
 		}
 	});
 }).call(Pseudo);
-(function(div){
-	if ("classList" in div) return;
-	var	PROTO = this.Element.prototype,
-		DESC = {
-			"enumerable": true,
-			"configurable": true,
-			"get": function() { return new DOMTokenList(this) }
-		};
-	function DOMTokenList(element) {
-		var classes = element.className.trim();
-		this.__element = element;
-		if (classes.length > 0) {
-			var names = classes.split(/\s/gm), i = 0, l = names.length;
-			this.length = l;
-			for (; i<l; i++) this[i] = names[i];
-		};
-	};
-	DOMTokenList.prototype = Pseudo.augment([],{
-		"add": function item(className) {
-			if (!this.contains(className)) this.push(className);
-			this.__element.className = this.join(" ");
-		},
-		"item": function item(index) { return this[index] || null },
-		"remove": function item($super,className) {
-			$super.call(this,className);
-			this.__element.className = this.join(" ");
-		},
-		"toggle": function item(className) {
-			this[this.contains(className) ? "remove" : "push"](className);
-			this.__element.className = this.join(" ");
-		},
-		"toString": function item() { return this.join(" ") }
-	});
-	Pseudo.tryThese(
-		function() { Object.defineProperty(PROTO,"classList",DESC) },
-		function() { DESC.enumerable = false; Object.defineProperty(PROTO,"classList",DESC) },
-		function() { PROTO.__defineGetter__("classList",desc["get"]) }
-	);
-}).call(Pseudo.DOM,document.createElement("div"));
 Pseudo.DOM.addMethods("*",(function(){
 	var	SLICE = Array.prototype.slice,
 		ELEM = this.Element,
@@ -1763,7 +1801,7 @@ Pseudo.DOM.addMethods("*",(function(){
 	};
 	function STYLES_OBJECT(cssText) {
 		var styles = {};
-		cssText.split(PARSE_STYLE_FILTER).each(function(pair) {
+		cssText.split(FILTER_STYLES).each(function(pair) {
 			var	key = pair.substring(0,pair.indexOf(":")).trim(),
 				value = pair.substring(key.length+1).trim();
 			if (key) styles[key] = value;
@@ -1992,12 +2030,11 @@ Pseudo.DOM.addMethods("*",(function(){
 			return { "top": element.style.top };
 		};
 	})(); else (function(){
-		var PREFIX_FUNCS, PREFIX_FILTER, PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
+		var PREFIX_FUNCS, PREFIX = Pseudo.Browser.IE ? ["-ms-","ms"] :
 			Pseudo.Browser.Gecko ? ["-moz-","Moz"] : 
 			Pseudo.Browser.Webkit ? ["-webkit-","webkit"] : 
 			Pseudo.Browser.Opera ? ["-o-","O"] : null;
 		if (PREFIX) {
-			PREFIX_FILTER = function(name) { if (typeof DIV.style[name] !== "string" && typeof DIV.style[PREFIX[1] + name.camelize().capitalize()] === "string") PREFIX_FUNCS(name) },
 			PREFIX_FUNCS = function(name) {
 				READERS[name] = function(element) { return GETSTYLE(element,PREFIX[0] + name.dasherize()) };
 				WRITERS[name] = function(element,value) {
@@ -2018,7 +2055,9 @@ Pseudo.DOM.addMethods("*",(function(){
 				"outline","perspective","perspective-origin","text-align-last","text-autospace","text-overflow",
 				"text-size-adjust","transform","transform-origin","transform-origin-x","transform-origin-y",
 				"transform-style","transition","transition-property","transition-duration",
-				"transition-timing-function","transition-delay","user-select"	].each(PREFIX_FILTER);
+				"transition-timing-function","transition-delay","user-select"	].each(function(name) {
+					if (typeof DIV.style[name] !== "string" && typeof DIV.style[PREFIX[1] + name.camelize().capitalize()] === "string") PREFIX_FUNCS(name);
+				});
 		};
 	})();
 	if (typeof DIV.style["float"] !== "string") {
@@ -2456,7 +2495,7 @@ var	Ajax = Pseudo.Ajax,
 	$$ = document.query.bind(document),
 	$A = Pseudo.Array.from;
 if (Pseudo.Browser.IE && Pseudo.BrowserVersion < 9) {
-	Pseudo.DOM.addEvent("#document","DOMContentLoaded");
+	Pseudo.DOM.addEventType("#document","DOMContentLoaded");
 	(function IEDOMContentLoaded(){
 		try {
 			document.documentElement.doScroll("left");
