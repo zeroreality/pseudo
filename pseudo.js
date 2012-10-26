@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
  *	Pseudo JavaScript framework, v2.0 (c) 2012 Alex Lein
- *	Pseudo is freely distributable under the terms of an MIT-style license.
+ *	Pseudo is freely distributable under the terms of The MIT License.
  *	For source code and licence, see http://code.google.com/p/pseudo/
  *--------------------------------------------------------------------------*/
 "use strict";
@@ -16,7 +16,6 @@ var Pseudo = (function(){
 		PROPERTY = { "configurable": true, "enumerable": true };
 	
 	// browser/engine
-//	BROWSER["Mobile"] = /(?:Mobile.+Safari|Opera\s(?:Mobi|Mini)|IEMobile)\/[0-9\.]+|Android\s+[\d.]+;/.test(navigator.userAgent);
 	BROWSER["Mobile"] = /\bAndroid\s+[\d.]+;|\b(?:iP[ao]d|iPhone);|IEMobile.[\d\.]+|\bPlayBook;|Opera\s(?:Mini|Mobi)\/[\d\.]+/.test(navigator.userAgent);
 	if (BROWSER.IE = /*@cc_on!@*/!1) {
 		BROWSER_VERSION = navigator.userAgent.match(/\s*MSIE\s*(\d+\.?\d*)/i)[1];
@@ -209,7 +208,7 @@ var Pseudo = (function(){
 			return object;
 		},
 		"getOwnPropertyDescriptor": function getOwnPropertyDescriptor(object,propertyName) {
-			return {};
+			return undefined;
 		},
 		"getOwnPropertyNames": function getOwnPropertyNames(object) {
 			var each, names = [], proto = this.getPrototypeOf(object);
@@ -221,8 +220,8 @@ var Pseudo = (function(){
 			if (NATIVE_CONSTRUCTOR) proto = object.constructor && object.constructor.prototype;
 			else if (PROTO_NATIVE) proto = object.__proto__;
 			if (!proto) {
-				proto = window[className(object)];
-				if (proto) proto = proto.prototype;
+				var klass = window[className(object)];
+				if (klass) proto = klass.prototype;
 			};
 			return proto || null;
 		},
@@ -278,7 +277,7 @@ var Pseudo = (function(){
 			if (!object) return [];
 			if ("toArray" in Object(object)) return object.toArray();
 			try { return SLICE.call(object,0) }
-			catch(x) { /* IE throws error for DOM queries like getElementsByTagName */ };
+			catch(x) { /* IE errors sometimes */ };
 			var length = object.length || 0, results = new Array(length);
 			while (length--) results[length] = object[length];
 			return results;
@@ -1164,19 +1163,19 @@ var Pseudo = (function(){
 		PROPERTIES = {};
 	
 	// events
-	function KlassEvent(scope,type,extras) {
+	function PseudoEvent(scope,type,extras) {
 		this.target = scope;
 		this.type = type;
 		this.stopped = this.fired = false;
 		if (extras) Pseudo.expand(this,extras);
 	};
-	function KlassListener(klass,type,handler) {
-		this.target = klass;
+	function Listener(target,type,handler) {
+		this.target = target;
 		this.active = false;
 		this.__handlers = {};
-		this.on(type,handler);
+		if (!!type) this.on(type,handler);
 	};
-	KlassListener.prototype = {
+	Listener.prototype = {
 		"dispose": function dispose() {
 			this.stop();
 			this.__handlers = null;
@@ -1188,7 +1187,10 @@ var Pseudo = (function(){
 				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i]);
 			} else if (handler instanceof Function) {
 				if (!this.__handlers[type]) this.__handlers[type] = [];
-				if (!this.__handlers[type].contains(handler)) this.__handlers[type].push(handler);
+				if (!this.__handlers[type].contains(handler)) {
+					this.__handlers[type].push(handler);
+					if (this.active) this.target.on(type,handler);
+				};
 			} else {
 				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
@@ -1205,18 +1207,19 @@ var Pseudo = (function(){
 				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i]);
 			} else if (handler instanceof Function) {
 				this.__handlers[type].remove(handler);
+				if (this.active) this.target.off(type,handler);
 			} else {
 				throw new TypeError("handler not an instance of a Object, Array, or Function");
 			};
 		},
 		"start": function start() {
 			if (this.active) return false;
-			for (var each in this.__handlers) this.target.on(each,this.__handlers[each]);
+			for (var type in this.__handlers) this.target.on(type,this.__handlers[type]);
 			return this.active = true;
 		},
 		"stop": function stop() {
 			if (!this.active) return false;
-			for (var each in this.__handlers) this.target.off(each,this.__handlers[each]);
+			for (var type in this.__handlers) this.target.off(type,this.__handlers[type]);
 			return !(this.active = false);
 		}
 	};
@@ -1249,7 +1252,7 @@ var Pseudo = (function(){
 			return this;
 		},
 		"fire": function fire(type,extras) {
-			var event = new KlassEvent(this,type,extras);
+			var event = new PseudoEvent(this,type,extras);
 			if (this.__handlers && this.__handlers[type]) {
 				if (!this.__machine) this.__machine = {};
 				if (this.__machine[type]) throw new Error("Recursion");
@@ -1386,8 +1389,8 @@ var Pseudo = (function(){
 	};
 	
 	this.Class = {
-		"Event": KlassEvent,
-		"Listener": KlassListener,
+		"Event": PseudoEvent,
+		"Listener": Listener,
 		
 		"Factory": FACTORY,
 		"Prototypes": PROTOTYPES,
@@ -1395,9 +1398,9 @@ var Pseudo = (function(){
 		
 		"create": create,
 		"klass": createKlass,
-		"listen": function listen(klass,type,handler,once,notAuto) {
-			var listener = new KlassListener(klass,type,handler);
-			if (!!once) {
+		"listen": function listen(target,type,handler,justOnce,notAuto) {
+			var listener = new Listener(target,type,handler);
+			if (!!justOnce) {
 				var each, onetime = listener.dispose.bind(listener);
 				for (each in listener.__handlers) listener.__handlers[each].push(onetime);
 			};
@@ -1488,8 +1491,7 @@ var Pseudo = (function(){
 		}
 	};
 }).call(Pseudo);
-(function(){
-	// HTML5 shim stuff
+(function(){	// HTML5 shim stuff
 	var	DIV = document.createElement("div"),
 		GETTERS = {
 			"classList": { "get": function() { return new DOMTokenList(this) } },
@@ -1541,7 +1543,7 @@ var Pseudo = (function(){
 	Pseudo.DOM.addProperties("*",GETTERS);
 	DIV = null;
 }).call(Pseudo.DOM);
-(function(){
+(function(){	// DOM event extension and DOM/Class event listener
 	var	FIX_EVENT = ["load","error","click"],
 		FIX_CLICK_WHICH = { "1": "left", "3": "right", "2": "middle" },
 		FIX_CLICK_BUTTON = { "0": "left", "2": "right", "4": "middle" },
@@ -1552,7 +1554,7 @@ var Pseudo = (function(){
 			// not standard
 			"LEFT_WINDOWS": 91, "RIGHT_WINDOWS": 92, "CONTEXT": 93, "NUMLOCK": 144, "SCROLLLOCK": 145
 		};
-		
+	
 	this.expand(Event,this.Event = {
 		"Keys": KEY_CODES
 	});
@@ -1584,7 +1586,110 @@ var Pseudo = (function(){
 		}
 	});
 }).call(Pseudo);
-Pseudo.DOM.addMethods("*",(function(){
+Pseudo.DOM.addMethods("*,#document,#window",(function(){	// DOM event helpers
+	var	CUSTOM = this.CUSTOM_EVENTS,
+		W3C = document.addEventListener ? true : false,
+		EVENT_ON = W3C ? W3C_ON : MSIE_ON,
+		EVENT_OFF = W3C ? W3C_OFF : MSIE_OFF;
+	
+	// Listener
+	this.listen = Pseudo.Class.listen;
+	this.Listener = Pseudo.Class.Listener;
+	
+	// events
+	function HANDLER_FIND(pair) { return pair.handler === this.handler && pair.capture === this.capture };
+	function HANDLER_WRAP(element,type,handler) {
+		return function wrapped(e) {
+			if (!e) e = window.event;
+			if (!!e.__type && e.__type !== type) return;
+			else if (!e.target !== element) e.target = element;
+			return handler.call(element,e);
+		};
+	};
+	function W3C_ON(element,type,handler,capture) {
+		var pair = { "handler": handler, "capture": capture };
+		element.__handlers[type].push(pair);
+		element.addEventListener(type,pair.handler,pair.capture);
+	};
+	function W3C_OFF(element,type,handler,capture) {
+		var	pair = { "handler": handler, "capture": capture },
+			index = element.__handlers[type].filterIndex(HANDLER_FIND,pair);
+		element.__handlers[type].removeAt(index);
+		element.removeEventListener(type,pair.handler,pair.capture);
+	};
+	function MSIE_ON(element,type,handler) {
+		var	name = element.nodeName.toLowerCase(),
+			handlers = element.__handlers[type], i = 0, l = handlers.length,
+			pair = { "handler": handler, "capture": false, "wrapped": HANDLER_WRAP(element,type,handler) };
+		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
+		for (;i<l;i++) element.detachEvent("on"+ type,handlers[i].wrapped);
+		handlers.push(pair);
+		for (;i>-1;i--) element.attachEvent("on"+ type,handlers[i].wrapped);
+	};
+	function MSIE_OFF(element,type,handler) {
+		var	name = element.nodeName.toLowerCase(),
+			handlers = element.__handlers[type],
+			pair = { "handler": handler, "capture": false },
+			index = handlers.filterIndex(HANDLER_FIND,pair);
+		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
+		pair = handlers[index];
+		handlers.removeAt(index);
+		element.detachEvent("on"+ type,pair.wrapped);
+	};
+	
+	return {
+		"on": function on(type,handler,capture) {
+			if (typeof type === "object") {
+				for (var each in type) this.on(each,type[each],capture);
+			} else if (handler instanceof Array) {
+				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i],capture);
+			} else if (handler instanceof Function) {
+				if (!this.__handlers) this.__handlers = {};
+				if (!this.__handlers[type]) this.__handlers[type] = [];
+				EVENT_ON(this,type,handler,!!capture);
+			} else {
+				throw new TypeError();
+			};
+			return this;
+		},
+		"off": function off(type,handler,capture) {
+			if (!this.__handlers) {
+				// do nothing I guess
+			} else if (!arguments.length) {
+				for (type in this.__handlers) this.off(type);
+			} else if (!handler) {
+				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy(),capture);
+				else if (typeof type === "object") for (var each in type) this.off(each,type[each],capture);
+			} else if (handler instanceof Array) {
+				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler || handler[i],typeof capture === "boolean" ? capture : handler[i].capture);
+			} else if (handler instanceof Function) {
+				EVENT_OFF(this,type,handler,!!capture);
+			} else {
+				throw new TypeError();
+			};
+			return this;
+		},
+		"fire": W3C ? function fireDom(type,bubbles,cancelable) {
+			var e = document.createEvent("Event");
+			e.initEvent(type,!!bubbles,!!cancelable);
+			this.dispatchEvent(e);
+			return e;
+		} : function fireMsie(type,bubbles) {
+			var e = document.createEventObject(), name = this.nodeName.toLowerCase();
+			e.__type = type;
+			e.bubbles = !!bubbles;
+			this.fireEvent(CUSTOM[name] && CUSTOM[name].contains(type) ? "ondataavailable" : type,e);
+			return e;
+		},
+		"uses": function uses(type,handler,capture) {
+			return this.__handlers[type].filterIndex(HANDLER_FIND,{
+				"handler": handler,
+				"capture": !!capture && W3C
+			}) > -1;
+		}
+	};
+}).call(Pseudo.DOM));
+Pseudo.DOM.addMethods("*",(function(){	// helpers for walking the DOM tree
 	var	SLICE = Array.prototype.slice,
 		ELEM = this.Element,
 		QUERY = this.querySelectorAll,
@@ -1610,6 +1715,11 @@ Pseudo.DOM.addMethods("*",(function(){
 			var selectors = SLICE.call(arguments,0).flatten().join(",");
 			return Array.from(this[QUERY](selectors));
 		},
+		"root": function root() {
+			var parent = this;
+			while (parent.parentNode instanceof ELEM) parent = parent.parentNode;
+			return parent || this;
+		},
 		"up": MATCH ? function upMatches(selector1,selector2,selectorN) {
 			var elem = this.parentNode, selectors = SELECTORS(arguments);
 			while (elem instanceof ELEM) if (!elem[MATCH](selectors)) elem = elem.parentNode;
@@ -1626,7 +1736,7 @@ Pseudo.DOM.addMethods("*",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
-Pseudo.DOM.addMethods("*",(function(){
+Pseudo.DOM.addMethods("*",(function(){	// child and attribute helpers
 	var	NOTBLANK = /[^\s]+/m,
 		SLICE = Array.prototype.slice,
 		ELEM = this.Element,
@@ -1720,11 +1830,6 @@ Pseudo.DOM.addMethods("*",(function(){
 			return element;
 		},
 		"insertAfter": function insertAfter(parent,element) { return this.insertBefore(parent,element && element.nextSibling || null) },
-		"root": function root() {
-			var parent = this;
-			while (parent.parentNode instanceof ELEM) parent = parent.parentNode;
-			return parent || this;
-		},
 		"supplant": function supplant(element) { this.parentNode.replaceChild(this,element) },
 		"transplant": function transplant(parent,before) { return parent.insertBefore(this.amputate(),before || null) },
 		"update": function update(value) {
@@ -1784,7 +1889,7 @@ Pseudo.DOM.addMethods("*",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
-Pseudo.DOM.addMethods("*",(function(){
+Pseudo.DOM.addMethods("*",(function(){	// CSS helpers
 	var	DIV = document.createElement("div"),
 		FILTER_STYLES = /\s*;\s*/gim,
 		GETSTYLE = window.getComputedStyle ? GETSTYLE_COMPUTED : GETSTYLE_CURRENT,
@@ -2099,7 +2204,7 @@ Pseudo.DOM.addMethods("*",(function(){
 		}
 	};
 }).call(Pseudo.DOM));
-Pseudo.DOM.addMethods("#document",(function(){
+Pseudo.DOM.addMethods("#document",(function(){	// document specific helpers
 	var ELEM = this.Element.prototype;
 	return {
 		"element": function element(nodeName,attributes,handlers) {
@@ -2114,106 +2219,7 @@ Pseudo.DOM.addMethods("#document",(function(){
 		"query": ELEM.query
 	};
 }).call(Pseudo.DOM));
-Pseudo.DOM.addMethods("*,#document,#window",(function(){
-	var	CUSTOM = this.CUSTOM_EVENTS,
-		W3C = document.addEventListener ? true : false,
-		EVENT_ON = W3C ? W3C_ON : MSIE_ON,
-		EVENT_OFF = W3C ? W3C_OFF : MSIE_OFF;
-	
-	// events
-	function HANDLER_FIND(pair) { return pair.handler === this.handler && pair.capture === this.capture };
-	function HANDLER_WRAP(element,type,handler) {
-		return function wrapped(e) {
-			if (!e) e = window.event;
-			if (!!e.__type && e.__type !== type) return;
-			else if (!e.target !== element) e.target = element;
-			return handler.call(element,e);
-		};
-	};
-	function W3C_ON(element,type,handler,capture) {
-		var pair = { "handler": handler, "capture": capture };
-		element.__handlers[type].push(pair);
-		element.addEventListener(type,pair.handler,pair.capture);
-	};
-	function W3C_OFF(element,type,handler,capture) {
-		var	pair = { "handler": handler, "capture": capture },
-			index = element.__handlers[type].filterIndex(HANDLER_FIND,pair);
-		element.__handlers[type].removeAt(index);
-		element.removeEventListener(type,pair.handler,pair.capture);
-	};
-	function MSIE_ON(element,type,handler) {
-		var	name = element.nodeName.toLowerCase(),
-			handlers = element.__handlers[type], i = 0, l = handlers.length,
-			pair = { "handler": handler, "capture": false, "wrapped": HANDLER_WRAP(element,type,handler) };
-		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
-		for (;i<l;i++) element.detachEvent("on"+ type,handlers[i].wrapped);
-		handlers.push(pair);
-		for (;i>-1;i--) element.attachEvent("on"+ type,handlers[i].wrapped);
-	};
-	function MSIE_OFF(element,type,handler) {
-		var	name = element.nodeName.toLowerCase(),
-			handlers = element.__handlers[type],
-			pair = { "handler": handler, "capture": false },
-			index = handlers.filterIndex(HANDLER_FIND,pair);
-		if (CUSTOM[name] && CUSTOM[name].contains(type)) type = "dataavailable";
-		pair = handlers[index];
-		handlers.removeAt(index);
-		element.detachEvent("on"+ type,pair.wrapped);
-	};
-	
-	return {
-		"on": function on(type,handler,capture) {
-			if (typeof type === "object") {
-				for (var each in type) this.on(each,type[each],capture);
-			} else if (handler instanceof Array) {
-				for (var i=0,l=handler.length; i<l; i++) this.on(type,handler[i],capture);
-			} else if (handler instanceof Function) {
-				if (!this.__handlers) this.__handlers = {};
-				if (!this.__handlers[type]) this.__handlers[type] = [];
-				EVENT_ON(this,type,handler,!!capture);
-			} else {
-				throw new TypeError();
-			};
-			return this;
-		},
-		"off": function off(type,handler,capture) {
-			if (!this.__handlers) {
-				// do nothing I guess
-			} else if (!arguments.length) {
-				for (type in this.__handlers) this.off(type);
-			} else if (!handler) {
-				if (this.__handlers[type] instanceof Array) this.off(type,this.__handlers[type].copy(),capture);
-				else if (typeof type === "object") for (var each in type) this.off(each,type[each],capture);
-			} else if (handler instanceof Array) {
-				for (var i=0,l=handler.length; i<l; i++) this.off(type,handler[i].handler || handler[i],typeof capture === "boolean" ? capture : handler[i].capture);
-			} else if (handler instanceof Function) {
-				EVENT_OFF(this,type,handler,!!capture);
-			} else {
-				throw new TypeError();
-			};
-			return this;
-		},
-		"fire": W3C ? function fireDom(type,bubbles,cancelable) {
-			var e = document.createEvent("Event");
-			e.initEvent(type,!!bubbles,!!cancelable);
-			this.dispatchEvent(e);
-			return e;
-		} : function fireMsie(type,bubbles) {
-			var e = document.createEventObject(), name = this.nodeName.toLowerCase();
-			e.__type = type;
-			e.bubbles = !!bubbles;
-			this.fireEvent(CUSTOM[name] && CUSTOM[name].contains(type) ? "ondataavailable" : type,e);
-			return e;
-		},
-		"uses": function uses(type,handler,capture) {
-			return this.__handlers[type].filterIndex(HANDLER_FIND,{
-				"handler": handler,
-				"capture": !!capture && W3C
-			}) > -1;
-		}
-	};
-}).call(Pseudo.DOM));
-Pseudo.DOM.addMethods("form",(function(){
+Pseudo.DOM.addMethods("form",(function(){	// form specific helpers
 	var	TOGGLE_STATE = function(input) { input.__enabled = !input.disabled },
 		TOGGLE_OFF = function(input) { input.disabled = true },
 		TOGGLE_ON = function(input) { input.disabled = false },
@@ -2325,11 +2331,10 @@ Pseudo.DOM.addMethods("form",(function(){
 	
 	// ajax
 	function getStatus(xhr) {
-		var status = { "code": 0, "text": "", "body": "" };
+		var status = { "code": 0, "text": "" };
 		try {
 			status.code = xhr.status;
 			status.text = xhr.statusText;
-			status.body = xhr.responseText;
 		} catch(x) {};
 		return status;
 	};
@@ -2395,11 +2400,11 @@ Pseudo.DOM.addMethods("form",(function(){
 		"getProgress": function getProgress(xhr) {
 			if (xhr.readyState === 4) return 1;
 			var percent = 0, size = getResponseSize(xhr) || 0;
-			if (size > 0) percent = (getStatus(xhr).body.length / size) * 0.85;
+			if (size > 0) percent = (xhr.responseText.length / size) * 0.85;
 			return percent + (0.05 * xhr.readyState);
 		},
-		"isResponseOK": function isResponseOK(xhr) {
-			var code = getStatus(xhr).code;
+		"isResponseOK": function isResponseOK(xhr,status) {
+			var code = status && status.code || getStatus(xhr).code;
 			return !!(code >= 200 && code <= 206 || code === 304);
 		}
 	};	
@@ -2427,31 +2432,35 @@ Pseudo.Ajax.Request = Pseudo.Class.create(null,{
 		return $super();
 	},
 	"cancel": function() {
-		// Firefox raises readystatechange event when the transport is aborted
-		try { this.__xhr.onreadystatechange = Pseudo.um } catch(x) {};
-		try { this.__xhr.abort() } catch(x) {};	// can be null when leaving page
+		var status = Ajax.getStatus(this.__xhr), progress = Ajax.getProgress(this.__xhr), progress = NaN;
+		if (progress < 1 && progress > 0) {
+			this.__xhr.onreadystatechange = Pseudo.um;	// FX readystatechange when abort
+			this.__xhr.abort();
+			this.fire("aborted",{ "status": status, "progress": progress, "text": this.__xhr.responseText });
+			return true;
+		} else {
+			return false;
+		};
 	},
 	"load": function(force) {
 		var loaded = !force ? Ajax.getProgress(this.__xhr) : 1;
-		if (loaded !== 1 && loaded !== 0) {
-			this.cancel();
-			loaded = 1;
-		};
+		if (loaded !== 1 && loaded !== 0 && this.cancel()) loaded = 0;
 		if (loaded === 1 || loaded === 0) {
-			var event = this.fire("before",{ "transport": this.__xhr });
-			if (event.stopped) return;
+			var	each,
+				event = this.fire("before",{ "transport": this.__xhr }),
+				method = this.method.toLowerCase();
+			if (event.stopped) return false;
+			if (method === "auto") method = this.data ? "post" : "get";
 			
-			this.__runSyncAfter = !!this.sync;
 			this.__xhr.onreadystatechange = this.__callback;
-			this.__xhr.open(this.method === "auto" ? (this.data ? "post" : "get") : this.method,this.url,!this.sync);
-			for (var each in this.headers) this.__xhr.setRequestHeader(each,this.headers[each]);
-			try { this.__xhr.send(this.data) }
-			catch(x) { /* IE require the .send() for sync requests, Chrome/Safari throw error */ };
-			if (this.__runSyncAfter) this.__callback();
+			this.__xhr.open(method,this.url,!this.sync);
+			for (each in this.headers) this.__xhr.setRequestHeader(each,this.headers[each]);
+			this.__xhr.send(this.data);
 			
 			return true;
+		} else {
+			return false;
 		};
-		return false;
 	},
 	"isBusy": function() {
 		var loaded = Ajax.getProgress(this.__xhr);
@@ -2464,21 +2473,19 @@ Pseudo.Ajax.Request = Pseudo.Class.create(null,{
 		"autofire": false
 	},
 	"callback": function() {
-		this.fire("loading",{
-			"progress": Ajax.getProgress(this.__xhr),
-			"status": Ajax.getStatus(this.__xhr)
-		});
+		var status = Ajax.getStatus(this.__xhr), xml, progress = Ajax.getProgress(this.__xhr);
+		this.fire("loading",{ "status": status, "progress": progress, "text": this.__xhr.responseText });
 		if (this.__xhr.readyState === 4) {
-			this.__runSyncAfter = false;
-			var ok = Ajax.isResponseOK(this.__xhr);
-			Ajax.setInnerXml(this.__doc,ok ? this.__xhr.responseText : "");
+			xml = this.__xhr.responseXML;
+			Ajax.setInnerXml(this.__doc,xml && xml.documentElement ? this.__xhr.responseText : "");
 			this.fire("loaded",{
-				"errored": !ok,
 				"xml": this.__doc.documentElement || null,
 				"text": this.__xhr.responseText,
-				"status": Ajax.getStatus(this.__xhr)
+				"status": status,
+				"errored": !Ajax.isResponseOK(this.__xhr,status),
+				"progress": progress,
+				"transport": this.__xhr
 			});
-		//	if (Pseudo.Ajax.METHOD === "MS") Ajax.Request.cancel(this.__xhr);	// IE6 memleak
 			this.fire.defer(this,"ready");
 		};
 	}
@@ -2488,9 +2495,7 @@ Pseudo.Ajax.Request = Pseudo.Class.create(null,{
 *** Globals ************
 ***********************/
 var	Ajax = Pseudo.Ajax,
-//	Browser = Pseudo.Browser,
 	Class = Pseudo.Class,
-//	DOM = Pseudo.DOM,
 	$ = document.getElementById,
 	$$ = document.query.bind(document),
 	$A = Pseudo.Array.from;
