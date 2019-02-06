@@ -88,8 +88,8 @@ function PSEUDO_ESCAPE(input) {
 function PSEUDO_CLONE(object, depth, chain) {
 	return typeof object === "object"
 		? object instanceof Array
-			? PSEUDO_CLONE_ARRAY(object)
-			: PSEUDO_CLONE_OBJECT(object)
+			? PSEUDO_CLONE_ARRAY(object, depth, chain)
+			: PSEUDO_CLONE_OBJECT(object, depth, chain)
 		: object;
 }
 /**
