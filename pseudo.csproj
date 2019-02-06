@@ -72,6 +72,7 @@
     <Content Include="src\util\keyboard.js" />
     <Content Include="src\util\processor.js" />
     <Content Include="src\util\protocol.js" />
+    <Folder Include="out\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
