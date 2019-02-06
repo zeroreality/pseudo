@@ -1,4 +1,4 @@
-﻿/// <reference path="..\blds\pseudo3.js" />
+﻿/// <reference path="..\..\blds\pseudo3.js" />
 "use strict";
 
 /**
