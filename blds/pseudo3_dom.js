@@ -17,3 +17,5 @@
 /// <reference path="..\src\dom\events.js" />
 /// </section>
 /// <output name="..\out\pseudo3_dom.js" />
+
+var ns = {};

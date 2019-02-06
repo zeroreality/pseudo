@@ -21,3 +21,5 @@
 /// <reference path="..\src\objects\Function.js" />
 /// </section>
 /// <output name="..\out\pseudo3_objects.js" />
+
+var ns = {};

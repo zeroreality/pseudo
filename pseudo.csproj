@@ -46,6 +46,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="out\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -72,7 +73,7 @@
     <Content Include="src\util\keyboard.js" />
     <Content Include="src\util\processor.js" />
     <Content Include="src\util\protocol.js" />
-    <Folder Include="out\" />
+    <Content Include="src\_include.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

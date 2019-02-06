@@ -20,3 +20,5 @@
 /// <reference path="..\src\util\protocol.js" />
 /// </section>
 /// <output name="..\out\pseudo3_util.js" />
+
+var ns = {};
