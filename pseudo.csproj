@@ -47,7 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="out\" />
-    <Folder Include="Properties\" />
+    <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="blds\pseudo3_dom.js" />
