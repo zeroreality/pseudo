@@ -48,5 +48,27 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="blds\pseudo3.js" />
+    <Content Include="src\dom\events.js" />
+    <Content Include="src\dom\query.js" />
+    <Content Include="src\dom\tree.js" />
+    <Content Include="src\dom\_include.js" />
+    <Content Include="src\objects\Array.js" />
+    <Content Include="src\objects\Boolean.js" />
+    <Content Include="src\objects\Date.js" />
+    <Content Include="src\objects\Function.js" />
+    <Content Include="src\objects\Number.js" />
+    <Content Include="src\objects\Object.js" />
+    <Content Include="src\objects\pseudo.js" />
+    <Content Include="src\objects\String.js" />
+    <Content Include="src\util\cookie.js" />
+    <Content Include="src\util\css.js" />
+    <Content Include="src\util\forms.js" />
+    <Content Include="src\util\json.js" />
+    <Content Include="src\util\keyboard.js" />
+    <Content Include="src\util\processor.js" />
+    <Content Include="src\util\protocol.js" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
