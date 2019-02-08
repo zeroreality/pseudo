@@ -23,6 +23,7 @@ _*/
 .vs/
 *.csproj
 *.sln
+*.jar
 
 # NuGet Packages
 *.nupkg
