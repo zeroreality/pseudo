@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 /**
  * Keyboard shortcuts and utility module

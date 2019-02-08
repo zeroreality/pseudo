@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\blds\pseudo3.js" />
-"use strict";
 
 /** @const */
 var PSEUDO_FILTER_CLASS = /^\[object\s(.*)\]$/;

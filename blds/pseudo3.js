@@ -37,4 +37,6 @@
 /// </section>
 /// <output name="..\out\pseudo3.js" />
 
+"use strict";
+
 var ns = {};

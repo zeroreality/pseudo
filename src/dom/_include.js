@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 /** @type {string} */
 var SVGNS = "http://www.w3.org/2000/svg";

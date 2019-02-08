@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 /** @type {Object} */
 var Date_prototype = Date[PROTOTYPE];

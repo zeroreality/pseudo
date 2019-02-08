@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 /**
  * Reference to an IFRAME element in use by some of the protocol checking hacks.

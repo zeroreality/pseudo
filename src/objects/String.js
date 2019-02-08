@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\blds\pseudo3.js" />
-"use strict";
 
 var String_prototype = String[PROTOTYPE];
 var FILTER_TRIM_LEFT = /^\s+/gm;

@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 /**
  * Polyfill for creating an Array instance from nearly any kind of enumerable.

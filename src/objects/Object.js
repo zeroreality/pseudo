@@ -1,5 +1,4 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
-"use strict";
 
 var OBJECT_KEYS_BUG = !({ "toString": null }).propertyIsEnumerable("toString");
 var OBJECT_KEYS_DONT = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"];
