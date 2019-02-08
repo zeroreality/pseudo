@@ -8,8 +8,6 @@ var SVGNS = "http://www.w3.org/2000/svg";
 var WIN = window;
 /** @type {Navigator} */
 var NAV = navigator;
-/** @type {Object} */
-var OBJECT = Object;
 /** @type {Document} */
 var DOC = document;
 /** @type {Location} */

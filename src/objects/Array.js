@@ -178,10 +178,10 @@ function ARRAY_HELPER_MIN(a, b) {
 /**
  * Adds the two values together and returns the result.
  * @param {?} a
- * @param {?} a
+ * @param {?} b
  */
-function ARRAY_HELPER_SUM(a, a) {
-	return a + a;
+function ARRAY_HELPER_SUM(a, b) {
+	return a + b;
 }
 
 /**

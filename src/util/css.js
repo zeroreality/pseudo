@@ -392,7 +392,7 @@ function GET_TRANSFORM_DICTIONARY(transform) {
 						key,
 						value.substring(value.indexOf("(") + 1, value.lastIndexOf(")"))
 							.split(",")
-							.map(ARRAY_HELPER_MAP_TRIM)
+							.invoke("trim")
 					);
 			}
 		);
@@ -407,8 +407,8 @@ function GET_TRANSFORM_DICTIONARY(transform) {
  * @return {!string}
  */
 function GET_TRANSFORM_COORDS(dic, prefix, type) {
-	var prefix2d = (dic[prefix] || "").split(",").map(ARRAY_HELPER_MAP_TRIM),
-		prefix3d = (dic[prefix + "3d"] || "").split(",").map(ARRAY_HELPER_MAP_TRIM),
+	var prefix2d = (dic[prefix] || "").split(",").invoke("trim"),
+		prefix3d = (dic[prefix + "3d"] || "").split(",").invoke("trim"),
 		prefixX = dic[prefix + "X"] || prefix2d[0] || prefix3d[0] || "",
 		prefixY = dic[prefix + "Y"] || prefix2d[1] || prefix3d[1] || "",
 		prefixZ = dic[prefix + "Z"] || prefix3d[2] || "",

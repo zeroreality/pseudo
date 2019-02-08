@@ -21,7 +21,7 @@ function COOKIE_GETTER(name) {
  * @param {Date=} expiry
  * @return {!string}
  */
-function COOKIE_SETTER(name, value, expiry) {
+function COOKIE_SETTER(name, value, path, expiry) {
 	expiry = new Date(expiry instanceof Date ? expiry.valueOf() : IS_AN(expiry) ? expiry : Date.parse(String(expiry)));
 	DOC.cookie = name + "=" + value
 		+ "; path=" + (path || "/")
