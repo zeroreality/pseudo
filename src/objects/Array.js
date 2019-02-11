@@ -460,7 +460,8 @@ Array_prototype.plant = function(propertyName, value) {
 
 //#region Inspection
 /**
- * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes|Array#includes}, but instead of taking a second argument as startIndex, it takes N arguments and returns true if any of the objects are present in the array.
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes|Array#includes},
+ * but instead of taking a second argument as startIndex, it takes N arguments and returns true if any of the objects are present in the array.
  * @expose
  * @this {Array}
  * @param {...*} var_args
@@ -474,7 +475,8 @@ Array_prototype.hasAny = function(var_args) {
 };
 
 /**
- * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes|Array#includes}, but instead of taking a second argument as startIndex, it takes N arguments and returns true if all the objects are present in the array.
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes|Array#includes},
+ * but instead of taking a second argument as startIndex, it takes N arguments and returns true if all the objects are present in the array.
  * @expose
  * @this {Array}
  * @param {...*} var_args

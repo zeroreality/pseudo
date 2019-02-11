@@ -150,7 +150,7 @@ Date_prototype.contextString = function(comparer, levels, roundUp, prefix, suffi
 		i = array.length,
 		results = [],
 		context = i === 0 ? "now" : array[0].value > 0 ? "after" : "before";
-	while (i--) results[i] = ABS(array[i].value) + " " + ns.Date.parts[array[i].type];
+	while (i--) results[i] = ABS(array[i].value) + " " + ns.Date["parts"][array[i].type];
 	return ((prefix[context] || "") + " " + results.join(", ") + " " + (suffix[context] || "")).trim();
 };
 //#endregion Comparison
@@ -172,7 +172,7 @@ Date_prototype.getMidnight = function getMidnight() {
  * @return {!string}
  */
 Date_prototype.getDayName = function getDayName() {
-	return ns.Date.dayNames[this.getDay()] || "";
+	return ns.Date["dayNames"][this.getDay()] || "";
 };
 /**
  * 
@@ -181,7 +181,7 @@ Date_prototype.getDayName = function getDayName() {
  * @return {!string}
  */
 Date_prototype.getMonthName = function getMonthName() {
-	return ns.Date.monthNames[this.getMonth()] || "";
+	return ns.Date["monthNames"][this.getMonth()] || "";
 };
 /**
  * 
@@ -190,7 +190,7 @@ Date_prototype.getMonthName = function getMonthName() {
  * @return {!string}
  */
 Date_prototype.getMeridiem = function getMonthName() {
-	return ns.Date.meridiem[this.getHours() > 11 ? 1 : 0];
+	return ns.Date["meridiem"][this.getHours() > 11 ? 1 : 0];
 };
 /**
  * 
