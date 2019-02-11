@@ -408,3 +408,10 @@ Event_prototype.getKey = function() {
 Event_prototype.unselect = function() {
 	WIN.getSelection().removeAllRanges();
 };
+
+/**
+ * Add these few functions to the document and window.
+ */
+["on", "once", "off", "fire", "uses", "ask", "query"].forEach(function(name) {
+	DOC[name] = WIN[name] = HTMLElement_prototype[name];
+});
