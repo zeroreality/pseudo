@@ -11,7 +11,6 @@
 /// <reference path="..\src\_include.js" />
 /// </section>
 /// <section name="Objects">
-/// <reference path="..\src\objects\pseudo.js" />
 /// <reference path="..\src\objects\Boolean.js" />
 /// <reference path="..\src\objects\Number.js" />
 /// <reference path="..\src\objects\Object.js" />
@@ -34,6 +33,9 @@
 /// <reference path="..\src\util\processor.js" />
 /// <reference path="..\src\util\json.js" />
 /// <reference path="..\src\util\protocol.js" />
+/// </section>
+/// <section name="namespace">
+/// <reference path="..\src\objects\pseudo.js" />
 /// </section>
 /// <output name="..\out\pseudo3.js" />
 
