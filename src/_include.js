@@ -15,13 +15,13 @@ var PREDICATE_ERROR = "predicate must be a function";
 
 //#region Timers
 /** @type {Function} */
-var SET_TIMER = setTimeout;
+var SET_TIMER = self.setTimeout;
 /** @type {Function} */
-var CLEAR_TIMER = clearTimeout;
+var CLEAR_TIMER = self.clearTimeout;
 /** @type {Function} */
-var SET_EVERY = setInterval;
+var SET_EVERY = self.setInterval;
 /** @type {Function} */
-var CLEAR_EVERY = clearInterval;
+var CLEAR_EVERY = self.clearInterval;
 /**
  * Sets a callback to happen the instance the main thread ends execution.
  * Only supported by Microsoft, so polyfill to help other browsers.
@@ -29,14 +29,14 @@ var CLEAR_EVERY = clearInterval;
  * @param {...?} var_args
  * @return {number}		Handle for the callback timer.
  **/
-var SET_INSTANT = setImmediate || function(func, var_args) {
+var SET_INSTANT = self.setImmediate || function(func, var_args) {
 	return SET_TIMER.apply(this, [func, 0].concat(SLICE.call(arguments, 0)));
 };
 /**
  * Clears a setImmediate (or polyfilled) timeout.
  * @param {number} id	Handle for the callback timer.
  **/
-var CLEAR_INSTANT = clearImmediate || function(id) {
+var CLEAR_INSTANT = self.clearImmediate || function(id) {
 	return CLEAR_TIMER(id);
 };
 //#endregion Timers
