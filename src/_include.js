@@ -147,7 +147,7 @@ function ROUND_TO(number, places) {
  * @return {boolean}
  */
 function IS_NAN(value) {
-	return value === null || isNaN(value);
+	return !OBJECT_IS_NUMBER(value) || isNaN(value);
 }
 /**
  * Opposite of IS_NAN
