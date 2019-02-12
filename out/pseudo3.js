@@ -1,38 +1,16 @@
+/*
+ pseudo3 stand-alone JavaScript utility library
+ This library extends the functionality of the DOM by changing the object prototypes.
+ Normally this approach is frowned upon because it can cause issue with other libraries if they do the same.
+ However, I don't care, since I don't use other libraries.
+ @author Alex Lein (zeroreality@gmail.com)
+ @version 2.0.7
+ @copyright Alex Lein 2019-02-12
+*/
 'use strict';
 (function(n) {
-  function p(a) {
-    return null === a || isNaN(a);
-  }
-  function ca(a, b, c) {
-    a = k.getElementsByTagName(a);
-    for (var d, g = 0; d = a[g]; g++) {
-      if (d.getAttribute(b) === c) {
-        return d.parentNode.removeChild(d);
-      }
-    }
-  }
-  function da(a) {
-    return void 0 === a ? 'undefined' : null === a ? 'null' : va.call(a).match(wa)[1];
-  }
-  function I(a, b, c) {
-    var d = J(a), g = {};
-    p(b) && (b = 5);
-    c || (c = []);
-    for (var q = 0, e = d.length; q < e; q++) {
-      var f = d[q], m = a[f];
-      'object' === typeof m ? 0 < b && 0 > c.indexOf(m) && (g[f] = m instanceof Array ? K(m, b - 1, [m].concat(c)) : I(m, b - 1, [m].concat(c))) : g[f] = m;
-    }
-    return g;
-  }
-  function K(a, b, c) {
-    var d = [];
-    p(b) && (b = 5);
-    c || (c = []);
-    for (var g = 0, q = a.length; g < q; g++) {
-      var e = a[g];
-      'object' === typeof e ? 0 < b && 0 > c.indexOf(e) && d.push(e instanceof Array ? K(e, b - 1, [e].concat(c)) : I(e, b - 1, [e].concat(c))) : d.push(e);
-    }
-    return d;
+  function q(a) {
+    return !E(a) || isNaN(a);
   }
   function C(a, b, c, d) {
     a = a.toString(d || 10).split('.');
@@ -53,18 +31,18 @@
   function F(a) {
     return 'string' === typeof a || a instanceof String;
   }
-  function ea(a, b, c) {
+  function ca(a, b, c) {
     if ('function' !== typeof b) {
       throw new TypeError('predicate must be a function');
     }
     3 > arguments.length && (c = a);
-    for (var d = [], g = J(a), q = 0, e = g.length; q < e; q++) {
-      var f = g[q];
-      d[q] = b.call(c, a[f], f, a, q);
+    for (var d = [], g = I(a), p = 0, e = g.length; p < e; p++) {
+      var f = g[p];
+      d[p] = b.call(c, a[f], f, a, p);
     }
     return d;
   }
-  function fa(a, b) {
+  function da(a, b) {
     return a < b ? -1 : a > b ? 1 : 0;
   }
   function S(a, b) {
@@ -78,7 +56,7 @@
     } else {
       return 0;
     }
-    var c = a.toString().match(ha), d = b.toString().match(ha);
+    var c = a.toString().match(ea), d = b.toString().match(ea);
     if (c || d) {
       if (!c) {
         return -1;
@@ -87,23 +65,23 @@
         return 1;
       }
     } else {
-      return fa(a, b);
+      return da(a, b);
     }
     a = 0;
     for (b = T(c.length, d.length); a < b; a++) {
-      var g = (c[a] || '').toUpperCase(), q = (d[a] || '').toUpperCase();
+      var g = (c[a] || '').toUpperCase(), p = (d[a] || '').toUpperCase();
       if (!g) {
         return -1;
       }
-      if (!q) {
+      if (!p) {
         return 1;
       }
-      var e = t(g, 10), f = t(q, 10), m = p(e), l = p(f);
+      var e = t(g, 10), f = t(p, 10), m = q(e), l = q(f);
       if (m && l) {
-        if (g < q) {
+        if (g < p) {
           return -1;
         }
-        if (g > q) {
+        if (g > p) {
           return 1;
         }
       } else {
@@ -125,16 +103,16 @@
     }
     return 0;
   }
-  function xa(a, b) {
+  function va(a, b) {
     return b > a ? b : a;
   }
-  function ya(a, b) {
+  function wa(a, b) {
     return b < a ? b : a;
   }
-  function za(a, b) {
+  function xa(a, b) {
     return a + b;
   }
-  function Aa(a, b) {
+  function ya(a, b) {
     return a === b;
   }
   function G(a) {
@@ -158,18 +136,18 @@
     }
     return a;
   }
-  function ia(a) {
+  function fa(a) {
     return a.handler === this.handler && a.capture === this.capture;
   }
-  function ja(a) {
+  function ha(a) {
     return k.cookie.split(new RegExp('\\b' + a + '=([^;]*)'))[1];
   }
-  function ka(a, b, c, d) {
-    d = new Date(d instanceof Date ? d.valueOf() : p(d) ? Date.parse(String(d)) : d);
-    k.cookie = a + '=' + b + '; path=' + (c || '/') + '; expires=' + (p(d.valueOf()) ? (new Date).addDate(1) : d).toUTCString();
-    return ja(a);
+  function ia(a, b, c, d) {
+    d = new Date(d instanceof Date ? d.valueOf() : q(d) ? Date.parse(String(d)) : d);
+    k.cookie = a + '=' + b + '; path=' + (c || '/') + '; expires=' + (q(d.valueOf()) ? (new Date).addDate(1) : d).toUTCString();
+    return ha(a);
   }
-  function la(a) {
+  function ja(a) {
     var b = '#';
     if ('#' === a[0]) {
       if (4 !== a.length) {
@@ -193,49 +171,49 @@
           var d = u(a[0]) / 360 * 6, g = u(a[1]) / 100;
           a = u(a[2]) / 100;
           c = V(d);
-          var q = d - c;
+          var p = d - c;
           d = a * (1 - g);
-          var e = a * (1 - q * g);
-          g = a * (1 - (1 - q) * g);
-          q = [g, a, a, e, d, d];
+          var e = a * (1 - p * g);
+          g = a * (1 - (1 - p) * g);
+          p = [g, a, a, e, d, d];
           var f = [d, d, g, a, a, e];
           c %= 6;
           b += (255 * [a, e, d, d, g, a][c]).toString(16);
-          b += (255 * q[c]).toString(16);
+          b += (255 * p[c]).toString(16);
           b += (255 * f[c]).toString(16);
       }
     }
     return b;
   }
-  function ma(a) {
-    var b = la(a);
+  function ka(a) {
+    var b = ja(a);
     a = t(b.substr(1, 2), 16);
     var c = t(b.substr(3, 2), 16);
     b = t(b.substr(5, 2), 16);
     return (299 * a + 587 * c + 114 * b) / 1E3;
   }
-  function Ba() {
+  function za() {
     this.dataset._before_edit = this.innerHTML;
   }
-  function Ca() {
+  function Aa() {
     this.dataset._before_edit !== this.innerHTML && this.fire('change');
   }
-  function Da() {
+  function Ba() {
     for (var a = new Date, b = a; a - b < this.l;) {
       this.o(this.v()), a = new Date;
     }
     this.b = 0;
     this.j();
   }
-  function na(a, b) {
+  function la(a, b) {
     b || (b = {});
     this.b = 0;
     this.o = a;
-    this.s = Da.bind(this);
+    this.s = Ba.bind(this);
     this.c = [];
     this.l = 0 < b.l ? b.l : 50;
     this.wait = 0 < b.wait ? b.wait : 0;
-    Ea(this, 'isWorking', {enumerable:!0, configurable:!0, get:function() {
+    Ca(this, 'isWorking', {enumerable:!0, configurable:!0, get:function() {
       return 0 < this.b;
     }});
   }
@@ -261,8 +239,8 @@
             } else {
               if (a) {
                 d.push("<span class='json-object'>{");
-                var e = J(a);
-                e.length && (d.push('<br/>'), d.push(e.map(function(d) {
+                var p = I(a);
+                p.length && (d.push('<br/>'), d.push(p.map(function(d) {
                   return g + b + "<span class='json-key'>\"" + d + '"</span>: ' + W(a[d], b, c + 1);
                 }).join(',<br/>')), d.push('<br/>' + g));
                 d.push('}</span>');
@@ -276,29 +254,29 @@
     }
     return d.join('');
   }
-  function oa() {
-    return pa || (pa = Fa.appendChild(k.element('iframe', {style:'position:absolute;top:-9999px;visibility:hidden'})));
+  function ma() {
+    return na || (na = Da.appendChild(k.element('iframe', {style:'position:absolute;top:-9999px;visibility:hidden'})));
   }
-  function L() {
-    qa(X);
-    A.off('blur', L);
-    M();
+  function J() {
+    oa(X);
+    A.off('blur', J);
+    K();
   }
-  function ra() {
-    A.off('blur', L);
+  function pa() {
+    A.off('blur', J);
     H();
   }
-  function Ga(a) {
+  function Ea(a) {
     for (A = r; A !== A.parent;) {
       A = A.parent;
     }
-    A.on('blur', L);
-    X = N(ra, 5E3);
+    A.on('blur', J);
+    X = L(pa, 5E3);
     r.location = a;
   }
-  function Ha(a) {
+  function Fa(a) {
     try {
-      oa().contentWindow.location.href = a, M();
+      ma().contentWindow.location.href = a, K();
     } catch (b) {
       if ('NS_ERROR_UNKNOWN_PROTOCOL' === b.name) {
         H();
@@ -307,62 +285,47 @@
       }
     }
   }
-  function Ia(a) {
-    A = r.once('blur', L);
-    X = N(ra, 5E3);
-    oa().contentWindow.location.href = a;
+  function Ga(a) {
+    A = r.once('blur', J);
+    X = L(pa, 5E3);
+    ma().contentWindow.location.href = a;
   }
-  var v = (72697618120946).toString(36), N = setTimeout, qa = clearTimeout, Ja = setInterval, Ka = clearInterval, La = setImmediate || function(a, b) {
-    return N.apply(this, [a, 0].concat(w.call(arguments, 0)));
-  }, Ma = clearImmediate || function(a) {
-    return qa(a);
-  }, f = Object, J = f.keys, Ea = f.defineProperty, e = Array[v], w = e.slice, va = Object[v].toString, B = Math, Y = B.abs, sa = B.ceil, V = B.floor, T = B.max, Na = B.pow, O = B.round, t = parseInt, u = parseFloat;
-  'use strict';
-  var wa = /^\[object\s(.*)\]$/, ta = k.getElementsByTagName('head')[0] || Z.appendChild(k.createElement('head'));
-  n.addScript = function(a, b, c) {
-    c && ca('script', 'src', a);
-    c = k.createElement('script');
-    c.async = !1;
-    c.type = 'text/javascript';
-    c.setAttribute('src', a);
-    b && (c.onload = b);
-    return ta.appendChild(c);
-  };
-  n.addSheet = function(a, b, c) {
-    c && ca('link', 'href', a);
-    c = k.createElement('link');
-    c.setAttribute('rel', 'stylesheet');
-    c.setAttribute('type', 'text/css');
-    c.setAttribute('href', a);
-    b && c.setAttribute('media', b);
-    return ta.appendChild(c);
-  };
-  n.className = da;
-  n.clone = function(a, b, c) {
-    return 'object' === typeof a ? a instanceof Array ? K(a, b, c) : I(a, b, c) : a;
-  };
-  n.cloneObject = I;
-  n.cloneArray = K;
-  n.escape = function(a) {
-    return a.replace(/[\r%\?=&\+\s]/gim, function(a) {
-      switch(a) {
-        case '\r':
-          return '';
-        case ' ':
-          return '+';
-        case '+':
-          return '%2b';
-        default:
-          return escape(a).toLowerCase();
+  function qa(a, b, c) {
+    a = k.getElementsByTagName(a);
+    for (var d, g = 0; d = a[g]; g++) {
+      if (d.getAttribute(b) === c) {
+        return d.parentNode.removeChild(d);
       }
-    });
-  };
-  n.isNaN = p;
-  n.isN = function(a) {
-    return !p(a);
-  };
-  'use strict';
-  'use strict';
+    }
+  }
+  function ra(a) {
+    return void 0 === a ? 'undefined' : null === a ? 'null' : Ha.call(a).match(Ia)[1];
+  }
+  function M(a, b, c) {
+    var d = I(a), g = {};
+    q(b) && (b = 5);
+    c || (c = []);
+    for (var p = 0, e = d.length; p < e; p++) {
+      var f = d[p], m = a[f];
+      'object' === typeof m ? 0 < b && 0 > c.indexOf(m) && (g[f] = m instanceof Array ? N(m, b - 1, [m].concat(c)) : M(m, b - 1, [m].concat(c))) : g[f] = m;
+    }
+    return g;
+  }
+  function N(a, b, c) {
+    var d = [];
+    q(b) && (b = 5);
+    c || (c = []);
+    for (var g = 0, p = a.length; g < p; g++) {
+      var e = a[g];
+      'object' === typeof e ? 0 < b && 0 > c.indexOf(e) && d.push(e instanceof Array ? N(e, b - 1, [e].concat(c)) : M(e, b - 1, [e].concat(c))) : d.push(e);
+    }
+    return d;
+  }
+  var v = (72697618120946).toString(36), L = self.setTimeout, oa = self.clearTimeout, Ja = self.setInterval, Ka = self.clearInterval, La = self.setImmediate || function(a, b) {
+    return L.apply(this, [a, 0].concat(w.call(arguments, 0)));
+  }, Ma = self.clearImmediate || function(a) {
+    return oa(a);
+  }, f = Object, I = f.keys, Ca = f.defineProperty, e = Array[v], w = e.slice, Ha = Object[v].toString, B = Math, Y = B.abs, sa = B.ceil, V = B.floor, T = B.max, Na = B.pow, O = B.round, t = parseInt, u = parseFloat;
   Number[v].pad = function(a, b, c) {
     return C(this, a, b, c);
   };
@@ -395,11 +358,10 @@
   Number[v].countDecimals = function() {
     return V(this) === this ? 0 : this.toString().split('.')[1].length || 0;
   };
-  'use strict';
   var Oa = !{toString:null}.propertyIsEnumerable('toString'), Pa = 'toString toLocaleString valueOf hasOwnProperty isPrototypeOf propertyIsEnumerable constructor'.split(' ');
   Object.isArguments = function(a) {
-    var b = da(a);
-    return 'Arguments' === b || 'Object' === b && !p(a.length) && 'callee' in a;
+    var b = ra(a);
+    return 'Arguments' === b || 'Object' === b && !q(a.length) && 'callee' in a;
   };
   Object.isNothing = z;
   Object.isBoolean = R;
@@ -420,24 +382,23 @@
     }
     return b;
   };
-  Object.each = ea;
-  'use strict';
+  Object.each = ca;
   Array.of = Array.of || function(a) {
     return w.call(a);
   };
   e.copy = function() {
     return w.call(this);
   };
-  var ha = /[a-z][a-z0-9]*|[0-9]+/gim;
+  var ea = /[a-z][a-z0-9]*|[0-9]+/gim;
   Array.natural = S;
   Array.numeric = function(a, b) {
     a = u(a);
-    var c = p(a);
+    var c = q(a);
     b = u(b);
-    var d = p(b);
+    var d = q(b);
     return a < b || !c && d ? -1 : a > b || c && !d ? 1 : 0;
   };
-  Array.compare = fa;
+  Array.compare = da;
   e.order = function(a) {
     z(a) && (a = S);
     if ('function' !== typeof a) {
@@ -473,7 +434,7 @@
   };
   e.max = function(a, b) {
     if (z(a)) {
-      a = xa;
+      a = va;
     } else {
       if ('function' !== typeof a) {
         throw new TypeError('predicate must be a function');
@@ -483,7 +444,7 @@
   };
   e.min = function(a, b) {
     if (z(a)) {
-      a = ya;
+      a = wa;
     } else {
       if ('function' !== typeof a) {
         throw new TypeError('predicate must be a function');
@@ -493,7 +454,7 @@
   };
   e.sum = function(a, b) {
     if (z(a)) {
-      a = za;
+      a = xa;
     } else {
       if ('function' !== typeof a) {
         throw new TypeError('predicate must be a function');
@@ -570,7 +531,7 @@
     return this;
   };
   e.insert = function(a, b) {
-    this.splice(p(b) ? this.length : b, 0, a);
+    this.splice(q(b) ? this.length : b, 0, a);
     return this;
   };
   e.insertBefore = function(a, b) {
@@ -584,7 +545,7 @@
     return this;
   };
   e.removeAt = function(a, b) {
-    p(b) && (b = 1);
+    q(b) && (b = 1);
     return this.splice(a, b);
   };
   e.replace = function(a, b) {
@@ -658,7 +619,7 @@
   };
   e.unique = function(a, b) {
     if (!a) {
-      a = Aa;
+      a = ya;
     } else {
       if ('function' !== typeof a) {
         throw new TypeError('predicate must be a function');
@@ -694,9 +655,9 @@
     if ('function' !== typeof a || b && 'function' !== typeof b) {
       throw new TypeError('predicate must be a function');
     }
-    return this.reduce(function(c, e, f, h) {
-      var d = a.call(h, e, f, c);
-      c[d] = b ? b.call(h, e, d, f, c) : e;
+    return this.reduce(function(c, g, e, f) {
+      var d = a.call(f, g, e, c);
+      c[d] = b ? b.call(f, g, d, e, c) : g;
       return c;
     }, c || {});
   };
@@ -742,11 +703,10 @@
       r.requestAnimationFrame(f);
     });
   };
-  'use strict';
   e = Date[v];
   var Qa = new Date(NaN), Ra = /(\\.|[ydM]{1,4}|[hHmstT]{1,2}|f{1,6})/gm, x = {yyyy:31536E6, MM:26784E5, ww:6048E5, dd:864E5, hh:36E5, mm:6E4, ss:1000, fff:1};
   Date.midnight = function(a) {
-    a = a instanceof Date || !p(a) ? new Date(a) : new Date;
+    a = a instanceof Date || !q(a) ? new Date(a) : new Date;
     a.addMilliseconds(-a.getMilliseconds() - a.getSeconds() * x.ss - a.getMinutes() * x.mm - a.getHours() * x.hh);
     return a;
   };
@@ -755,8 +715,8 @@
   };
   var Sa = [{type:'yyyy', value:x.yyyy}, {type:'MM', value:x.MM}, {type:'ww', value:x.ww}, {type:'dd', value:x.dd}, {type:'hh', value:x.hh}, {type:'mm', value:x.mm}, {type:'ss', value:x.ss}];
   e.context = function(a, b, c) {
-    a instanceof Date && !p(a.valueOf()) || (a = new Date);
-    p(b) && (b = 2);
+    a instanceof Date && !q(a.valueOf()) || (a = new Date);
+    q(b) && (b = 2);
     var d = 0, e = [], f = 1 === b - d ? c ? sa : O : V;
     a = this.valueOf() - a.valueOf();
     for (var h = 0 > a, k = Y(a), m = 0; a = Sa[m]; m++) {
@@ -793,7 +753,7 @@
     b = a.length;
     c = [];
     for (var g = 0 === b ? 'now' : 0 < a[0].value ? 'after' : 'before'; b--;) {
-      c[b] = Y(a[b].value) + ' ' + n.Date.D[a[b].type];
+      c[b] = Y(a[b].value) + ' ' + n.Date.parts[a[b].type];
     }
     return ((d[g] || '') + ' ' + c.join(', ') + ' ' + (e[g] || '')).trim();
   };
@@ -801,16 +761,16 @@
     return Date.midnight(this);
   };
   e.getDayName = function() {
-    return n.Date.w[this.getDay()] || '';
+    return n.Date.dayNames[this.getDay()] || '';
   };
   e.getMonthName = function() {
-    return n.Date.C[this.getMonth()] || '';
+    return n.Date.monthNames[this.getMonth()] || '';
   };
   e.getMeridiem = function() {
-    return n.Date.B[11 < this.getHours() ? 1 : 0];
+    return n.Date.meridiem[11 < this.getHours() ? 1 : 0];
   };
   e.toFormat = function(a, b) {
-    return p(this.valueOf()) ? 1 < arguments.length ? b : Qa.toString() : (a || '').split(Ra).map(function(a) {
+    return q(this.valueOf()) ? 1 < arguments.length ? b : Qa.toString() : (a || '').split(Ra).map(function(a) {
       if (!a) {
         return '';
       }
@@ -879,16 +839,16 @@
     return a instanceof Date && this.getDate() === a.getDate() && this.getMonth() === a.getMonth() && this.getFullYear() === a.getFullYear();
   };
   e.isSameTime = function(a, b) {
-    p(b) && (b = 0);
+    q(b) && (b = 0);
     return a instanceof Date && (0 < b || this.getMilliseconds() === a.getMilliseconds()) && (1 < b || this.getSeconds() === a.getSeconds()) && (2 < b || this.getMinutes() === a.getMinutes()) && this.getHours() === a.getHours();
   };
   e.isMidnight = function(a) {
     var b = Date.midnight(this);
-    p(a) && (a = 0);
+    q(a) && (a = 0);
     return this.isSameTime(b, a);
   };
   e.isValid = function() {
-    return !p(this.valueOf());
+    return !q(this.valueOf());
   };
   e.getFirstDay = function() {
     var a = new Date(this.valueOf());
@@ -939,7 +899,6 @@
     return this;
   };
   n.Date = {milli:f.freeze(x), meridiem:['am', 'pm'], parts:{yyyy:'years', MM:'months', ww:'weeks', dd:'days', hh:'hours', mm:'minutes', ss:'seconds', fff:'milliseconds'}, dayNames:'Sunday Monday Tuesday Wednesday Thursday Friday Saturday'.split(' '), monthNames:'January February March April May June July August September October November December'.split(' ')};
-  'use strict';
   f = String[v];
   var Ta = /^\s+/gm, Ua = /\s+$/gm;
   f.contains = function(a) {
@@ -1033,20 +992,18 @@
   f.beforeLast = function(a) {
     return this.substring(0, this.lastIndexOf(a));
   };
-  'use strict';
   f = Function[v];
   f.defer = function(a) {
     var b = this;
     a = w.call(arguments);
-    return N(function() {
+    return L(function() {
       return b.apply(r, a);
     }, 1);
   };
   f.promise = function() {
     return new Promise(this);
   };
-  'use strict';
-  var r = window, ua = navigator, k = document, Z = k.documentElement, Fa = k.body, h = Element[v];
+  var r = window, ta = navigator, k = document, Z = k.documentElement, Da = k.body, h = Element[v];
   f = Event[v];
   e = ['webkit', 'moz', 'ms', 'o'];
   var P = 'matchesSelector', Q = 'transform';
@@ -1058,7 +1015,6 @@
   for (D = 0; D < B && !h[P]; D++) {
     P = e[D] + 'MatchesSelector';
   }
-  'use strict';
   h.ask = function() {
     return this.querySelector(G(arguments));
   };
@@ -1081,7 +1037,6 @@
   h.jump = function(a, b) {
     return this.matches(a) ? this : this.up(a, b);
   };
-  'use strict';
   h.amputate = function() {
     return this.parentNode.removeChild(this);
   };
@@ -1133,7 +1088,7 @@
             var y = u(l[1]);
             l = u(l[2]);
             k *= y;
-            m *= p(l) ? y : l;
+            m *= q(l) ? y : l;
             break;
           case 'scalex':
             k *= u(l[1]);
@@ -1247,7 +1202,7 @@
       return a.substring(a.indexOf('(') + 1, a.lastIndexOf(')'));
     });
     b ? c[a] = b : delete c[a];
-    this.style[Q] = ea(c, function(a, b) {
+    this.style[Q] = ca(c, function(a, b) {
       return b + '(' + a + ')';
     }).join(' ');
     return this;
@@ -1286,7 +1241,6 @@
   r.$$ = function(a) {
     return k.query(G(arguments));
   };
-  'use strict';
   var aa = {1:'left', 2:'middle', 3:'right'};
   r.ScriptEngineMajorVersion instanceof Function && (aa['0'] = 'left', aa['4'] = 'middle');
   var ba = {escape:27, tab:9, capslock:20, shift:16, control:17, alt:18, backspace:8, enter:13, space:32, scrolllock:145, pause:19, cancel:19, 'break':19, insert:45, 'delete':46, home:36, end:35, pageup:33, pagedown:34, arrowleft:37, arrowup:38, arrowright:39, arrowdown:40, numlock:144, divide:111, multiply:106, subtract:109, numpad7:103, numpad8:104, numpad9:105, add:107, numpad4:100, numpad5:101, numpad6:102, clear:12, numpad1:97, numpad2:98, numpad3:99, numpad0:96, dot:110, windows:91, select:93, 
@@ -1324,7 +1278,7 @@
         } else {
           if (b) {
             if (b instanceof Function) {
-              this.a[a] instanceof Array && (d = !!c, e = this.a[a].findIndex(ia, {handler:b, capture:d}), this.a[a].removeAt(e), this.removeEventListener(a, b, d));
+              this.a[a] instanceof Array && (d = !!c, e = this.a[a].findIndex(fa, {handler:b, capture:d}), this.a[a].removeAt(e), this.removeEventListener(a, b, d));
             } else {
               throw new TypeError('handler not an instance of a Function');
             }
@@ -1333,7 +1287,7 @@
           }
         }
       } else {
-        for (var d = J(this.a), e = 0, f = d.length; e < f; e++) {
+        for (var d = I(this.a), e = 0, f = d.length; e < f; e++) {
           this.off(d[e]);
         }
       }
@@ -1371,7 +1325,7 @@
     return a;
   };
   h.uses = function(a, b, c) {
-    return this.a && this.a[a] ? -1 < this.a[a].findIndex(ia, {handler:b, capture:!!c}) : !1;
+    return this.a && this.a[a] ? -1 < this.a[a].findIndex(fa, {handler:b, capture:!!c}) : !1;
   };
   f.cancel = function() {
     this.unselect();
@@ -1391,29 +1345,28 @@
   f.unselect = function() {
     r.getSelection().removeAllRanges();
   };
-  'use strict';
-  n.cookies = {get:ja, set:ka, remove:function(a) {
-    return !ka(a, '', new Date(0));
+  'on once off fire uses ask query'.split(' ').forEach(function(a) {
+    k[a] = r[a] = h[a];
+  });
+  n.cookies = {get:ha, set:ia, remove:function(a) {
+    return !ia(a, '', new Date(0));
   }};
-  'use strict';
   n.CSS = {parseTime:function(a) {
     var b = u(a);
     a.endsWith('ms') || a.endsWith('s') && (b *= 1000);
     return O(b);
-  }, hexColour:la, contrast:ma, dark:function(a) {
-    return 128 > ma(a);
+  }, hexColour:ja, contrast:ka, dark:function(a) {
+    return 128 > ka(a);
   }};
-  'use strict';
   n.Forms = {};
   n.Forms.editable = function(a) {
-    a.on('focus', Ba);
-    a.on('blur', Ca);
+    a.on('focus', za);
+    a.on('blur', Aa);
   };
   n.Opaque = {};
   n.Opaque.create = function(a, b) {
     return k.element('article', {id:'opaque', innerHTML:'<div class="modal"><header>' + a + '</header><article><form action="javascript:void(0)" class="standard_form">' + b + '</form></article></div>'});
   };
-  'use strict';
   n.keyboard = function() {
     function a() {
       this.type = 'keydown';
@@ -1511,10 +1464,9 @@
       return -1 < f(new c(a, b, g), !b);
     }, removeShortcut:h};
   }();
-  'use strict';
-  n.Processor = na;
-  f = na[v];
-  f.A = function() {
+  n.Processor = la;
+  f = la[v];
+  f.w = function() {
     this.b = Ma(this.b) || 0;
   };
   f.add = function(a) {
@@ -1531,12 +1483,10 @@
   f.j = function() {
     !this.b && this.c.length && (this.b = La(this.s, this.wait));
   };
-  'use strict';
   n.JSON = {pretty:W};
-  'use strict';
-  var A = r, pa = null, X = 0, M = null, H = null;
+  var A = r, na = null, X = 0, K = null, H = null;
   n.protocol = {check:function(a, b, c) {
-    M = function() {
+    K = function() {
       b && b();
     };
     H = function() {
@@ -1544,18 +1494,61 @@
     };
     switch(r.chrome ? 'chrome' : 'undefined' !== typeof r.InstallTrigger ? 'firefox' : k.documentMode ? 'ie' : r.opera ? 'opera' : null) {
       case 'chrome':
-        Ga(a);
+        Ea(a);
         break;
       case 'firefox':
-        Ha(a);
+        Fa(a);
         break;
       case 'ie':
       case 'edge':
-        ua.msLaunchUri ? ua.msLaunchUri(a, M, H) : Ia(a);
+        ta.msLaunchUri ? ta.msLaunchUri(a, K, H) : Ga(a);
         break;
       default:
         H();
     }
   }};
+  var Ia = /^\[object\s(.*)\]$/, ua = k.getElementsByTagName('head')[0] || Z.appendChild(k.createElement('head'));
+  n.addScript = function(a, b, c) {
+    c && qa('script', 'src', a);
+    c = k.createElement('script');
+    c.async = !1;
+    c.type = 'text/javascript';
+    c.setAttribute('src', a);
+    b && (c.onload = b);
+    return ua.appendChild(c);
+  };
+  n.addSheet = function(a, b, c) {
+    c && qa('link', 'href', a);
+    c = k.createElement('link');
+    c.setAttribute('rel', 'stylesheet');
+    c.setAttribute('type', 'text/css');
+    c.setAttribute('href', a);
+    b && c.setAttribute('media', b);
+    return ua.appendChild(c);
+  };
+  n.className = ra;
+  n.clone = function(a, b, c) {
+    return 'object' === typeof a ? a instanceof Array ? N(a, b, c) : M(a, b, c) : a;
+  };
+  n.cloneObject = M;
+  n.cloneArray = N;
+  n.escape = function(a) {
+    return a.replace(/[\r%\?=&\+\s]/gim, function(a) {
+      switch(a) {
+        case '\r':
+          return '';
+        case ' ':
+          return '+';
+        case '+':
+          return '%2b';
+        default:
+          return escape(a).toLowerCase();
+      }
+    });
+  };
+  n.isNaN = q;
+  n.isN = function(a) {
+    return !q(a);
+  };
 })(this.pseudo3 = {});
 

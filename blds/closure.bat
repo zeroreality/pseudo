@@ -30,7 +30,7 @@ java -jar "..\path\to\closure.jar"
                         --formatting PRETTY_PRINT ^
                         --formatting SINGLE_QUOTES ^
                         --js_output_file "..\out\pseudo3.js" ^
-                        "..\out\tmp"
+                        "..\out\tmp" 2> "..\out\pseudo3.js.log"
 
 rem ### cleanup temp file
 del "..\out\tmp"

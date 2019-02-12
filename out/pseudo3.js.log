@@ -1,0 +1,811 @@
+../out/tmp:212: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Number[PROTOTYPE].pad = function(length, decimals, radix) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:224: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Number[PROTOTYPE].group = function(separator, length, decimals, point) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:250: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Number[PROTOTYPE].round = function(places) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:259: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Number[PROTOTYPE].countDecimals = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:361: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.isArguments = OBJECT_IS_ARGUMENTS;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:365: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.isNothing = OBJECT_IS_NOTHING;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:369: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.isBoolean = OBJECT_IS_BOOLEAN;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:373: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.isNumber = OBJECT_IS_NUMBER;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:377: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.isString = OBJECT_IS_STRING;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:381: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.pairs = OBJECT_PAIRS;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:385: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Object.each = OBJECT_EACH;
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:394: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array.of = Array.of || function(list) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:394: WARNING - assignment to property of of Array
+found   : function((Object|null)): (Array|null)
+required: function(...T): Array<T>
+Array.of = Array.of || function(list) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:404: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.copy = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:481: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array.natural = ARRAY_NATURAL;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:483: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array.numeric = ARRAY_NUMERIC;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:485: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array.compare = ARRAY_COMPARE;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:494: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.order = function(predicate) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:508: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.orderBy = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:527: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.orderWith = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:582: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.max = function(predicate, initialValue) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:598: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.min = function(predicate, initialValue) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:613: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.sum = function(predicate, initialValue) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:629: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.each = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:643: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.gather = function(key) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:659: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.invoke = function(methodName, var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:674: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.flatten = function(levels) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:693: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.find = Array_prototype.find || function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:710: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.findIndex = Array_prototype.findIndex || function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:728: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.findIndexes = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:746: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.last = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:759: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.inject = function(array) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:773: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.insert = function(object, index) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:785: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.insertBefore = function(object, before) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:796: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.remove = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:813: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.removeAt = function(index, number) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:825: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.replace = function(object, replacement) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:838: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.plant = function(propertyName, value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:855: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.hasAny = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:870: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.hasAll = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:883: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.count = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:896: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.group = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:915: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.groupBy = function(key) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:937: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.overlaps = function(array) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:956: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.without = function(array) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:976: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.unique = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:996: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.distinct = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1032: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.toDictionary = function(keyPredicate, valuePredicate, dictionary) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1053: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.asyncForEach = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1096: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.deferForEach = function(predicate, context, delay) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1162: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Array_prototype.animForEach = function(predicate, context) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1218: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date.midnight = function(date) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1240: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.copy = function() { return new Date(this); };
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1266: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.context = function(comparer, levels, roundUp) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1326: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.contextString = function(comparer, levels, roundUp, prefix, suffix) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1345: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getMidnight = function getMidnight() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1354: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getDayName = function getDayName() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1363: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getMonthName = function getMonthName() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1372: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getMeridiem = function getMonthName() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1383: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.toFormat = function(string, invalid) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1384: WARNING - inconsistent return type
+found   : (string|undefined)
+required: string
+	if (IS_NAN(this.valueOf())) return arguments.length > 1 ? invalid : DATE_INVALID.toString();
+	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1437: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.isSameMonth = function(other) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1449: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.isSameDay = function(other) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1464: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.isSameTime = function(other, accuracy) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1479: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.isMidnight = function(accuracy) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1490: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.isValid = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1499: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getFirstDay = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1510: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getLastDate = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1523: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.getHoursBase12 = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1537: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addYear = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1548: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addMonth = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1559: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addDate = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1570: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addHours = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1581: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addMinutes = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1592: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addSeconds = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1603: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.addMilliseconds = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1614: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Date_prototype.add = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1623: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Date = {
+^^^^^^^^^^^^
+
+../out/tmp:1671: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.contains = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1681: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.count = function(string) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1690: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.reverse = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1700: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.startsWith = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1710: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.endsWith = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1741: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.prune = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1751: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.pruneStart = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1774: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.pruneEnd = function(object) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1805: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.replaceAll = function(find, replacement) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1817: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.left = function(length) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1827: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.right = function(length) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1837: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.repeat = function(number) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1850: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.toCapital = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1860: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.after = function(string) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1870: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.afterLast = function(string) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1880: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.before = function(string) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1890: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+String_prototype.beforeLast = function(string) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1903: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Function_prototype.defer = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1914: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Function_prototype.promise = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1971: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.ask = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1979: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.query = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:1989: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.matches = function(args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2001: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.up = function(query, ancestorNode) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2021: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.jump = function(query, ancestorNode) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2022: WARNING - actual parameter 1 of Element.prototype.matches does not match formal parameter
+found   : (Array<string>|null|string|undefined)
+required: string
+	return this.matches(query)
+	                    ^^^^^
+
+../out/tmp:2033: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.amputate = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2041: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.replace = function(withNode) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2087: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.append = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2115: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.empty = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2128: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.insertAfter = function(child, after) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2138: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.update = function(value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2148: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.transplant = function(parent, before) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2157: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.climb = function(ancestor) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2162: WARNING - inconsistent return type
+found   : Node
+required: (Element|null)
+	return child;
+	       ^^^^^
+
+../out/tmp:2173: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.offsets = function(ancestor, includeTransforms) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2245: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.dimensions = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2322: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.read = function(name) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2335: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.write = function(name, value) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2349: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.getStyle = function(propertyName) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2359: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.hasClass = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2370: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.addClass = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2382: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.removeClass = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2394: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.toggleClass = function(var_args) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2408: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.setTransform = function(type, values) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2425: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.selectText = function(startIndex, endIndex) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2462: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+DOC.element = function(nodeName, attributes, handlers) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2474: WARNING - inconsistent return type
+found   : (Element|null)
+required: (HTMLElement|null)
+	return DOC.getElementById(id) || null;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2586: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+	this.handler = handler;
+	^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2588: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+	this.capture = !!capture;
+	^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2626: WARNING - Parse error. invalid param name "definition.init"
+ * @param {!string} definition.init
+                    ^
+
+../out/tmp:2627: WARNING - Parse error. invalid param name "definition.type"
+ * @param {!string} definition.type
+                    ^
+
+../out/tmp:2628: WARNING - Parse error. invalid param name "definition.bubbles"
+ * @param {boolean=} definition.bubbles
+                     ^
+
+../out/tmp:2629: WARNING - Parse error. invalid param name "definition.cancelable"
+ * @param {boolean=} definition.cancelable
+                     ^
+
+../out/tmp:2630: WARNING - Parse error. invalid param name "definition.view"
+ * @param {Window=} definition.view
+                    ^
+
+../out/tmp:2631: WARNING - Parse error. invalid param name "definition.detail"
+ * @param {number=} definition.detail
+                    ^
+
+../out/tmp:2632: WARNING - Parse error. invalid param name "definition.screenX"
+ * @param {number=} definition.screenX
+                    ^
+
+../out/tmp:2633: WARNING - Parse error. invalid param name "definition.screenY"
+ * @param {number=} definition.screenY
+                    ^
+
+../out/tmp:2634: WARNING - Parse error. invalid param name "definition.clientX"
+ * @param {number=} definition.clientX
+                    ^
+
+../out/tmp:2635: WARNING - Parse error. invalid param name "definition.clientY"
+ * @param {number=} definition.clientY
+                    ^
+
+../out/tmp:2636: WARNING - Parse error. invalid param name "definition.ctrlKey"
+ * @param {boolean=} definition.ctrlKey
+                     ^
+
+../out/tmp:2637: WARNING - Parse error. invalid param name "definition.altKey"
+ * @param {boolean=} definition.altKey
+                     ^
+
+../out/tmp:2638: WARNING - Parse error. invalid param name "definition.shiftKey"
+ * @param {boolean=} definition.shiftKey
+                     ^
+
+../out/tmp:2639: WARNING - Parse error. invalid param name "definition.metaKey"
+ * @param {boolean=} definition.metaKey
+                     ^
+
+../out/tmp:2640: WARNING - Parse error. invalid param name "definition.ctrlKey"
+ * @param {boolean=} definition.ctrlKey
+                     ^
+
+../out/tmp:2641: WARNING - Parse error. invalid param name "definition.button"
+ * @param {number=} definition.button
+                    ^
+
+../out/tmp:2642: WARNING - Parse error. invalid param name "definition.keyCode"
+ * @param {number=} definition.keyCode
+                    ^
+
+../out/tmp:2643: WARNING - Parse error. invalid param name "definition.charCode"
+ * @param {number=} definition.charCode
+                    ^
+
+../out/tmp:2644: WARNING - Parse error. invalid param name "definition.relatedTarget"
+ * @param {Node=} definition.relatedTarget
+                  ^
+
+../out/tmp:2645: WARNING - Parse error. invalid param name "definition.relatedNode"
+ * @param {Node=} definition.relatedNode
+                  ^
+
+../out/tmp:2646: WARNING - Parse error. invalid param name "definition.prevValue"
+ * @param {string=} definition.prevValue
+                    ^
+
+../out/tmp:2647: WARNING - Parse error. invalid param name "definition.newValue"
+ * @param {string=} definition.newValue
+                    ^
+
+../out/tmp:2648: WARNING - Parse error. invalid param name "definition.attrName"
+ * @param {string=} definition.attrName
+                    ^
+
+../out/tmp:2649: WARNING - Parse error. invalid param name "definition.attrChange"
+ * @param {number=} definition.attrChange
+                    ^
+
+../out/tmp:2755: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.on = function(type, handler, capture) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2777: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.once = function(type, handler, capture) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2794: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.off = function(type, handler, capture) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2825: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.fire = function(event) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2826: WARNING - actual parameter 1 of handlerEvent does not match formal parameter
+found   : (Object|null|string)
+required: (Object|null)
+	var e = handlerEvent(OBJECT_IS_STRING(event) ? { "type": event } : event);
+	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2838: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+HTMLElement_prototype.uses = function(type, handler, capture) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2857: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Event_prototype.cancel = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2869: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Event_prototype.click = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2881: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Event_prototype.getKey = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2890: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+Event_prototype.unselect = function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2926: WARNING - inconsistent return type
+found   : (string|undefined)
+required: string
+	return COOKIE_GETTER(name);
+	       ^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:2935: WARNING - actual parameter 3 of COOKIE_SETTER does not match formal parameter
+found   : Date
+required: (string|undefined)
+	return !COOKIE_SETTER(name, "", new Date(0));
+	                                ^^^^^^^^^^^
+
+../out/tmp:2939: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.cookies = {
+^^^^^^^^^^^^^^^
+
+../out/tmp:2950: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.CSS = {
+^^^^^^^^^^^
+
+../out/tmp:3434: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Forms = {};
+^^^^^^^^^^^^^
+
+../out/tmp:3460: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Forms.editable = function(div, rich) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3470: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Opaque = {};
+^^^^^^^^^^^^^^
+
+../out/tmp:3475: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Opaque.create = function(title, body) {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3668: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.keyboard = (function() {
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3675: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+		this.type = "keydown";
+		^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3677: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+		this.propagate = false;
+		^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3679: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+		this.notMatching = "";	// "input, textarea";
+		^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3681: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+		this.target = DOC;
+		^^^^^^^^^^^^^^^^^
+
+../out/tmp:3683: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+		this.code = 0;
+		^^^^^^^^^^^^^
+
+../out/tmp:3911: WARNING - Bad type annotation. Unknown type Processor
+ * @this {Processor}
+          ^
+
+../out/tmp:3930: WARNING - assignment
+found   : {}
+required: {per: number, wait: number}
+missing : [per,wait]
+mismatch: []
+	if (!options) options = {};
+	              ^^^^^^^^^^^^
+
+../out/tmp:3971: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.Processor = Processor;
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:3975: WARNING - Bad type annotation. Unknown type Processor
+ * @this {Processor}
+          ^
+
+../out/tmp:3978: WARNING - Left operand of || operator is always falsy.
+	this.__timer = CLEAR_INSTANT(this.__timer) || 0;
+	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4051: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.JSON = {
+^^^^^^^^^^^^
+
+../out/tmp:4090: WARNING - inconsistent return type
+found   : Node
+required: (HTMLIFrameElement|null)
+	return PROTOCOL_CHECK_IFRAME
+	       ^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4091: WARNING - assignment
+found   : Node
+required: (HTMLIFrameElement|null)
+		|| (PROTOCOL_CHECK_IFRAME = BODY.appendChild(DOC.element("iframe", {
+		    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4104: WARNING - Left operand of || operator is always falsy.
+			: /*@cc_on!@*/false || !!DOC["documentMode"]
+			              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4223: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.protocol = {
+^^^^^^^^^^^^^^^^
+
+../out/tmp:4260: WARNING - inconsistent return type
+found   : Node
+required: (HTMLScriptElement|null)
+	return DOC_HEAD.appendChild(file);
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4375: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.addScript = PSEUDO_ADD_SCRIPT;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4379: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.addSheet = PSEUDO_ADD_SHEET;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4383: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.className = PSEUDO_KLASS_NAME;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4387: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.clone = PSEUDO_CLONE;
+^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4391: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.cloneObject = PSEUDO_CLONE_OBJECT;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4395: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.cloneArray = PSEUDO_CLONE_ARRAY;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4399: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.escape = PSEUDO_ESCAPE;
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+../out/tmp:4403: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.isNaN = IS_NAN;
+^^^^^^^^^^^^^^^^^
+
+../out/tmp:4407: WARNING - The @expose annotation is deprecated. Use @nocollapse or @export instead.
+ns.isN = IS_AN;
+^^^^^^^^^^^^^^
+
+../out/tmp:4409: WARNING - dangerous use of the global this object
+})(this['pseudo3']={});
+   ^^^^
+
+0 error(s), 196 warning(s), 86.7% typed
