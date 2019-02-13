@@ -17,7 +17,7 @@ rem ### copy temp file to output folder
 copy !merge! "..\out\tmp"
 
 rem ### run Closure (update this path to compile)
-java -jar "..\path\to\closure.jar"
+java -jar "..path\to\closure.jar" ^
                         --charset UTF-8 ^
                         --env BROWSER ^
                         --strict_mode_input ^
@@ -29,6 +29,7 @@ java -jar "..\path\to\closure.jar"
                         --compilation_level ADVANCED ^
                         --formatting PRETTY_PRINT ^
                         --formatting SINGLE_QUOTES ^
+				    --jscomp_off deprecatedAnnotations ^
                         --js_output_file "..\out\pseudo3.js" ^
                         "..\out\tmp" 2> "..\out\pseudo3.js.log"
 
