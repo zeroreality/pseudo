@@ -75,22 +75,22 @@ var DATE_HELPER_COMPARE = [
 ];
 
 /**
- * 
+ * Compares this date to the given value and returns an array containing a sum of differential values.
  * @expose
  * @this {Date}
- * @param {Date=} comparer	Default is "now".
+ * @param {Date=} value		Default is "now".
  * @param {number=} levels	Default is 2.
  * @param {boolean=} roundUp	Rounds the last level up instead of even rounding.
  * @return {!Array.<{value:number,type:string}>}
  */
-Date_prototype.context = function(comparer, levels, roundUp) {
-	if (!(comparer instanceof Date) || IS_NAN(comparer.valueOf())) comparer = new Date();
+Date_prototype.context = function(value, levels, roundUp) {
+	if (!(value instanceof Date) || IS_NAN(value.valueOf())) value = new Date;
 	if (IS_NAN(levels)) levels = 2;
 
 	var s = 0,
 		descriptor = [],
 		method = levels - s === 1 ? roundUp ? CEIL : ROUND : FLOOR,
-		difference = this.valueOf() - comparer.valueOf(),
+		difference = this.valueOf() - value.valueOf(),
 		before = difference < 0,
 		absolute = ABS(difference);
 
@@ -102,12 +102,12 @@ Date_prototype.context = function(comparer, levels, roundUp) {
 				"type": criteria["type"],
 			});
 		} else {
-			var value = method(absolute / criteria["value"]);
+			var diff = method(absolute / criteria["value"]);
 			descriptor.push({
-				"value": before ? -value : value,
+				"value": before ? -diff : diff,
 				"type": criteria["type"],
 			});
-			absolute -= value * criteria["value"];
+			absolute -= diff * criteria["value"];
 			s++;
 		}
 		if (levels <= s || absolute < 1) break;
@@ -128,36 +128,36 @@ Date_prototype.context = function(comparer, levels, roundUp) {
 	}
 
 	// remove prefix "zero" values
-	while (descriptor.length && !descriptor[0].value) descriptor.shift();
+	while (descriptor.length && !descriptor[0]["value"]) descriptor.shift();
 
 	return descriptor;
 };
 /**
- * 
+ * Internally invoked {@link Date#context} and returns a concatenated string describing the difference between this date and the given value.
  * @expose
  * @this {Date}
- * @param {Date=} comparer	Default is "now".
+ * @param {Date=} value		Default is "now".
  * @param {number=} levels	Default is 2.
  * @param {boolean=} roundUp	Rounds the last level up instead of even rounding.
  * @param {{after:string,before:string,now:string}=} suffix
  * @param {{after:string,before:string,now:string}=} prefix
  * @return {!string}
  */
-Date_prototype.contextString = function(comparer, levels, roundUp, prefix, suffix) {
+Date_prototype.contextString = function(value, levels, roundUp, prefix, suffix) {
 	if (!prefix) prefix = { "before": "", "after": "", "now": "", };
 	if (!suffix) suffix = { "before": "until", "after": "ago", "now": "now", };
-	var array = this.context(comparer, levels, !!roundUp),
+	var array = this.context(value, levels, !!roundUp),
 		i = array.length,
 		results = [],
-		context = i === 0 ? "now" : array[0].value > 0 ? "after" : "before";
-	while (i--) results[i] = ABS(array[i].value) + " " + ns.Date["parts"][array[i].type];
+		context = i === 0 ? "now" : array[0]["value"] > 0 ? "after" : "before";
+	while (i--) results[i] = ABS(array[i]["value"]) + " " + ns.Date["parts"][array[i]["type"]];
 	return ((prefix[context] || "") + " " + results.join(", ") + " " + (suffix[context] || "")).trim();
 };
 //#endregion Comparison
 
 //#region Format
 /**
- * 
+ * Returns a copy of this date with the time zeroed.
  * @expose
  * @this {Date}
  * @return {!Date}
@@ -166,7 +166,8 @@ Date_prototype.getMidnight = function getMidnight() {
 	return Date.midnight(this);
 };
 /**
- * 
+ * Returns the name of the weekday for this date.
+ * Internally uses the {@link pseudo3.Date.dayNames} array; you can update the values if the day names should be different/translated.
  * @expose
  * @this {Date}
  * @return {!string}
@@ -175,7 +176,8 @@ Date_prototype.getDayName = function getDayName() {
 	return ns.Date["dayNames"][this.getDay()] || "";
 };
 /**
- * 
+ * Returns the name of the month for this date.
+ * Internally uses the {@link pseudo3.Date.monthNames} array; you can update the values if the day names should be different/translated.
  * @expose
  * @this {Date}
  * @return {!string}
@@ -184,7 +186,8 @@ Date_prototype.getMonthName = function getMonthName() {
 	return ns.Date["monthNames"][this.getMonth()] || "";
 };
 /**
- * 
+ * Returns the meridiem (AM/PM) for this date.
+ * Internally uses the {@link pseudo3.Date.meridiem} array; you can update the values if the day names should be different/translated.
  * @expose
  * @this {Date}
  * @return {!string}
@@ -193,8 +196,82 @@ Date_prototype.getMeridiem = function getMonthName() {
 	return ns.Date["meridiem"][this.getHours() > 11 ? 1 : 0];
 };
 /**
- * 
+ * Uses the given format string to return a human readable date.
+ * Use a \ to escape a character in the format string. ie: "h\h m\m" => "9h 30m"
+ * Internally uses the {@link pseudo3.Date.dayNames}, {@link pseudo3.Date.monthNames}, and {@link pseudo3.Date.meridiem} arrays.
  * @expose
+ * @example
+ * // four digit year
+ * yyyy or yyyy
+ * @example
+ * // last two digits of the year
+ * yy
+ * @example
+ * // last digit of the year
+ * y
+ * @example
+ * // month name
+ * MMMM
+ * @example
+ * // first three characters of the month name
+ * MMM
+ * @example
+ * // zero-padded two digit month
+ * MM
+ * @example
+ * // one or two digit month
+ * M
+ * @example
+ * // weekday name
+ * dddd
+ * @example
+ * // first three characters of the weekday name
+ * ddd
+ * @example
+ * // zero-padded two digit date
+ * dd
+ * @example
+ * // one or two digit date
+ * d
+ * @example
+ * // zero-padded two digit hour in base 24
+ * HH
+ * @example
+ * // one or two digit hour in base 24
+ * H
+ * @example
+ * // zero-padded two digit hour in base 12
+ * hh
+ * @example
+ * // one or two digit hour in base 12
+ * h
+ * @example
+ * // zero-padded two digit minute
+ * mm
+ * @example
+ * // one or two digit minute
+ * m
+ * @example
+ * // zero-padded three digit millisecond
+ * fff
+ * @example
+ * // zero-padded two digit millisecond
+ * ff
+ * @example
+ * // zero-padded one digit millisecond
+ * f
+ * @example
+ * // upper-case meridiem
+ * TT
+ * @example
+ * // first character of upper-case meridiem
+ * T
+ * @example
+ * // lower-case meridiem
+ * tt
+ * @example
+ * // first character of lower-case meridiem
+ * t
  * @this {Date}
  * @param {string=} string	The format string; dddd MMMM d, yyyy
  * @param {string=} invalid	What string to return for invalid date values
@@ -311,7 +388,7 @@ Date_prototype.isValid = function() {
 	return IS_AN(this.valueOf());
 };
 /**
- * 
+ * Returns the first weekday of the month.
  * @expose
  * @this {Date}
  * @return {!number}
@@ -322,7 +399,7 @@ Date_prototype.getFirstDay = function() {
 	return day.getDay();
 };
 /**
- * 
+ * Returns the last date of the month.
  * @expose
  * @this {Date}
  * @return {!number}
@@ -335,7 +412,7 @@ Date_prototype.getLastDate = function() {
 	return last.getDate();
 };
 /**
- * 
+ * Returns the hours in base 12.  Substitutes midnight (0) for 12.
  * @expose
  * @this {Date}
  * @return {!number}
@@ -348,101 +425,115 @@ Date_prototype.getHoursBase12 = function() {
 
 //#region Modification
 /**
- * 
+ * Add the given value as years to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addYear = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setFullYear(this.getFullYear() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as months to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addMonth = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setMonth(this.getMonth() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as days to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addDate = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setDate(this.getDate() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as hours to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addHours = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setHours(this.getHours() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as minutes to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addMinutes = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setMinutes(this.getMinutes() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as seconds to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addSeconds = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setSeconds(this.getSeconds() + value);
 	return this;
 };
 /**
- * 
+ * Add the given value as milliseconds to this date instance.
+ * If no value is given, the default is 1.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
 Date_prototype.addMilliseconds = function(value) {
+	if (!IS_AN(value)) value = 1;
 	this.setMilliseconds(this.getMilliseconds() + value);
 	return this;
 };
 /**
- * 
+ * Alias for {@link Date#addMilliseconds}.
  * @expose
  * @this {Date}
- * @param {number} value
+ * @param {number=} value	Default is 1.
  * @return {!Date} this
  */
-Date_prototype.add = function(value) {
-	this.setMilliseconds(this.getMilliseconds() + value);
-	return this;
-};
+Date_prototype.add = Date_prototype.addMilliseconds;
 //#endregion Modification
 
 /** 
+ * Publicly exposed members which are all used internally by Date prototypes.
+ * @namespace
  * @expose
  **/
 ns.Date = {
-	"milli": OBJECT.freeze(DATE_MILLI_PER),
-	"meridiem": ["am", "pm"],
+	/**
+	 * A dictionary where the key is a date-part and the value is the name of that part.
+	 **/
 	"parts": {
 		"yyyy": "years",
 		"MM": "months",
@@ -453,6 +544,20 @@ ns.Date = {
 		"ss": "seconds",
 		"fff": "milliseconds",
 	},
+	/**
+	 * A dictionary where the key is a date-part and the value is the number of milliseconds in that part.
+	 **/
+	"milli": OBJECT.freeze(DATE_MILLI_PER),
+	/**
+	 * A two-item array containing the abbreviations for A.M. and P.M.
+	 **/
+	"meridiem": [
+		"am",
+		"pm"
+	],
+	/**
+	 * A seven-item array containing the names of the days of the week.
+	 **/
 	"dayNames": [
 		"Sunday",
 		"Monday",
@@ -462,6 +567,9 @@ ns.Date = {
 		"Friday",
 		"Saturday",
 	],
+	/**
+	 * A twelve-item array containing the names of the months.
+	 **/
 	"monthNames": [
 		"January",
 		"February",
