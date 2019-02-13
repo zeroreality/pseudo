@@ -17,7 +17,7 @@ Array.of = Array.of || function(list) {
  * @this {Array}
  */
 Array_prototype.copy = function() {
-	return SLICE.call(this);
+	return this.slice();
 };
 
 //#region Sorting
@@ -68,13 +68,12 @@ function ARRAY_NATURAL(a, b) {
 		if (aNaN && bNaN) {
 			if (aValue < bValue) return -1;
 			else if (aValue > bValue) return 1;
-		} else if (!aNaN && bNaN) {
-			return -1;
-		} else if (aNaN && !bNaN) {
-			return 1;
 		} else if (!aNaN && !bNaN) {
 			if (aNum < bNum) return -1;
 			else if (aNum > bNum) return 1;
+		} else {
+			if (!aNaN) return -1;
+			else if (!bNaN) return 1;
 		}
 	}
 	return 0;
@@ -92,12 +91,6 @@ function ARRAY_NUMERIC(a, b) {
 		bNaN = IS_NAN(bNum);
 	return aNum < bNum || !aNaN && bNaN ? -1 : aNum > bNum || aNaN && !bNaN ? 1 : 0;
 }
-/** @expose **/
-Array.natural = ARRAY_NATURAL;
-/** @expose **/
-Array.numeric = ARRAY_NUMERIC;
-/** @expose **/
-Array.compare = ARRAY_COMPARE;
 
 /**
  * Sorts this array with the given predicate and returns itself.
@@ -793,3 +786,23 @@ Array_prototype.animForEach = function(predicate, context) {
 	});
 };
 //#endregion async-iteration tests
+
+/** 
+ * Exposing the predicates that are used internally for sorting arrays.
+ * @namespace
+ * @expose
+ **/
+ns.Array = {
+	/**
+	 * A predicate passed to {@link Arra#sort}, it uses "natural" sorting by trying to sort by words alphabetically and numbers numerically.
+	 **/
+	"natural": ARRAY_NATURAL,
+	/**
+	 * A predicate passed to {@link Arra#sort}, it sorts strings as if they were numbers.  Sorts non numbers to the end of the list.
+	 **/
+	"numeric": ARRAY_NUMERIC,
+	/**
+	 * A predicate passed to {@link Arra#sort}, it simply compares values are returns -1, 0 or 1.
+	 **/
+	"compare": ARRAY_COMPARE,
+};
