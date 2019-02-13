@@ -1,6 +1,7 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
 var Function_prototype = Function[PROTOTYPE];
+
 /**
  * Defers the execution of a function for 1ms
  * @this {Function}

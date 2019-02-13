@@ -1,7 +1,15 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
 var OBJECT_KEYS_BUG = !({ "toString": null }).propertyIsEnumerable("toString");
-var OBJECT_KEYS_DONT = ["toString", "toLocaleString", "valueOf", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "constructor"];
+var OBJECT_KEYS_DONT = [
+	"toString",
+	"toLocaleString",
+	"valueOf",
+	"hasOwnProperty",
+	"isPrototypeOf",
+	"propertyIsEnumerable",
+	"constructor",
+];
 
 /**
  * Checks for an Arguments object
@@ -57,10 +65,14 @@ function OBJECT_IS_OBJECT(value) {
 }
 
 /**
+ * Creates an array of name/value pairs.
  * @param {!Object} object
+ * @return {Array.<{name:string,value:?}>}
  */
 function OBJECT_PAIRS(object) {
-	if (object === null || typeof object !== "object" && typeof object !== "function") throw new TypeError("Object.pairs called on non-object");
+	if (OBJECT_IS_NOTHING(object) || !OBJECT_IS_OBJECT(object)) {
+		throw new TypeError("pseudo3.Object.pairs called on non-object");
+	}
 	var results = [];
 	for (var each in object) {
 		if (object.hasOwnProperty(each)) {
@@ -77,9 +89,11 @@ function OBJECT_PAIRS(object) {
 	return results;
 };
 /**
+ * Similar to {@link Array#each}, allows you to iterate over the key/value pairs of an object.
  * @param {!Object} object
  * @param {function(*,string,Object,number)} predicate
  * @param {Object=} context
+ * @return {Array}
  */
 function OBJECT_EACH(object, predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
@@ -93,31 +107,39 @@ function OBJECT_EACH(object, predicate, context) {
 	return results;
 }
 
+
 /**
+ * Utility functions for inspecting objects.
+ * @namespace
  * @expose
- */
-Object.isArguments = OBJECT_IS_ARGUMENTS;
-/**
- * @expose
- */
-Object.isNothing = OBJECT_IS_NOTHING;
-/**
- * @expose
- */
-Object.isBoolean = OBJECT_IS_BOOLEAN;
-/**
- * @expose
- */
-Object.isNumber = OBJECT_IS_NUMBER;
-/**
- * @expose
- */
-Object.isString = OBJECT_IS_STRING;
-/**
- * @expose
- */
-Object.pairs = OBJECT_PAIRS;
-/**
- * @expose
- */
-Object.each = OBJECT_EACH;
+ **/
+ns.Object = {
+	/**
+	 * @expose
+	 */
+	"isArguments": OBJECT_IS_ARGUMENTS,
+	/**
+	 * @expose
+	 */
+	"isNothing": OBJECT_IS_NOTHING,
+	/**
+	 * @expose
+	 */
+	"isBoolean": OBJECT_IS_BOOLEAN,
+	/**
+	 * @expose
+	 */
+	"isNumber": OBJECT_IS_NUMBER,
+	/**
+	 * @expose
+	 */
+	"isString": OBJECT_IS_STRING,
+	/**
+	 * @expose
+	 */
+	"pairs": OBJECT_PAIRS,
+	/**
+	 * @expose
+	 */
+	"each": OBJECT_EACH,
+};

@@ -1,10 +1,14 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+var Number_prototype = Number[PROTOTYPE];
+
 /**
+ * Internal method for returning a string representation of the given number, padded with zeros.
  * @param {number} num
  * @param {number} length
  * @param {number=} decimals
  * @param {number=} radix
+ * @return {string}
  */
 function ZERO_PADDED(num, length, decimals, radix) {
 	var strings = num.toString(radix || 10).split(".");
@@ -15,6 +19,7 @@ function ZERO_PADDED(num, length, decimals, radix) {
 }
 
 /**
+ * Returns this number as a string padded with zeros.
  * @expose
  * @this {number}
  * @param {!number} length	The minimum-length of the string representing the formatted number
@@ -22,10 +27,11 @@ function ZERO_PADDED(num, length, decimals, radix) {
  * @param {number=} radix	Optionally specify the radis when parsing the number to a string
  * @return {string}
  */
-Number[PROTOTYPE].pad = function(length, decimals, radix) {
+Number_prototype.pad = function(length, decimals, radix) {
 	return ZERO_PADDED(this, length, decimals, radix);
 };
 /**
+ * Returns this number as a string, with separators in groups of digits.
  * @expose
  * @this {number}
  * @param {string=} separator	Character separator between number groups.  Default is ",".
@@ -34,7 +40,7 @@ Number[PROTOTYPE].pad = function(length, decimals, radix) {
  * @param {string=} point	Character separator between integers and decimals. Default is ".".
  * @return {string}
  */
-Number[PROTOTYPE].group = function(separator, length, decimals, point) {
+Number_prototype.group = function(separator, length, decimals, point) {
 	if (!separator) separator = ",";
 	if (!length) length = 3;
 	else if (length < 0) throw new Error("length must be greater than zero.");
@@ -55,22 +61,23 @@ Number[PROTOTYPE].group = function(separator, length, decimals, point) {
 	return neg + ints.join(separator) + (decs.length ? point + decs.join(decimals) : "");
 };
 /**
+ * Returns this number rounded to the given number of decimal places.  If no value is given, 0 is assumed.
  * @expose
  * @this {number}
  * @param {number=} places The number of decimal places.  Default is 0.
  * @return {number}
  */
-Number[PROTOTYPE].round = function(places) {
+Number_prototype.round = function(places) {
 	return ROUND_TO(this, places);
 };
 /**
- * 
+ * Returns the number of decimal places in this number.
  * @expose
  * @this {number}
  * @return {number}
  */
-Number[PROTOTYPE].countDecimals = function() {
+Number_prototype.countDecimals = function() {
 	return FLOOR(this) === this
 		? 0
-		: this.toString().split(".")[1].length || 0;
+		: (this.toString().split(".")[1] || "").length;
 };
