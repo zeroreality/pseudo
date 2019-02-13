@@ -14,13 +14,13 @@ var PREDICATE_ERROR = "predicate must be a function";
 //#endregion Constant Strings
 
 //#region Timers
-/** @type {Function} */
+/** @const {Function} */
 var SET_TIMER = self.setTimeout;
-/** @type {Function} */
+/** @const {Function} */
 var CLEAR_TIMER = self.clearTimeout;
-/** @type {Function} */
+/** @const {Function} */
 var SET_EVERY = self.setInterval;
-/** @type {Function} */
+/** @const {Function} */
 var CLEAR_EVERY = self.clearInterval;
 /**
  * Sets a callback to happen the instance the main thread ends execution.
@@ -42,66 +42,66 @@ var CLEAR_INSTANT = self.clearImmediate || function(id) {
 //#endregion Timers
 
 //#region Objects
-/** @type {Object} */
+/** @const {Object} */
 var OBJECT = Object;
-/** @type {Function} */
+/** @const {Function} */
 var GET_KEYS = OBJECT.keys;
-/** @type {Function} */
+/** @const {Function} */
 var GET_ALL_KEYS = OBJECT.getOwnPropertyNames;
-/** @type {Function} */
+/** @const {Function} */
 var DEFINE_PROP = OBJECT.defineProperty;
-/** @type {Function} */
+/** @const {Function} */
 var DEFINE_PROPS = OBJECT.defineProperties;
-/** @type {Object} */
+/** @const {Object} */
 var Array_prototype = Array[PROTOTYPE];
-/** @type {Function} */
+/** @const {Function} */
 var SLICE = Array_prototype.slice;
-/** @type {Function} */
+/** @const {Function} */
 var VALUEOF = Function[PROTOTYPE].valueOf;
-/** @type {Function} */
+/** @const {Function} */
 var TOSTRING = Object[PROTOTYPE].toString;
 //#endregion Objects
 
 //#region Math
-/** @type {Object} */
+/** @const {Object} */
 var MATH = Math;
-/** @type {Function} */
+/** @const {Function} */
 var ABS = MATH.abs;
-/** @type {Function} */
+/** @const {Function} */
 var ACOS = MATH.acos;
-/** @type {Function} */
+/** @const {Function} */
 var ASIN = MATH.asin;
-/** @type {Function} */
+/** @const {Function} */
 var ATAN = MATH.atan;
-/** @type {Function} */
+/** @const {Function} */
 var ATAN2 = MATH.atan2;
-/** @type {Function} */
+/** @const {Function} */
 var CEIL = MATH.ceil;
-/** @type {Function} */
+/** @const {Function} */
 var COS = MATH.cos;
-/** @type {Function} */
+/** @const {Function} */
 var EXP = MATH.exp;
-/** @type {Function} */
+/** @const {Function} */
 var FLOOR = MATH.floor;
-/** @type {Function} */
+/** @const {Function} */
 var LOG = MATH.log;
-/** @type {Function} */
+/** @const {Function} */
 var MAX = MATH.max;
-/** @type {Function} */
+/** @const {Function} */
 var MIN = MATH.min;
-/** @type {Function} */
+/** @const {Function} */
 var PI = MATH.PI;
-/** @type {Function} */
+/** @const {Function} */
 var POW = MATH.pow;
-/** @type {Function} */
+/** @const {Function} */
 var RANDOM = MATH.random;
-/** @type {Function} */
+/** @const {Function} */
 var ROUND = MATH.round;
-/** @type {Function} */
+/** @const {Function} */
 var SIN = MATH.sin;
-/** @type {Function} */
+/** @const {Function} */
 var SQRT = MATH.sqrt;
-/** @type {Function} */
+/** @const {Function} */
 var TAN = MATH.tan;
 /**
  * Does fast 32bit uint multiplication (from C++).  Used mostly in ASM.
@@ -119,9 +119,9 @@ var IMUL = MATH["imul"] || function imul(a, b) {
 	// the final |0 converts the unsigned value into a signed value
 	return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
 };
-/** @type {Function} */
+/** @const {Function} */
 var INT = parseInt;
-/** @type {Function} */
+/** @const {Function} */
 var FLOAT = parseFloat;
 /**
  * Parses the given string as a base-10 integer.
@@ -162,12 +162,12 @@ function IS_AN(value) {
 //#region Constant Numbers
 /**
  * radians to degrees: value * (180 / pi)
- * @type {number}
+ * @const {number}
  */
 var RADIANS_TO_DEGREES = 180 / PI;
 /**
  * degrees to radians: value * (pi / 180)
- * @type {number}
+ * @const {number}
  */
 var DEGREES_TO_RADIANS = PI / 180;
 //#endregion Constant Numbers
