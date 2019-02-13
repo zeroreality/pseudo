@@ -1,41 +1,65 @@
-﻿/// <reference path="..\blds\pseudo3.js" />
+﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+/** @const {Object} */
 var String_prototype = String[PROTOTYPE];
-var FILTER_TRIM_LEFT = /^\s+/gm;
-var FILTER_TRIM_RIGHT = /\s+$/gm;
+
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes|String#includes},
+ * but instead of taking a second argument as startIndex, it takes N arguments and returns true if any of the objects are present in the array.
+ * Additionally, the function accepts both {@link String}s and {@link RegExp}s as arguments.
  * @expose
- * @this {string}
- * @param {string|RegExp} object
+ * @this {String}
+ * @param {...string|RegExp} var_args
  * @return {!boolean}
  */
-String_prototype.contains = function(object) {
-	return (object instanceof RegExp ? this.search(object) : this.indexOf(object)) > -1;
+String_prototype.hasAny = function(var_args) {
+	for (var i = 0, l = arguments.length; i < l; i++) {
+		if ((arguments[i] instanceof RegExp ? this.search(arguments[i]) : this.indexOf(arguments[i])) > -1) {
+			return true;
+		}
+	}
+	return false;
 };
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes|String#includes},
+ * but instead of taking a second argument as startIndex, it takes N arguments and returns true if all of the objects are present in the array.
+ * Additionally, the function accepts both {@link String}s and {@link RegExp}s as arguments.
  * @expose
- * @this {string}
- * @param {string} string
+ * @this {String}
+ * @param {...string|RegExp} var_args
+ * @return {!boolean}
+ */
+String_prototype.hasAll = function(var_args) {
+	for (var i = 0, l = arguments.length; i < l; i++) {
+		if ((arguments[i] instanceof RegExp ? this.search(arguments[i]) : this.indexOf(arguments[i])) < 0) {
+			return false;
+		}
+	}
+	return true;
+};
+/**
+ * Counts the number of instances this string contains the given value.
+ * @expose
+ * @this {String}
+ * @param {string} value
  * @return {!number}
  */
-String_prototype.count = function(string) {
-	return this.split(string).length - 1;
+String_prototype.count = function(value) {
+	return this.split(value).length - 1;
 };
 /**
- * 
+ * Returns a string with this characters in reverse order.
  * @expose
- * @this {string}
+ * @this {String}
  * @return {!string}
  */
 String_prototype.reverse = function() {
 	return this.split("").reverse().join("");
 };
 /**
- * 
+ * Checks to see if this string begins with the given {@link String} or {@link RegExp} pattern.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string|RegExp} object
  * @return {!boolean}
  */
@@ -43,9 +67,9 @@ String_prototype.startsWith = function(object) {
 	return (object instanceof RegExp ? this.search(object) : this.indexOf(object)) === 0;
 }
 /**
- * 
+ * Checks to see if this string ends with the given {@link String} or {@link RegExp} pattern.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string|RegExp} object
  * @return {!boolean}
  */
@@ -74,9 +98,10 @@ String_prototype.endsWith = function(object) {
 	*/
 };
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim|String#trim},
+ * but also takes a {@link String} or {@link RegExp} argument to trim from the start and end of this string.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string|RegExp} object
  * @return {!string}
  */
@@ -84,16 +109,17 @@ String_prototype.prune = function(object) {
 	return !this.length ? "" : this.pruneEnd(object).pruneStart(object);
 };
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trimStart|String#trimStart},
+ * but also takes a {@link String} or {@link RegExp} argument to trim from the start of this string.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string|RegExp} object
  * @return {!string}
  */
 String_prototype.pruneStart = function(object) {
 	var pruned = this.valueOf();
 	if (!pruned) return "";
-	else if (arguments.length < 1) object = FILTER_TRIM_LEFT;
+	if (arguments.length < 1) return this.trimStart();
 	if (object instanceof RegExp) {
 		while (pruned.search(object) === 0) {
 			pruned = pruned.substring(pruned.match(object)[0].length, pruned.length);
@@ -107,16 +133,17 @@ String_prototype.pruneStart = function(object) {
 	return pruned;
 };
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trimEnd|String#trimEnd},
+ * but also takes a {@link String} or {@link RegExp} argument to trim from the end of this string.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string|RegExp} object
  * @return {!string}
  */
 String_prototype.pruneEnd = function(object) {
 	var pruned = this.valueOf();
 	if (!pruned) return "";
-	else if (arguments.length < 1) object = FILTER_TRIM_RIGHT;
+	if (arguments.length < 1) return this.trimEnd();
 	if (object instanceof RegExp) {
 		var matches = pruned.match(object) || [],
 			match = matches[matches.length - 1],
@@ -137,9 +164,10 @@ String_prototype.pruneEnd = function(object) {
 	return pruned;
 };
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace|String#replace},
+ * but will replace all instances of the given string.  The replacement string is optional and defaults to blank.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string} find
  * @param {string=} replacement
  * @return {!string}
@@ -150,29 +178,35 @@ String_prototype.replaceAll = function(find, replacement) {
 	return this.split(find).join(replacement);
 };
 /**
- * 
+ * Returns the left-most N characters of this string.
+ * If a negative number is used, it will return that number of right-most characters instead.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {number} length
  * @return {!string}
  */
 String_prototype.left = function(length) {
-	return length < 0 ? this.slice(-length) : this.substring(0, length);
+	return length < 0
+		? this.slice(-length)
+		: this.substring(0, length);
 };
 /**
- * 
+ * Returns the right-most N characters of this string.
+ * If a negative number is used, it will return that number of left-most characters instead.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {number} length
  * @return {!string}
  */
 String_prototype.right = function(length) {
-	return length < 0 ? this.substring(0, length + this.length) : this.slice(-length);
+	return length < 0
+		? this.substring(0, length + this.length)
+		: this.slice(-length);
 };
 /**
- * 
+ * Returns a concatenated string composed of this string N times.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {number} number
  * @return {!string}
  */
@@ -184,51 +218,68 @@ String_prototype.repeat = function(number) {
 	return me.join("");
 };
 /**
- * 
+ * Returns this string but with the first letter in upper-case.
+ * The rest of the string is not made lower-case.
  * @expose
- * @this {string}
+ * @this {String}
  * @return {!string}
  */
 String_prototype.toCapital = function() {
 	return this[0].toUpperCase() + this.substring(1);
 };
 /**
- * 
+ * Returns the section of this string after the first instance of the given value.
+ * If the value is not found, a blank string is returned.
  * @expose
- * @this {string}
- * @param {string} string
+ * @this {String}
+ * @param {string} value
  * @return {!string}
  */
-String_prototype.after = function(string) {
-	return this.substring(this.indexOf(string) + string.length);
+String_prototype.after = function(value) {
+	var index = this.indexOf(value);
+	return index < 0
+		? ""
+		: this.substring(index + value.length);
 };
 /**
- * 
+ * Returns the section of this string after the last instance of the given value.
+ * If the value is not found, a blank string is returned.
  * @expose
- * @this {string}
- * @param {string} string
+ * @this {String}
+ * @param {string} value
  * @return {!string}
  */
-String_prototype.afterLast = function(string) {
-	return this.substring(this.lastIndexOf(string) + string.length);
+String_prototype.afterLast = function(value) {
+	var index = this.lastIndexOf(value);
+	return index < 0
+		? ""
+		: this.substring(index + value.length);
 };
 /**
- * 
+ * Returns the section of this string before the first instance of the given value.
+ * If the value is not found, the whole string is returned.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string} string
  * @return {!string}
  */
-String_prototype.before = function(string) {
-	return this.substring(0, this.indexOf(string));
+String_prototype.before = function(value) {
+	var index = this.indexOf(value);
+	return index < 0
+		? this.valueOf()
+		: this.substring(0, index);
 };
 /**
- * 
+ * Returns the section of this string before the last instance of the given value.
+ * If the value is not found, the whole string is returned.
  * @expose
- * @this {string}
+ * @this {String}
  * @param {string} string
  * @return {!string}
  */
-String_prototype.beforeLast = function(string) {
-	return this.substring(0, this.lastIndexOf(string));
+String_prototype.beforeLast = function(value) {
+	var index = this.lastIndexOf(value);
+	return index < 0
+		? this.valueOf()
+		: this.substring(0, index);
 };
