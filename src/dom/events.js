@@ -1,5 +1,9 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+/**
+ * A mapping of mouse button codes to a button name.
+ * @type {Object.<string,string>}
+ */
 var BUTTON_CODES = {
 	"1": "left",
 	"2": "middle",
@@ -12,7 +16,7 @@ if (WIN["ScriptEngineMajorVersion"] instanceof Function) {
 
 /**
  * A mapping of all keyboard keys to their corresponding event codes.
- * @type {Object.<string,number>}
+ * @const {Object.<string,number>}
  */
 var KEYCODES = {
 	"escape": 27,
@@ -96,7 +100,7 @@ var KEYCODES = {
 	"'": 222,
 };
 /**
- * Unused klass to trick Closure into keeping the "handler" and "capture" attributes
+ * 
  * @constructor
  */
 function handlerPair(handler, capture) {
@@ -107,6 +111,7 @@ function handlerPair(handler, capture) {
 }
 
 /**
+ * 
  * @this {handlerPair}
  * @return {boolean}
  */
@@ -114,6 +119,7 @@ function handlerFinder(pair) {
 	return pair.handler === this.handler && pair.capture === this.capture;
 }
 /**
+ * 
  * @param {Element} element
  * @param {!string} type
  * @param {!Function} handler
@@ -128,6 +134,7 @@ function handlerAdd(element, type, handler, capture) {
 	element.addEventListener(type, handler, !!capture);
 }
 /**
+ * 
  * @param {Element} element
  * @param {!string} type
  * @param {!Function} handler
@@ -140,35 +147,36 @@ function handlerRemove(element, type, handler, capture) {
 	element.removeEventListener(type, handler, capture);
 }
 /**
+ * Instantiates an Event of the given type and definition.
  * @param {Object} definition
- * @param {!string} definition.init
- * @param {!string} definition.type
- * @param {boolean=} definition.bubbles
- * @param {boolean=} definition.cancelable
- * @param {Window=} definition.view
- * @param {number=} definition.detail
- * @param {number=} definition.screenX
- * @param {number=} definition.screenY
- * @param {number=} definition.clientX
- * @param {number=} definition.clientY
- * @param {boolean=} definition.ctrlKey
- * @param {boolean=} definition.altKey
- * @param {boolean=} definition.shiftKey
- * @param {boolean=} definition.metaKey
- * @param {boolean=} definition.ctrlKey
- * @param {number=} definition.button
- * @param {number=} definition.keyCode
- * @param {number=} definition.charCode
- * @param {Node=} definition.relatedTarget
- * @param {Node=} definition.relatedNode
- * @param {string=} definition.prevValue
- * @param {string=} definition.newValue
- * @param {string=} definition.attrName
- * @param {number=} definition.attrChange
+ * @param {!string} definition.init		Can be "html", "mouse", "key"/"keyboard", "ui", or "mutation". Default is "html".
+ * @param {!string} definition.type		The event.type. ie: "click", "keypress", "change", etc...
+ * @param {boolean=} definition.bubbles		Default is true.
+ * @param {boolean=} definition.cancelable	Default is true.
+ * @param {Window=} definition.view		Used for mouse, keyboard, and UI events.
+ * @param {number=} definition.detail		Used for mouse, and UI events.
+ * @param {boolean=} definition.ctrlKey		Used for mouse, and keyboard events.
+ * @param {boolean=} definition.altKey		Used for mouse, and keyboard events.
+ * @param {boolean=} definition.shiftKey	Used for mouse, and keyboard events.
+ * @param {boolean=} definition.metaKey		Used for mouse, and keyboard events.
+ * @param {number=} definition.keyCode		Used for keyboard events.
+ * @param {number=} definition.charCode		Used for keyboard events.
+ * @param {number=} definition.screenX		Used for mouse events.
+ * @param {number=} definition.screenY		Used for mouse events.
+ * @param {number=} definition.clientX		Used for mouse events.
+ * @param {number=} definition.clientY		Used for mouse events.
+ * @param {number=} definition.button		Used for mouse events.
+ * @param {Node=} definition.relatedTarget	Used for mouse events.
+ * @param {Node=} definition.relatedNode	Used for mutation events.
+ * @param {string=} definition.prevValue	Used for mutation events.
+ * @param {string=} definition.newValue		Used for mutation events.
+ * @param {string=} definition.attrName		Used for mutation events.
+ * @param {number=} definition.attrChange	Used for mutation events.
  * @return {!Event}
  */
 function handlerEvent(definition) {
-	var event, init = definition["init"] || "html";
+	var event,
+		init = definition["init"] || "html";
 	if (!("bubbles" in definition)) definition["bubbles"] = true;
 	if (!("cancelable" in definition)) definition["cancelable"] = true;
 	switch (init) {
@@ -208,26 +216,6 @@ function handlerEvent(definition) {
 				INT(definition["charCode"], 10) || -1
 			);
 			break;
-		/*
-				case "KeyboardEvent":
-				case "KeyboardEvents":
-					event.initKeyboardEvent(
-						definition["type"],
-						!!definition["bubbles"],
-						!!definition["cancelable"],
-						definition["view"] || WIN,
-						INT(definition["keyCode"], 10) || -1,
-						INT(definition["charCode"], 10) || -1,
-						FLOAT(definition["location"]) || -1,
-		
-						!!definition["ctrlKey"] || false,
-						!!definition["altKey"] || false,
-						!!definition["shiftKey"] || false,
-						!!definition["metaKey"] || false,
-						!!definition["repeat"] || false,
-					);
-					break;
-		*/
 		case "ui":
 			event = DOC.createEvent("UIEvents");
 			event.initUIEvent(
@@ -263,6 +251,7 @@ function handlerEvent(definition) {
 	return event;
 }
 /**
+ * Adds the given function as an event handler to this element.
  * @this {Element}
  * @expose
  * @param {!string} type
@@ -285,6 +274,7 @@ HTMLElement_prototype.on = function(type, handler, capture) {
 	return this;
 };
 /**
+ * Adds the given function as an event handler to this element, and after the event is fired, the handler is automatically removed.
  * @this {Element}
  * @expose
  * @param {!string} type
@@ -302,6 +292,7 @@ HTMLElement_prototype.once = function(type, handler, capture) {
 	return this;
 };
 /**
+ * Removes the given handlers from this element.
  * @this {Element}
  * @expose
  * @param {!string} type
@@ -335,6 +326,9 @@ HTMLElement_prototype.off = function(type, handler, capture) {
 	return this;
 };
 /**
+ * Creates and fires an event based on the name or definition.
+ * If the argument is a string, the event is raised as a simle html event.
+ * Note: For mouse events like "click", the full definition must be specified to have the intended behaviour.
  * @this {Element}
  * @expose
  * @param {string|Object} event
@@ -346,6 +340,7 @@ HTMLElement_prototype.fire = function(event) {
 	return e;
 };
 /**
+ * Checks this element to see if it uses the given function to handle the given event.
  * @this {Element}
  * @expose
  * @param {string} type
@@ -367,7 +362,7 @@ HTMLElement_prototype.uses = function(type, handler, capture) {
 //SVGElement_prototype.uses = HTMLElement_prototype.uses;
 
 /**
- * 
+ * Cancels the event by stopping propagation, de-selecting any text ranges, preventing the default action, and returning false.
  * @this {Event}
  * @expose
  * @return {boolean} false
@@ -379,19 +374,21 @@ Event_prototype.cancel = function() {
 	return this.returnValue = false;
 };
 /**
- * Verifies the mousebutton clicked.
+ * Returns the name of the mousebutton that was clicked.
  * @this {Event}
  * @expose
  * @return {string} "left", "right", or "middle"
  */
 Event_prototype.click = function() {
-	var button = BUTTON_CODES[this.which || this.button];
-	if (this.type === "contextmenu") button = "right";
+	var button = this.type === "contextmenu"
+			? "right"
+			: BUTTON_CODES[this.which || this.button];
 	if (button === "left" && this.metaKey === true) button = "middle";
 	return button;
 };
 /**
- * 
+ * Returns the char-code of the key pressed.
+ * Note that letters are returned as their upper-case codes regardless of whether the shift key was being held.
  * @this {Event}
  * @expose
  * @return {number}
@@ -401,7 +398,7 @@ Event_prototype.getKey = function() {
 		|| String.fromCharCode(this.keyCode).toUpperCase().charCodeAt(0);
 };
 /**
- * Removes selection from text
+ * Removes selection from all text.
  * @this {Event}
  * @expose
  */
@@ -415,3 +412,19 @@ Event_prototype.unselect = function() {
 ["on", "once", "off", "fire", "uses", "ask", "query"].forEach(function(name) {
 	DOC[name] = WIN[name] = HTMLElement_prototype[name];
 });
+
+/**
+ * 
+ * @namespace
+ * @expose
+ **/
+ns.Event = {
+	/**
+	 * @expose
+	 **/
+	"buttons": BUTTON_CODES,
+	/**
+	 * @expose
+	 **/
+	"keys": KEYCODES,
+};
