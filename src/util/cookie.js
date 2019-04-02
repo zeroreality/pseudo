@@ -29,15 +29,21 @@ function COOKIE_SETTER(name, value, path, expiry) {
 }
 /**
  * Removes a cookie by the given (case-sensitive) name.
+ * If no path is given, the root is used by default.
  * Returns true when the cooke was successfully removed.
  * @param {!string} name
+ * @param {string=} path
  * @return {!boolean}
  */
-function COOKIE_REMOVE(name) {
-	return !COOKIE_SETTER(name, "", new Date(0));
+function COOKIE_REMOVE(name, path) {
+	return !COOKIE_SETTER(name, "", path || "/", new Date(0));
 }
 
-/** @expose */
+/**
+ * 
+ * @namespace
+ * @expose
+ **/
 ns.cookies = {
 	"get": COOKIE_GETTER,
 	"set": COOKIE_SETTER,
