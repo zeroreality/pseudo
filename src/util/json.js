@@ -52,7 +52,14 @@ function JSON_PRETTY(object, tab, depth) {
 	return html.join("");
 }
 
-/** @expose */
+/**
+ * 
+ * @namespace
+ * @expose
+ **/
 ns.JSON = {
+	/**
+	 * Returns a string of HTML so an object can be styled in the browser.
+	 **/
 	"pretty": JSON_PRETTY,
 };
