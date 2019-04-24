@@ -54,33 +54,15 @@ function appender(parent, value) {
 	return parent;
 }
 /**
+ * Adds all the given arguments as child nodes.
+ * Any non-Element given is added as HTML.
  * @this {Element}
  * @expose
- * @param {*} value
+ * @param {...*} var_args
  * @return {!Node} this
- */
-HTMLElement_prototype.append = function(value) {
-	/*
-	if (value instanceof HTMLElement || value instanceof DocumentFragment) {
-		this.appendChild(value);
-	} else if (value instanceof Array) {
-		for (var i = 0, l = value.length; i < l; i++) {
-			this.append(value[i]);
-		}
-	} else {
-		var container = DOC.createElement(this.nodeName),
-			fragment = DOC.createDocumentFragment();
-		container.innerHTML = value;
-		var nodes = SLICE.call(container.childNodes);
-		for (var i = 0, node = nodes[i]; node = nodes[i]; i++) {
-			fragment.appendChild(node);
-		}
-		this.appendChild(fragment);
-		container = fragment = null;
-	}
-	return this;
-	*/
-	return appender(this, value);
+ **/
+HTMLElement_prototype.append = function(var_args) {
+	return appender(this, SLICE.call(arguments));
 };
 /**
  * @this {Element}
@@ -105,7 +87,8 @@ HTMLElement_prototype.insertAfter = function(child, after) {
 	return this.insertBefore(child, !after ? null : after.nextElementSibling || after.nextSibling || null);
 };
 /**
- * 
+ * Replaces the contents of this element with the given arguments.
+ * Any non-Element given is added as HTML.
  * @this {Element}
  * @expose
  * @param {...*} var_args
