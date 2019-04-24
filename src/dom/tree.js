@@ -105,13 +105,14 @@ HTMLElement_prototype.insertAfter = function(child, after) {
 	return this.insertBefore(child, !after ? null : after.nextElementSibling || after.nextSibling || null);
 };
 /**
+ * 
  * @this {Element}
  * @expose
- * @param {*=} value
+ * @param {...*} var_args
  * @return {!Node} this
- */
-HTMLElement_prototype.update = function(value) {
-	return appender(this.empty(), value);
+ **/
+HTMLElement_prototype.update = function(var_args) {
+	return appender(this.empty(), SLICE.call(arguments));
 };
 /**
  * @this {Element}
