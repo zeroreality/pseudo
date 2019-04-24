@@ -53,6 +53,14 @@ function OBJECT_IS_STRING(value) {
 	return typeof value === "string" || value instanceof String;
 }
 /**
+ * Checks to see if the given parameter is a function.
+ * @param {?} value The variable to check
+ * @return {!boolean}
+ */
+function OBJECT_IS_FUNCTION(value) {
+	return typeof value === "function" || value instanceof Function;
+}
+/**
  * Checks to see if the given parameter is an object, not undefined or a number/string/boolean object.
  * @param {?} value The variable to check
  * @return {boolean}
@@ -89,17 +97,19 @@ function OBJECT_PAIRS(object) {
 	return results;
 };
 /**
- * Similar to {@link Array#each}, allows you to iterate over the key/value pairs of an object.
+ * Similar to {@link Array#forEach}, allows you to iterate over the key/value pairs of an object.
  * @param {!Object} object
  * @param {function(*,string,Object,number)} predicate
  * @param {Object=} context
+ * @param {function(string,string):number=} keyOrder
  * @return {Array}
  */
-function OBJECT_EACH(object, predicate, context) {
+function OBJECT_EACH(object, predicate, context, keyOrder) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
 	else if (arguments.length < 3) context = object;
 	var results = [],
-		keys = GET_KEYS(object)
+		keys = GET_KEYS(object);
+	if (keyOrder) keys.sort(keyOrder);
 	for (var i = 0, l = keys.length; i < l; i++) {
 		var key = keys[i];
 		results[i] = predicate.call(context, object[key], key, object, i);
@@ -134,6 +144,10 @@ ns.Object = {
 	 * @expose
 	 */
 	"isString": OBJECT_IS_STRING,
+	/**
+	 * @expose
+	 */
+	"isFunction": OBJECT_IS_FUNCTION,
 	/**
 	 * @expose
 	 */

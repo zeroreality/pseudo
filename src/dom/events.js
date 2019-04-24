@@ -9,7 +9,7 @@ var BUTTON_CODES = {
 	"2": "middle",
 	"3": "right",
 };
-if (WIN["ScriptEngineMajorVersion"] instanceof Function) {
+if (OBJECT_IS_FUNCTION(WIN["ScriptEngineMajorVersion"])) {
 	BUTTON_CODES["0"] = "left";
 	BUTTON_CODES["4"] = "middle";
 }
@@ -264,7 +264,7 @@ HTMLElement_prototype.on = function(type, handler, capture) {
 		for (var i = 0, l = handler.length; i < l; i++) {
 			this.on(type, handler[i], capture);
 		}
-	} else if (handler instanceof Function) {
+	} else if (OBJECT_IS_FUNCTION(handler)) {
 		if (!this.__handlers) this.__handlers = {};
 		if (!this.__handlers[type]) this.__handlers[type] = [];
 		handlerAdd(this, type, handler, !!capture);
@@ -316,7 +316,7 @@ HTMLElement_prototype.off = function(type, handler, capture) {
 		if (this.__handlers[type] instanceof Array) {
 			this.off(type, this.__handlers[type].copy(), capture);
 		}
-	} else if (handler instanceof Function) {
+	} else if (OBJECT_IS_FUNCTION(handler)) {
 		if (this.__handlers[type] instanceof Array) {
 			handlerRemove(this, type, handler, !!capture);
 		}
