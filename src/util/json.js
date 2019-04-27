@@ -53,6 +53,24 @@ function JSON_PRETTY(object, tab, depth) {
 }
 
 /**
+ * Parses the JSON string, and handles the error if any.
+ * @param {!string} jsonString
+ * @param {Object=} errorContainer
+ * @return {*}
+ */
+function JSON_PARSE_SAFE(jsonString, errorContainer) {
+	var json;
+	try {
+		json = JSON_PARSE(jsonString);
+	} catch (error) {
+		["name"].concat(GET_ALL_KEYS(error)).forEach(function(key) {
+			this[key] = error[key];
+		}, errorContainer || {});
+	}
+	return json;
+}
+
+/**
  * 
  * @namespace
  * @expose
@@ -62,4 +80,9 @@ ns.JSON = {
 	 * Returns a string of HTML so an object can be styled in the browser.
 	 **/
 	"pretty": JSON_PRETTY,
+	/**
+	 * Parses the passed JSON string and returns the parsed value.
+	 * If there is an exception in parsing, the errorContainer is populated with all the details of the error and `undefined` is returned.
+	 **/
+	"parseSafe": JSON_PARSE_SAFE,
 };
