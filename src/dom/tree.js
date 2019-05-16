@@ -1,58 +1,101 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
 /**
+ * An array of keys that can be used with {@link HTMLElement#read} to more easily read property values.
+ * @const {Object.<string,function():string>}
+ **/
+var DOM_ATTR_READERS = {
+	"for": /** @this {Element} */ function() {
+		return this.htmlFor;
+	},
+	"class": /** @this {Element} */ function() {
+		return this.className;
+	},
+};
+/**
+ * An array of keys that can be used with {@link HTMLElement#write} to more easily write property values.
+ * @const {Object.<string,function(string)>}
+ **/
+var DOM_ATTR_WRITERS = {
+	"class": /** @this {Element} */ function(value) {
+		this.className = value;
+	},
+	"innerHTML": /** @this {Element} */ function(value) {
+		this.update(value);
+	},
+	"textContent":/** @this {Element} */ function(value) {
+		this.textContent = value;
+	},
+	"dataset": /** @this {Element} */ function(value) {
+		for (var each in value) this.dataset[each] = value[each];
+	},
+	"style": /** @this {Element} */ function(value) {
+		if (typeof value === "string") {
+			//	this.style.cssText = value;
+			value.split(";").forEach(function(pair) {
+				var values = pair.split(":"),
+					name = values[0].trim(),
+					value = values[1] || "";
+				if (name) this[name] = value.trim();
+			}, this.style);
+		} else {
+			for (var each in value) this.style[each] = value[each];
+		}
+	},
+};
+/**
+ * Used internally to add values to a given element.
+ * @param {!Node} element
+ * @param {*} value
+ * @return {!Node} element
+ **/
+function DOM_ELEMENT_APPENDER(element, value) {
+	if (
+		// if the value is an Element or DocumentFragment
+		// we don't check node because we shouldn't add a Document (child class of Node) in this way
+		value instanceof Element
+		|| value instanceof DocumentFragment
+	) {
+		element.appendChild(value);
+	} else if (
+		// if the value is an array, iterate through and recursively append the items in the array
+		value instanceof Array
+	) {
+		for (var i = 0, l = value.length; i < l; i++) {
+			DOM_ELEMENT_APPENDER(element, value[i]);
+		}
+	} else if (
+		// for any other item that has a value
+		value
+		// of for numbers, because the number 0 or NaN is not considered to have a value
+		|| OBJECT_IS_NUMBER(value)
+	) {
+		element.insertAdjacentHTML("beforeEnd", value.toString());
+	}
+	// lastly, return the given element.
+	return element;
+}
+
+/**
+ * Removes itself from its parentNode.
+ * Throws as exception if it is not a child of any node.
  * @this {Element}
  * @expose
  * @return {!Node} this
- */
+ **/
 HTMLElement_prototype.amputate = function() {
 	return this.parentNode.removeChild(this);
 };
 /**
+ * Replaces iteself with the given node.
+ * Throws as exception if it is not a child of any node.
  * @this {Element}
  * @expose
  * @return {!Node} withNode
- */
+ **/
 HTMLElement_prototype.replace = function(withNode) {
 	return this.parentNode.replaceChild(withNode, this);
 };
-
-/**
- * @param {!Node} parent
- * @param {*} value
- * @return {!Node} parent
- */
-function appender(parent, value) {
-	if (value instanceof Element || value instanceof DocumentFragment) {
-		parent.appendChild(value);
-	} else if (value instanceof Array) {
-		for (var i = 0, l = value.length; i < l; i++) {
-			appender(parent, value[i]);
-		}
-	} else if (value || OBJECT_IS_NUMBER(value)) {
-		parent.insertAdjacentHTML("beforeEnd", value.toString());
-		/*
-	} else {
-		var fragment = document.createDocumentFragment();
-		if (value instanceof Array) {
-			for (var i = 0, l = value.length; i < l; i++) {
-				appender(fragment, value[i], nodeName);
-			}
-		} else if (value || OBJECT_IS_NUMBER(value)) {
-			
-		} else {
-			var container = DOC.createElement(nodeName);
-			container.innerHTML = value;
-			var nodes = SLICE.call(container.childNodes);
-			for (var i = 0, node = nodes[i]; node = nodes[i]; i++) {
-				fragment.appendChild(node);
-			}
-		}
-		parent.appendChild(fragment);
-		*/
-	}
-	return parent;
-}
 /**
  * Adds all the given arguments as child nodes.
  * Any non-Element given is added as HTML.
@@ -62,13 +105,14 @@ function appender(parent, value) {
  * @return {!Node} this
  **/
 HTMLElement_prototype.append = function(var_args) {
-	return appender(this, SLICE.call(arguments));
+	return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
 };
 /**
+ * Removes all child nodes from this element.
  * @this {Element}
  * @expose
  * @return {!Node} this
- */
+ **/
 HTMLElement_prototype.empty = function() {
 	while (this.lastChild) {
 		this.removeChild(this.lastChild);
@@ -76,12 +120,14 @@ HTMLElement_prototype.empty = function() {
 	return this;
 };
 /**
+ * Similar to Element#insertBefore, this method will add the child after the given after node.
+ * If no after node is given, it will add the child as the last child node.
  * @this {Element}
  * @expose
  * @param {!Element} child	
  * @param {!Element=} after	
  * @return {!Node} child
- */
+ **/
 HTMLElement_prototype.insertAfter = function(child, after) {
 	if (after && !this.contains(after)) throw "Invalid after node";
 	return this.insertBefore(child, !after ? null : after.nextElementSibling || after.nextSibling || null);
@@ -95,34 +141,38 @@ HTMLElement_prototype.insertAfter = function(child, after) {
  * @return {!Node} this
  **/
 HTMLElement_prototype.update = function(var_args) {
-	return appender(this.empty(), SLICE.call(arguments));
+	return DOM_ELEMENT_APPENDER(this.empty(), SLICE.call(arguments));
 };
 /**
+ * Amputates this element from its parentNode, and adds it to the new parent.
+ * If the before is specified, this element will be added as a child of the parent before the given before node.
  * @this {Element}
  * @expose
  * @param {Element} parent
  * @param {Element} before
  * @return {!Node} this
- */
+ **/
 HTMLElement_prototype.transplant = function(parent, before) {
 	return parent.insertBefore(this.amputate(), before || null);
 };
 /**
+ * Returns the element that is a direct descendant of this node from the given ancestor.
+ * If no ancestor is given, it will return the descendant of the documentElement.
  * @this {Element}
  * @expose
  * @param {Node=} ancestor
  * @return {Element}
- */
+ **/
 HTMLElement_prototype.climb = function(ancestor) {
 	var child = this;
-	if (!ancestor) ancestor = DOC;
+	if (!ancestor) ancestor = DOC_EL;
 	if (!ancestor.contains(child)) throw new Error("ancestor does not contain this element");
 	while (child.parentNode !== ancestor) child = child.parentNode;
 	return child;
 };
-
-
 /**
+ * Creates an object with the left/top pixel offsets, as well as scroll offsets, and optionally calculates based on CSS transform changes too.
+ * By default, the offsets are calculated against the documentElement, but an optional ancestor node can be specified.
  * @this {Element}
  * @expose
  * @param {Element=} ancestor
@@ -197,6 +247,8 @@ HTMLElement_prototype.offsets = function(ancestor, includeTransforms) {
 	};
 };
 /**
+ * Returns an object with the width and height of this Element.
+ * Also includes a calculation for the margin, border, and padding (named "bumper").
  * @this {Element}
  * @expose
  * @return {!{width:number,height:number}}
@@ -221,85 +273,39 @@ HTMLElement_prototype.dimensions = function() {
 	};
 };
 /**
- * @enum {Object.<string,function():string>}
- */
-var DOM_ATTR_READERS = {
-	"for": /** @this {Element} */ function() {
-		return this.htmlFor;
-	},
-	"class": /** @this {Element} */ function() {
-		return this.className;
-	},
-};
-/**
- * @enum {Object.<string,function(string)>}
- */
-var DOM_ATTR_WRITERS = {
-	"class": /** @this {Element} */ function(value) {
-		this.className = value;
-	},
-	"innerHTML": /** @this {Element} */ function(value) {
-		this.update(value);
-	},
-	"textContent":/** @this {Element} */ function(value) {
-		this.textContent = value;
-	},
-	"dataset": /** @this {Element} */ function(value) {
-		for (var each in value) this.dataset[each] = value[each];
-	},
-	"style": /** @this {Element} */ function(value) {
-		if (typeof value === "string") {
-			//	this.style.cssText = value;
-			value.split(";").forEach(function(pair) {
-				var values = pair.split(":"),
-					name = values[0].trim(),
-					value = values[1] || "";
-				if (name) this[name] = value.trim();
-			}, this.style);
-			/*
-			value.split(";").forEach(function(pair) {
-				var values = pair.split(":"),
-					name = values[0].trim(),
-					value = values[1] || "",
-					style = {};
-				if (name) {
-					style[name] = value;
-					this.write("style", style);
-				}
-			}, this);
-			*/
-		} else {
-			for (var each in value) this.style[each] = value[each];
-		}
-	},
-};
-/**
+ * Returns the property value for this element's given property name.
+ * If the property name starts with "on" (for properties like "onload") then the actual Function is returned.
  * @this {Element}
  * @expose
+ * @param {!string} propertyName
  * @return {string|Function|Object}
  */
-HTMLElement_prototype.read = function(name) {
-	var reader = DOM_ATTR_READERS[name];
+HTMLElement_prototype.read = function(propertyName) {
+	var reader = DOM_ATTR_READERS[propertyName];
 	return reader
 		? reader.call(this)
-		: name.slice(0, 2) == "on"
-			? this[name] || null
-			: this.getAttribute(name);
+		: propertyName.slice(0, 2) === "on"
+			? this[propertyName] || null
+			: this.getAttribute(propertyName);
 };
 /**
+ * Writes the given value as a attribute or property for this element.
  * @this {Element}
  * @expose
+ * @param {!string} propertyName
+ * @param {!string|Function|Object} value
  * @return {Element} this
  */
-HTMLElement_prototype.write = function(name, value) {
-	var writer = DOM_ATTR_WRITERS[name];
+HTMLElement_prototype.write = function(propertyName, value) {
+	var writer = DOM_ATTR_WRITERS[propertyName];
 	if (writer) writer.call(this, value);
-	else if (name.slice(0, 2) == "on") this[name] = value;
-	else this.setAttribute(name, value);
+	else if (propertyName.slice(0, 2) === "on") this[propertyName] = value;
+	else this.setAttribute(propertyName, value);
 	return this;
 };
 
 /**
+ * Gets the computed style value of the given property name for this element.
  * @this {Element}
  * @expose
  * @param {!string} propertyName
@@ -310,6 +316,8 @@ HTMLElement_prototype.getStyle = function(propertyName) {
 	return !style ? "" : style.getPropertyValue(propertyName) || "";
 };
 /**
+ * Internally checks the {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/classList|Element#classList} for any of the given class names.
+ * Takes multiple arguments and returns true of any match, not all match.
  * @this {Element}
  * @expose
  * @param {...string} var_args
@@ -321,6 +329,8 @@ HTMLElement_prototype.hasClass = function(var_args) {
 	}, this.classList);
 };
 /**
+ * Takes multiple arguments, and adds all of the given class names to this element.
+ * Returns itself.
  * @this {Element}
  * @expose
  * @param {...string} var_args
@@ -333,6 +343,8 @@ HTMLElement_prototype.addClass = function(var_args) {
 	return this;
 };
 /**
+ * Takes multiple arguments, and removes all of the given class names from this element.
+ * Returns itself.
  * @this {Element}
  * @expose
  * @param {...string} var_args
@@ -345,6 +357,9 @@ HTMLElement_prototype.removeClass = function(var_args) {
 	return this;
 };
 /**
+ * Takes multiple arguments, and either adds or removes all of the given class names from this element.
+ * If the given class has already been added to this element, it is removed.  Otherwise, the class is added.
+ * Returns itself.
  * @this {Element}
  * @expose
  * @param {...string} var_args
@@ -357,7 +372,9 @@ HTMLElement_prototype.toggleClass = function(var_args) {
 	return this;
 };
 /**
- * Sets the CSS transform property values separately
+ * Sets the CSS transform property values separately.
+ * This method allows you to modify a single aspect of the CSS transform without replacing all aspects.
+ * For example, you could add a scale() to an element that already has a translate() without needing to get and reset the translate() part of the transform property.
  * @this {Element}
  * @expose
  * @param {!string} type
@@ -376,6 +393,8 @@ HTMLElement_prototype.setTransform = function(type, values) {
 	return this;
 };
 /**
+ * Selects the textContent of this element.
+ * If the start and end index are not specified, then the whole text range is selected.
  * @this {Element}
  * @expose
  * @param {number=} startIndex
@@ -406,13 +425,14 @@ HTMLElement_prototype.selectText = function(startIndex, endIndex) {
 };
 
 /**
- * 
+ * These method names are shared between the HTMLElement and the document and the window.
  */
 ["on", "once", "off", "fire", "uses", "ask", "query"].forEach(function(name) {
 	DOC[name] = WIN[name] = HTMLElement_prototype[name];
 });
 /**
- *
+ * A quick way of creating an element in this document.
+ * Internally uses {@link Element#write} to add attributes and {@link Element#on} to add event handlers.
  * @expose
  * @param {!string} nodeName
  * @param {Object=} attributes
@@ -425,7 +445,7 @@ DOC.element = function(nodeName, attributes, handlers) {
 	return elem;
 };
 /**
- * 
+ * Shortcut to getting an element by its id.
  * @param {string} id
  * @return {HTMLElement}
  */
@@ -433,10 +453,10 @@ WIN["$"] = function(id) {
 	return DOC.getElementById(id) || null;
 };
 /**
- * 
+ * Shortcut to getting an array of elements by matching CSS queries.
  * @param {...string} var_args
  * @return {!Array.<HTMLElement>}
  */
 WIN["$$"] = function(var_args) {
-	return DOC["query"](parseSelectors(arguments));
+	return DOC["query"](DOM_PARSE_SELECTORS(arguments));
 };
