@@ -263,7 +263,7 @@ String_prototype.afterLast = function(value) {
  * If the value is not found, the whole string is returned.
  * @expose
  * @this {String}
- * @param {string} string
+ * @param {string} value
  * @return {!string}
  */
 String_prototype.before = function(value) {
@@ -277,7 +277,7 @@ String_prototype.before = function(value) {
  * If the value is not found, the whole string is returned.
  * @expose
  * @this {String}
- * @param {string} string
+ * @param {string} value
  * @return {!string}
  */
 String_prototype.beforeLast = function(value) {

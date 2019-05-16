@@ -9,7 +9,7 @@ function Processor_worker() {
 		start = now;
 	while (now - start < this.per) {
 		this.__iterator(this.getNext());
-		now = new Date;
+		now = new Date();
 	}
 	this.__timer = 0;
 	this.__start();
@@ -17,38 +17,50 @@ function Processor_worker() {
 
 /**
  * 
- * @param {Function} iterator
+ * @constructor
+ * @template T
+ * @param {function(T)} iterator
  * @param {{per:number,wait:number}} options
  **/
 function Processor(iterator, options) {
-	if (!options) options = {};
+	if (!options) options = {
+		per: 0,
+		wait: 0,
+	};
 
 	/**
+	 *
 	 * @type {number}
 	 **/
 	this.__timer = 0;
 	/**
-	 * @type {Function}
+	 * 
+	 * @type {function(T)}
 	 **/
 	this.__iterator = iterator;
 	/**
+	 * 
 	 * @type {Function}
 	 **/
 	this.__worker = Processor_worker.bind(this);
 
 	/**
-	 * @type {Array}
+	 * 
+	 * @type {Array.<T>}
 	 **/
 	this.queue = [];
 	/**
+	 * 
 	 * @type {number}
 	 **/
 	this.per = options.per > 0 ? options.per : 50;
 	/**
+	 * 
 	 * @type {number}
 	 **/
 	this.wait = options.wait > 0 ? options.wait : 0;
 	/**
+	 * 
 	 * @type {boolean}
 	 **/
 	this.isWorking;
@@ -71,17 +83,37 @@ var Processor_proto = Processor[PROTOTYPE];
 Processor_proto.dispose = function() {
 	this.__timer = CLEAR_INSTANT(this.__timer) || 0;
 };
+/**
+ * 
+ * @this {Processor}
+ * @template T
+ * @param {T} item
+ **/
 Processor_proto.add = function(item) {
 	this.queue.push(item);
 	this.__start();
 };
+/**
+ * 
+ * @this {Processor}
+ * @template T
+ * @param {Array.<T>} items
+ **/
 Processor_proto.addRange = function(items) {
 	this.queue = this.queue.concat(items);
 	this.__start();
 };
+/**
+ * 
+ * @this {Processor}
+ **/
 Processor_proto.getNext = function() {
 	return this.queue.shift();
 };
+/**
+ * 
+ * @this {Processor}
+ **/
 Processor_proto.__start = function() {
 	if (!this.__timer && this.queue.length) {
 		this.__timer = SET_INSTANT(this.__worker, this.wait);

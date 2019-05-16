@@ -25,7 +25,7 @@ var CLEAR_EVERY = self.clearInterval;
 /**
  * Sets a callback to happen the instance the main thread ends execution.
  * Only supported by Microsoft, so polyfill to help other browsers.
- * @param {Function} func
+ * @param {function():?} func
  * @param {...?} var_args
  * @return {number}		Handle for the callback timer.
  **/
