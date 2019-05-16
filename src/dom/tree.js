@@ -14,7 +14,7 @@ var DOM_ATTR_READERS = {
 };
 /**
  * An array of keys that can be used with {@link HTMLElement#write} to more easily write property values.
- * @const {Object.<string,function(string)>}
+ * @const {Object.<string,function(?)>}
  **/
 var DOM_ATTR_WRITERS = {
 	"class": /** @this {Element} */ function(value) {
@@ -437,6 +437,7 @@ HTMLElement_prototype.selectText = function(startIndex, endIndex) {
  * @param {!string} nodeName
  * @param {Object=} attributes
  * @param {Object=} handlers
+ * @return {Element}
  */
 DOC.element = function(nodeName, attributes, handlers) {
 	var elem = DOC.createElement(nodeName);
@@ -447,7 +448,7 @@ DOC.element = function(nodeName, attributes, handlers) {
 /**
  * Shortcut to getting an element by its id.
  * @param {string} id
- * @return {HTMLElement}
+ * @return {Element}
  */
 WIN["$"] = function(id) {
 	return DOC.getElementById(id) || null;
@@ -455,7 +456,7 @@ WIN["$"] = function(id) {
 /**
  * Shortcut to getting an array of elements by matching CSS queries.
  * @param {...string} var_args
- * @return {!Array.<HTMLElement>}
+ * @return {!Array.<Element>}
  */
 WIN["$$"] = function(var_args) {
 	return DOC["query"](DOM_PARSE_SELECTORS(arguments));

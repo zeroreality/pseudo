@@ -53,7 +53,7 @@ HTMLElement_prototype.query = function(var_args) {
  * Moves up the tree to find the first node that matches the given query or undefined if it reaches the ancestorNode first.
  * @this {Element}
  * @expose
- * @param {Array.<string>|string=} query
+ * @param {string=} query
  * @param {HTMLElement=} ancestorNode
  * @return {HTMLElement|undefined}
  */
@@ -74,7 +74,7 @@ HTMLElement_prototype.up = function(query, ancestorNode) {
  * Similar to the node.up() method, but first checks itself for a match.
  * @this {Element}
  * @expose
- * @param {Array.<string>|string=} query
+ * @param {!string} query
  * @param {HTMLElement=} ancestorNode
  */
 HTMLElement_prototype.jump = function(query, ancestorNode) {
