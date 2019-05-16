@@ -60,6 +60,10 @@ var SLICE = Array_prototype.slice;
 var VALUEOF = Function[PROTOTYPE].valueOf;
 /** @const {Function} */
 var TOSTRING = Object[PROTOTYPE].toString;
+/** @type {Function} */
+var JSON_PARSE = JSON.parse;
+/** @type {Function} */
+var JSON_STRINGIFY = JSON.stringify;
 //#endregion Objects
 
 //#region Math
