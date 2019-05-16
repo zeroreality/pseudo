@@ -5,11 +5,11 @@ if (!Array.of) {
 	/**
 	 * Polyfill for creating an Array instance from nearly any kind of enumerable.
 	 * @expose
-	 * @param {Object} list	A list of objects.  For example, a NodeList.
-	 * @return {Array}
+	 * @param {...T} var_args	A list of objects.  For example, a NodeList.
+	 * @return {!Array.<T>}
 	 **/
-	Array.of = function(list) {
-		return SLICE.call(list);
+	Array.of = function(var_args) {
+		return SLICE.call(arguments);
 	};
 }
 
