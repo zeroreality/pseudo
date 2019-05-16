@@ -155,41 +155,276 @@ function DOM_EVENT_HANDLER_REMOVER(element, type, handler, phase) {
 	element.__handlers[type].removeAt(index);
 	element.removeEventListener(type, pair.handler, pair.phase);
 }
+
+/**
+ * The supported types of event initializations.
+ * @enum {!string}
+ **/
+var EventDefinitionInitKinds = {
+	/**
+	 * 
+	 **/
+	"html": "html",
+	/**
+	 * 
+	 **/
+	"mouse": "mouse",
+	/**
+	 * 
+	 **/
+	"key": "keyboard",
+	/**
+	 * 
+	 **/
+	"keyboard": "keyboard",
+	/**
+	 * 
+	 **/
+	"ui": "ui",
+	/**
+	 * 
+	 **/
+	"mutant": "mutation",
+	/**
+	 * 
+	 **/
+	"mutation": "mutation",
+};
+/**
+ * 
+ * @constructor
+ * @param {!string} type
+ * @param {EventDefinitionInitKinds=} init
+ * @param {boolean=} bubbles
+ * @param {boolean=} cancelable
+ **/
+function EventDefinition(type, init, bubbles, cancelable) {
+	/**
+	 * 
+	 * Default is "html".
+	 * @type {!EventDefinitionInitKinds}
+	 **/
+	this.init = init || EventDefinitionInitKinds.html;
+	/**
+	 * The event.type. ie: "click", "keypress", "change", etc...
+	 * @type {!string}
+	 **/
+	this.type = type;
+	/**
+	 * 
+	 * Default is true.
+	 * @type {!boolean}
+	 **/
+	this.bubbles = !!bubbles;
+	/**
+	 * 
+	 * Default is true.
+	 * @type {!boolean}
+	 **/
+	this.cancelable = !!cancelable;
+}
+/**
+ * 
+ * @constructor
+ * @extends {EventDefinition}
+ * @param {Object} definition
+ **/
+function EventDefinitionMouse(definition) {
+	EventDefinition.call(
+		this,
+		definition["type"],
+		definition["init"],
+		definition["bubbles"],
+		definition["cancelable"]
+	);
+	/**
+	 * 
+	 * @type {!Object}
+	 **/
+	this.view = definition["view"] || WIN;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.detail = definition["detail"] || 0;
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.ctrlKey = !!definition["ctrlKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.altKey = !!definition["altKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.shiftKey = !!definition["shiftKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.metaKey = !!definition["metaKey"];
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.screenX = definition["screenX"] || 0;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.screenY = definition["screenY"] || 0;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.clientX = definition["clientX"] || 0;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.clientY = definition["clientY"] || 0;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.button = definition["button"] || 0;
+}
+/**
+ * 
+ * @constructor
+ * @extends {EventDefinition}
+ * @param {Object} definition
+ **/
+function EventDefinitionKeyboard(definition) {
+	EventDefinition.call(
+		this,
+		definition["type"],
+		definition["init"],
+		definition["bubbles"],
+		definition["cancelable"]
+	);
+	/**
+	 * 
+	 * @type {!Object}
+	 **/
+	this.view = definition["view"] || WIN;
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.ctrlKey = !!definition["ctrlKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.altKey = !!definition["altKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.shiftKey = !!definition["shiftKey"];
+	/**
+	 * 
+	 * @type {!boolean}
+	 **/
+	this.metaKey = !!definition["metaKey"];
+	/**
+	 *
+	 * @type {!number}
+	 **/
+	this.keyCode = definition["keyCode"] || 0;
+	/**
+	 *
+	 * @type {!number}
+	 **/
+	this.charCode = definition["charCode"] || 0;
+}
+/**
+ * 
+ * @constructor
+ * @extends {EventDefinition}
+ * @param {Object} definition
+ **/
+function EventDefinitionMutant(definition) {
+	EventDefinition.call(
+		this,
+		definition["type"],
+		definition["init"],
+		definition["bubbles"],
+		definition["cancelable"]
+	);
+	/**
+	 * 
+	 * @type {!Object}
+	 **/
+	this.view = definition["view"] || WIN;
+	/**
+	 * 
+	 * @type {!Node}
+	 **/
+	this.relatedNode = definition["relatedNode"] || null;
+	/**
+	 * 
+	 * @type {string}
+	 **/
+	this.prevValue = definition["prevValue"] || null;
+	/**
+	 * 
+	 * @type {string}
+	 **/
+	this.newValue = definition["newValue"] || null;
+	/**
+	 * 
+	 * @type {string}
+	 **/
+	this.attrName = definition["attrName"] || null;
+	/**
+	 *
+	 * @type {!number}
+	 **/
+	this.attrChange = definition["attrChange"] || 0;
+}
+/**
+ * 
+ * @constructor
+ * @extends {EventDefinition}
+ * @param {Object} definition
+ **/
+function EventDefinitionUi(definition) {
+	EventDefinition.call(
+		this,
+		definition["type"],
+		definition["init"],
+		definition["bubbles"],
+		definition["cancelable"]
+	);
+	/**
+	 * 
+	 * @type {!Object}
+	 **/
+	this.view = definition["view"] || WIN;
+	/**
+	 * 
+	 * @type {!number}
+	 **/
+	this.detail = definition["detail"] || 0;
+}
+
 /**
  * Instantiates an Event of the given type and definition.
- * @param {Object} definition
- * @param {!string} definition.init		Can be "html", "mouse", "key"/"keyboard", "ui", or "mutation". Default is "html".
- * @param {!string} definition.type		The event.type. ie: "click", "keypress", "change", etc...
- * @param {boolean=} definition.bubbles		Default is true.
- * @param {boolean=} definition.cancelable	Default is true.
- * @param {Window=} definition.view		Used for mouse, keyboard, and UI events.
- * @param {number=} definition.detail		Used for mouse, and UI events.
- * @param {boolean=} definition.ctrlKey		Used for mouse, and keyboard events.
- * @param {boolean=} definition.altKey		Used for mouse, and keyboard events.
- * @param {boolean=} definition.shiftKey	Used for mouse, and keyboard events.
- * @param {boolean=} definition.metaKey		Used for mouse, and keyboard events.
- * @param {number=} definition.keyCode		Used for keyboard events.
- * @param {number=} definition.charCode		Used for keyboard events.
- * @param {number=} definition.screenX		Used for mouse events.
- * @param {number=} definition.screenY		Used for mouse events.
- * @param {number=} definition.clientX		Used for mouse events.
- * @param {number=} definition.clientY		Used for mouse events.
- * @param {number=} definition.button		Used for mouse events.
- * @param {Node=} definition.relatedTarget	Used for mouse events.
- * @param {Node=} definition.relatedNode	Used for mutation events.
- * @param {string=} definition.prevValue	Used for mutation events.
- * @param {string=} definition.newValue		Used for mutation events.
- * @param {string=} definition.attrName		Used for mutation events.
- * @param {number=} definition.attrChange	Used for mutation events.
+ * @param {EventDefinition} definition
  * @return {!Event}
  */
 function DOM_EVENT_INIT(definition) {
-	var event,
-		init = definition["init"] || "html";
+	var event;
 	if (!("bubbles" in definition)) definition["bubbles"] = true;
 	if (!("cancelable" in definition)) definition["cancelable"] = true;
-	switch (init) {
-		case "mouse":
+	switch (definition["init"] || EventDefinitionInitKinds.html) {
+		case EventDefinitionInitKinds.mouse:
 			event = DOC.createEvent("MouseEvents");
 			event.initMouseEvent(
 				definition["type"],
@@ -209,8 +444,8 @@ function DOM_EVENT_INIT(definition) {
 				definition["relatedTarget"] || null
 			);
 			break;
-		case "key":
-		case "keyboard":
+		case EventDefinitionInitKinds.key:
+		case EventDefinitionInitKinds.keyboard:
 			event = DOC.createEvent("KeyboardEvents");
 			event.initKeyboardEvent(
 				definition["type"],
@@ -225,7 +460,7 @@ function DOM_EVENT_INIT(definition) {
 				INT(definition["charCode"], 10) || -1
 			);
 			break;
-		case "ui":
+		case EventDefinitionInitKinds.ui:
 			event = DOC.createEvent("UIEvents");
 			event.initUIEvent(
 				definition["type"],
@@ -235,7 +470,8 @@ function DOM_EVENT_INIT(definition) {
 				INT(definition["detail"], 10) || 0
 			);
 			break;
-		case "mutation":
+		case EventDefinitionInitKinds.mutant:
+		case EventDefinitionInitKinds.mutation:
 			event = DOC.createEvent("MutationEvents");
 			event.initMutationEvent(
 				definition["type"],
@@ -248,6 +484,7 @@ function DOM_EVENT_INIT(definition) {
 				INT(definition["attrChange"], 10) || 0
 			);
 			break;
+		case EventDefinitionInitKinds.html:
 		default:
 			event = DOC.createEvent("HTMLEvents");
 			event.initEvent(
@@ -264,7 +501,7 @@ function DOM_EVENT_INIT(definition) {
  * @this {Element}
  * @expose
  * @param {!string} type
- * @param {!Array.<!Function>|Function=} handler
+ * @param {!Array.<function(Event)>|function(Event)} handler
  * @param {!boolean=} capture
  * @return {!Element} this
  */
@@ -296,7 +533,7 @@ HTMLElement_prototype.on = function(type, handler, capture) {
  * @this {Element}
  * @expose
  * @param {!string} type
- * @param {!Array.<!Function>|Function=} handler
+ * @param {!Array.<function(Event)>|function(Event)} handler
  * @param {!boolean=} capture
  * @return {!Element} this
  */
@@ -314,7 +551,7 @@ HTMLElement_prototype.once = function(type, handler, capture) {
  * @this {Element}
  * @expose
  * @param {!string} type
- * @param {!Array.<!Function>|Array.<!HandlerPair>|Function=} handler
+ * @param {!Array.<!function(Event)>|Array.<!HandlerPair>|function(Event)=} handler
  * @param {!boolean=} capture
  * @return {!Element} this
  */
@@ -364,11 +601,15 @@ HTMLElement_prototype.off = function(type, handler, capture) {
  * Note: For mouse events like "click", the full definition must be specified to have the intended behaviour.
  * @this {Element}
  * @expose
- * @param {string|Object} event
+ * @param {!string|EventDefinition|EventDefinitionMouse|EventDefinitionKeyboard|EventDefinitionMutant|EventDefinitionUi} event
  * @return {!Event}
  */
 HTMLElement_prototype.fire = function(event) {
-	var e = DOM_EVENT_INIT(OBJECT_IS_STRING(event) ? { "type": event } : event);
+	var e = DOM_EVENT_INIT(
+		OBJECT_IS_STRING(event)
+			? new EventDefinition(event)
+			: event
+	);
 	this.dispatchEvent(e);
 	return e;
 };
@@ -377,7 +618,7 @@ HTMLElement_prototype.fire = function(event) {
  * @this {Element}
  * @expose
  * @param {string} type
- * @param {Function} handler
+ * @param {function(Event)} handler
  * @param {boolean=} capture
  * @return {!boolean}
  */
@@ -452,11 +693,18 @@ Event_prototype.unselect = function() {
  **/
 ns.Event = {
 	/**
+	 * 
 	 * @expose
 	 **/
 	"buttons": DOM_EVENT_BUTTON_CODES,
 	/**
+	 * 
 	 * @expose
 	 **/
 	"keys": DOM_EVENT_KEY_CODES,
+	/**
+	 *
+	 * @expose
+	 **/
+	"definitions": EventDefinitionInitKinds,
 };
