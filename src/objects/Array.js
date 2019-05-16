@@ -295,7 +295,7 @@ Array_prototype.flatten = function(levels) {
  * @expose
  * @this {Array}
  * @param {Function} predicate
- * @param {*=} context
+ * @param {?=} context
  * @return {!*}
  */
 Array_prototype.find = Array_prototype.find || function(predicate, context) {
@@ -312,7 +312,7 @@ Array_prototype.find = Array_prototype.find || function(predicate, context) {
  * @expose
  * @this {Array}
  * @param {Function} predicate
- * @param {*=} context
+ * @param {?=} context
  * @return {!number}
  */
 Array_prototype.findIndex = Array_prototype.findIndex || function(predicate, context) {
@@ -330,7 +330,7 @@ Array_prototype.findIndex = Array_prototype.findIndex || function(predicate, con
  * @expose
  * @this {Array}
  * @param {Function} predicate
- * @param {*=} context
+ * @param {?=} context
  * @return {!Array.<number>}
  */
 Array_prototype.findIndexes = function(predicate, context) {
@@ -358,7 +358,7 @@ Array_prototype.last = function() {
 
 //#region Modification
 /**
- * 
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat|Array#concat}, but instead of creating a new array, will add the items of the given array to itself, then return itself.
  * @expose
  * @this {Array}
  * @param {Array} array
@@ -371,47 +371,50 @@ Array_prototype.inject = function(array) {
 	return this;
 };
 /**
- * 
+ * Internally uses {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice|Array#splice} to insert an item into this array at the given index.
+ * If the index is not specified, then the item is added at the end.
  * @expose
  * @this {Array}
- * @param {?} object
+ * @param {?} item
  * @param {number=} index
  * @return {!Array} this
  */
-Array_prototype.insert = function(object, index) {
-	this.splice(IS_AN(index) ? index : this.length, 0, object);
+Array_prototype.insert = function(item, index) {
+	this.splice(IS_AN(index) ? index : this.length, 0, item);
 	return this;
 };
 /**
- * 
+ * Similar to {@link Array#insert}, the given item is inserted into the array before the first reference of the before item.
+ * If the before item is not found, then the given item is added at the end of the array.
  * @expose
  * @this {Array}
- * @param {?} object
+ * @param {?} item
  * @param {?} before
  * @return {!Array} this
  */
-Array_prototype.insertBefore = function(object, before) {
+Array_prototype.insertBefore = function(item, before) {
 	var index = this.indexOf(before);
-	return this.insert(object, index > -1 ? index : this.length);
+	return this.insert(item, index > -1 ? index : this.length);
 };
 /**
- * 
+ * Removes all instances of the given item from this array.
+ * Returns itself.
  * @expose
  * @this {Array}
- * @param {?} object
+ * @param {?} item
  * @return {!Array} this
  */
-Array_prototype.remove = function(object) {
-	var results = [];
+Array_prototype.remove = function(item) {
 	for (var i = 0; i < this.length; i++) {
-		if (this[i] === object) {
-			results.push(this.splice(i--, 1)[0]);
+		if (this[i] === item) {
+			this.splice(i--, 1);
 		}
 	}
 	return this;	//return results;
 };
 /**
- * 
+ * Shorthand for {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice|Array#splice}, but only used for removing an item at the given index.
+ * Optionally you can specify a number of elements to remove at the index, but the default is one.
  * @expose
  * @this {Array}
  * @param {number} index
@@ -423,24 +426,24 @@ Array_prototype.removeAt = function(index, number) {
 	return this.splice(index, number);
 };
 /**
- * 
+ * Replaces all instances of the given item with the replacement item.
  * @expose
  * @this {Array}
- * @param {?} object
+ * @param {?} item
  * @param {?} replacement
  * @return {!Array} this
  */
-Array_prototype.replace = function(object, replacement) {
+Array_prototype.replace = function(item, replacement) {
 	var i = this.length;
-	while (i--) if (this[i] === object) this[i] = replacement;
+	while (i--) if (this[i] === item) this[i] = replacement;
 	return this;
 };
 /**
- * 
+ * Iterates through this array's items and adds the given value to each item using the given property name.
  * @expose
  * @this {Array}
  * @param {string} propertyName
- * @param {*=} value
+ * @param {?=} value
  * @return {!Array}
  */
 Array_prototype.plant = function(propertyName, value) {
@@ -482,23 +485,23 @@ Array_prototype.hasAll = function(var_args) {
 	return true;
 };
 /**
- * 
+ * Finds and counts all instances of the given item in this array.
  * @expose
  * @this {Array}
- * @param {?} object
+ * @param {?} item
  * @return {!number}
  */
-Array_prototype.count = function(object) {
+Array_prototype.count = function(item) {
 	var count = 0;
-	for (var i = 0, l = this.length; i < l; i++) if (this[i] === object) count++;
+	for (var i = 0, l = this.length; i < l; i++) if (this[i] === item) count++;
 	return count;
 };
 /**
- * 
+ * Creates an object where the keys are created using the given predicate, and the values are arrays where each item in this array's generated key is the same.
  * @expose
  * @this {Array}
- * @param {Function} predicate
- * @param {*=} context
+ * @param {function(*,number,Array):string} predicate
+ * @param {?=} context
  * @return {!Object.<string,Object>}
  */
 Array_prototype.group = function(predicate, context) {
@@ -514,21 +517,22 @@ Array_prototype.group = function(predicate, context) {
 	return groups;
 };
 /**
- * 
+ * Internally uses {@link Array#group} to create a group object using the given property name of each item in this array.
  * @expose
  * @this {Array}
- * @param {!string} key
+ * @param {!string} propertyName
  * @return {!Object.<string,Object>}
  */
-Array_prototype.groupBy = function(key) {
+Array_prototype.groupBy = function(propertyName) {
 	return this.group(function(obj) {
-		return obj[key];
+		return obj[propertyName];
 	});
 };
 //#endregion Inspection
 
 //#region Transform
 /**
+ * Helper to find identical items in an array during compare operations.
  * @param {?} a
  * @param {?} b
  */
@@ -536,7 +540,7 @@ function ARRAY_HELPER_IDENTITY(a, b) {
 	return a === b;
 }
 /**
- * 
+ * Creates a new Array containing only those items that are contained in both this array, and the given array.
  * @expose
  * @this {Array}
  * @param {!Array} array
@@ -555,7 +559,7 @@ Array_prototype.overlaps = function(array) {
 	return results;
 };
 /**
- * 
+ * Creates a new Array containing only those items that are contained in this array, and not contained in the given array.
  * @expose
  * @this {Array}
  * @param {!Array} array
@@ -574,11 +578,11 @@ Array_prototype.without = function(array) {
 	return results;
 };
 /**
- * Returns an array of unique values
+ * Returns an array of unique values.
  * @expose
  * @this {Array}
  * @param {function(*, *):boolean=} predicate	Used to identify duplicates.
- * @param {*=} context
+ * @param {?=} context
  * @return {!Array}
  */
 Array_prototype.unique = function(predicate, context) {
@@ -629,33 +633,72 @@ Array_prototype.distinct = function() {
 	return sorted;
 };
 /**
- * 
+ * Creates an object using the given predicates to define keys, and (optionally) values.
+ * The key creating predicate should return a string; the key is changed to a string internally when used as the key in the result object.
+ * The value creating predicate is optional, and when not specified, the array item is added as the value in the Map.
  * @expose
  * @this {Array}
  * @param {!function(?,number,Object):string} keyPredicate
  * @param {function(?,string,number,Object):?=} valuePredicate
  * @param {Object=} dictionary
- * @return {!Array} this
+ * @return {!Object} dictionary
  */
 Array_prototype.toDictionary = function(keyPredicate, valuePredicate, dictionary) {
-	if (typeof keyPredicate !== "function" || valuePredicate && typeof valuePredicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	return this.reduce(function(object, value, index, array) {
-		var key = keyPredicate.call(array, value, index, object);
-		object[key] = !valuePredicate
+	if (typeof keyPredicate !== "function" || valuePredicate && typeof valuePredicate !== "function") {
+		throw new TypeError(PREDICATE_ERROR);
+	}
+	if (!dictionary) dictionary = {};
+	for (var i = 0, l = this.length; i < l; i++) {
+		var value = this[i],
+			key = String(keyPredicate.call(this, value, i, dictionary));
+		dictionary[key] = !valuePredicate
 			? value
-			: valuePredicate.call(array, value, key, index, object);
-		return object;
-	}, dictionary || {});
+			: valuePredicate.call(this, value, key, i, dictionary);
+	}
+	return dictionary;
+};
+/**
+ * Creates a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map|Map} using the given predicates to define keys, and (optionally) values.
+ * Both the key and value creating predicate can return any type.
+ * The value creating predicate is optional, and when not specified, the array item is added as the value in the Map.
+ * @expose
+ * @this {Array}
+ * @param {!function(?,number,Object):?} keyPredicate
+ * @param {function(?,string,number,Object):?=} valuePredicate
+ * @param {Map=} map
+ * @return {!Map} map
+ */
+Array_prototype.toMap = function(keyPredicate, valuePredicate, map) {
+	if (typeof keyPredicate !== "function" || valuePredicate && typeof valuePredicate !== "function") {
+		throw new TypeError(PREDICATE_ERROR);
+	}
+	if (!map) map = new Map();
+	if (!(map instanceof Map)) {
+		throw new TypeError("map is not an instance of Map");
+	}
+	for (var i = 0, l = this.length; i < l; i++) {
+		var value = this[i],
+			key = keyPredicate.call(this, value, i, map);
+		map.set(
+			key,
+			!valuePredicate
+				? value
+				: valuePredicate.call(this, value, key, i, map)
+		);
+	}
+	return map;
 };
 //#endregion Transform
 
 //#region async-iteration tests
 /**
- *
+ * Experimental!
+ * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} to resolve the predicate for each item in this array.
+ * I see no point to this method even existing.
  * @expose
  * @this {Array}
  * @param {function(?,number,Array)} predicate
- * @param {*=} context
+ * @param {?=} context
  * @return {!Promise}
  */
 Array_prototype.asyncForEach = function(predicate, context) {
@@ -693,11 +736,13 @@ Array_prototype.asyncForEach = function(predicate, context) {
 	}, Promise.resolve());
 };
 /**
- *
+ * Experimental!
+ * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} and {@link https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval|setInterval} to resolve the predicate for each item in this array.
+ * This can be used to simulate asynchronously processing items in an array.
  * @expose
  * @this {Array}
  * @param {function(?,number,Array)} predicate
- * @param {*=} context
+ * @param {?=} context
  * @param {number=} delay
  * @return {!Promise}
  */
@@ -760,11 +805,13 @@ Array_prototype.deferForEach = function(predicate, context, delay) {
 	 */
 };
 /**
- *
+ * Experimental!
+ * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} and {@link https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame|requestAnimationFrame} to resolve the predicate for each item in this array.
+ * Similar to {Array#deferForEach}, this can be used to simulate asynchronously processing items in an array.
  * @expose
  * @this {Array}
  * @param {function(?,number,Array)} predicate
- * @param {*=} context
+ * @param {?=} context
  * @return {!Promise}
  */
 Array_prototype.animForEach = function(predicate, context) {
