@@ -49,7 +49,7 @@ function checkBrowser() {
 		? "chrome"
 		: typeof WIN["InstallTrigger"] !== "undefined"
 			? "firefox"
-			: /*@cc_on!@*/false || !!DOC["documentMode"]
+			: eval("/*@cc_on!@*/false") || !!DOC["documentMode"]
 				? "ie"
 				: !!WIN["opera"]
 					? "opera"
