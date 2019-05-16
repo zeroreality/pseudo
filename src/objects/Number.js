@@ -1,5 +1,9 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+/**
+ * 
+ * @const {Object}
+ **/
 var Number_prototype = Number[PROTOTYPE];
 
 /**

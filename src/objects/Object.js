@@ -1,6 +1,14 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+/**
+ * Checks to see if this browser has a bug in not overriding property enumerables.
+ * @const {boolean}
+ **/
 var OBJECT_KEYS_BUG = !({ "toString": null }).propertyIsEnumerable("toString");
+/**
+ * When OBJECT_KEYS_BUG is true, this list is used in special cases when enumerating an object's keys.
+ * @const {Array.<string>}
+ **/
 var OBJECT_KEYS_DONT = [
 	"toString",
 	"toLocaleString",

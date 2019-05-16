@@ -1,5 +1,9 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
+/**
+ * 
+ * @const {Object}
+ **/
 var Function_prototype = Function[PROTOTYPE];
 
 /**

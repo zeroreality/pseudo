@@ -1,6 +1,9 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
-/** @const {Object} */
+/**
+ * 
+ * @const {Object}
+ **/
 var String_prototype = String[PROTOTYPE];
 
 /**

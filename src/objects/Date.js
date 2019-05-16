@@ -1,6 +1,9 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
-/** @type {Object} */
+/**
+ * 
+ * @const {Object}
+ **/
 var Date_prototype = Date[PROTOTYPE];
 /**
  * This is an invalid date object used for comparison purposes.
@@ -17,13 +20,45 @@ var DATE_FILTER_FORMAT = /(\\.|[ydM]{1,4}|[hHmstT]{1,2}|[f]{1,6})/gm;
  * A dictionary/reference of the number of milliseconds in each date-part.
  **/
 var DATE_MILLI_PER = {
+	/**
+	 * The number of milliseconds in a (non-leap) year.
+	 * @const {number}
+	 **/
 	"yyyy": 365 * 24 * 3600 * 1000,
+	/**
+	 * The number of milliseconds in a (31 day) month.
+	 * @const {number}
+	 **/
 	"MM": 31 * 24 * 3600 * 1000,
+	/**
+	 * The number of milliseconds in a week.
+	 * @const {number}
+	 **/
 	"ww": 7 * 24 * 3600 * 1000,
+	/**
+	 * The number of milliseconds in a day.
+	 * @const {number}
+	 **/
 	"dd": 24 * 3600 * 1000,
+	/**
+	 * The number of milliseconds in an hour.
+	 * @const {number}
+	 **/
 	"hh": 3600 * 1000,
+	/**
+	 * The number of milliseconds in a minute.
+	 * @const {number}
+	 **/
 	"mm": 60 * 1000,
+	/**
+	 * The number of milliseconds in a second.
+	 * @const {number}
+	 **/
 	"ss": 1000,
+	/**
+	 * The number of milliseconds in a millisecond... Why is this even defined?
+	 * @const {number}
+	 **/
 	"fff": 1
 };
 
@@ -61,7 +96,8 @@ Date_prototype.copy = function() { return new Date(this); };
 
 //#region Comparison
 /**
- * An array used by the Date#context function.
+ * An array used by the {@link Date#context} function.
+ * @const {Array.<{type:string,value:number}>}
  **/
 var DATE_HELPER_COMPARE = [
 	{ "type": "yyyy", "value": DATE_MILLI_PER["yyyy"] },
@@ -533,6 +569,8 @@ Date_prototype.add = Date_prototype.addMilliseconds;
 ns.Date = {
 	/**
 	 * A dictionary where the key is a date-part and the value is the name of that part.
+	 * When working in a different language, change these values so {@link Date#compare} responses are correct.
+	 * @const {Object}
 	 **/
 	"parts": {
 		"yyyy": "years",
@@ -546,10 +584,13 @@ ns.Date = {
 	},
 	/**
 	 * A dictionary where the key is a date-part and the value is the number of milliseconds in that part.
+	 * @const {Object}
 	 **/
 	"milli": OBJECT.freeze(DATE_MILLI_PER),
 	/**
 	 * A two-item array containing the abbreviations for A.M. and P.M.
+	 * When working in a different language, change these values so {@link Date#compare} responses are correct.
+	 * @const {Array.<string>}
 	 **/
 	"meridiem": [
 		"am",
@@ -557,6 +598,8 @@ ns.Date = {
 	],
 	/**
 	 * A seven-item array containing the names of the days of the week.
+	 * When working in a different language, change these values so {@link Date#compare} responses are correct.
+	 * @const {Array.<string>}
 	 **/
 	"dayNames": [
 		"Sunday",
@@ -569,6 +612,8 @@ ns.Date = {
 	],
 	/**
 	 * A twelve-item array containing the names of the months.
+	 * When working in a different language, change these values so {@link Date#compare} responses are correct.
+	 * @const {Array.<string>}
 	 **/
 	"monthNames": [
 		"January",

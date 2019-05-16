@@ -142,7 +142,7 @@ function ROUND_TO(number, places) {
 	return ROUND(number * power) / power;
 }
 /**
- * Calls isNaN, but also checks for null.
+ * Calls isNaN, but also checks that the given value is a number type.
  * @param {?} value The variable to check
  * @return {boolean}
  */
@@ -150,7 +150,7 @@ function IS_NAN(value) {
 	return !OBJECT_IS_NUMBER(value) || isNaN(value);
 }
 /**
- * Opposite of IS_NAN
+ * Opposite of {@link pseudo3.isNaN}.
  * @param {?} value The variable to check
  * @return {boolean}
  */
