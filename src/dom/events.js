@@ -4,21 +4,22 @@
  * A mapping of mouse button codes to a button name.
  * @type {Object.<string,string>}
  */
-var BUTTON_CODES = {
+var DOM_EVENT_BUTTON_CODES = {
 	"1": "left",
 	"2": "middle",
 	"3": "right",
 };
+// additional for IE
 if (OBJECT_IS_FUNCTION(WIN["ScriptEngineMajorVersion"])) {
-	BUTTON_CODES["0"] = "left";
-	BUTTON_CODES["4"] = "middle";
+	DOM_EVENT_BUTTON_CODES["0"] = "left";
+	DOM_EVENT_BUTTON_CODES["4"] = "middle";
 }
 
 /**
  * A mapping of all keyboard keys to their corresponding event codes.
  * @const {Object.<string,number>}
  */
-var KEYCODES = {
+var DOM_EVENT_KEY_CODES = {
 	"escape": 27,
 	"tab": 9,
 	"capslock": 20,
@@ -100,51 +101,59 @@ var KEYCODES = {
 	"'": 222,
 };
 /**
- * 
+ * A container for an event handler function and event phase to which it is bound.
  * @constructor
- */
-function handlerPair(handler, capture) {
-	/** @expose */
+ * @param {function(Event)} handler
+ * @param {boolean=} phase
+ **/
+function HandlerPair(handler, phase) {
+	/**
+	 * A reference to the event handler.
+	 * @type {function(Event)}
+	 **/
 	this.handler = handler;
-	/** @expose */
-	this.capture = !!capture;
+	/**
+	 * When true, the event handler is bound to the capture phase.
+	 * When false, it's bound to the bubble phase.
+	 * @type {!boolean}
+	 **/
+	this.phase = !!phase;
 }
 
 /**
- * 
- * @this {handlerPair}
+ * Finds a HandlerPair that matches the event handler and the event phase.
+ * Does not match by identity.
+ * @this {HandlerPair}
  * @return {boolean}
  */
-function handlerFinder(pair) {
-	return pair.handler === this.handler && pair.capture === this.capture;
+function DOM_EVENT_HANDLER_FINDER(pair) {
+	return pair.handler === this.handler
+		&& pair.phase === this.phase;
 }
 /**
- * 
+ * Adds an event handler to this element, and makes a reference to it for later checking.
  * @param {Element} element
  * @param {!string} type
  * @param {!Function} handler
- * @param {!boolean=} capture
+ * @param {!boolean=} phase
  */
-function handlerAdd(element, type, handler, capture) {
-	var pair = {
-		"handler": handler,
-		"capture": !!capture,
-	};
+function DOM_EVENT_HANDLER_ADDER(element, type, handler, phase) {
+	var pair = new HandlerPair(handler, phase);
 	element.__handlers[type].push(pair);
-	element.addEventListener(type, handler, !!capture);
+	element.addEventListener(type, pair.handler, pair.phase);
 }
 /**
- * 
+ * Removes an event handler from this element, and also removes its reference.
  * @param {Element} element
  * @param {!string} type
  * @param {!Function} handler
- * @param {!boolean=} capture
+ * @param {!boolean=} phase
  */
-function handlerRemove(element, type, handler, capture) {
-	var pair = { "handler": handler, "capture": capture },
-		index = element.__handlers[type].findIndex(handlerFinder, pair);
+function DOM_EVENT_HANDLER_REMOVER(element, type, handler, phase) {
+	var pair = new HandlerPair(handler, phase),
+		index = element.__handlers[type].findIndex(DOM_EVENT_HANDLER_FINDER, pair);
 	element.__handlers[type].removeAt(index);
-	element.removeEventListener(type, handler, capture);
+	element.removeEventListener(type, pair.handler, pair.phase);
 }
 /**
  * Instantiates an Event of the given type and definition.
@@ -174,7 +183,7 @@ function handlerRemove(element, type, handler, capture) {
  * @param {number=} definition.attrChange	Used for mutation events.
  * @return {!Event}
  */
-function handlerEvent(definition) {
+function DOM_EVENT_INIT(definition) {
 	var event,
 		init = definition["init"] || "html";
 	if (!("bubbles" in definition)) definition["bubbles"] = true;
@@ -262,12 +271,21 @@ function handlerEvent(definition) {
 HTMLElement_prototype.on = function(type, handler, capture) {
 	if (handler instanceof Array) {
 		for (var i = 0, l = handler.length; i < l; i++) {
-			this.on(type, handler[i], capture);
+			this.on(
+				type,
+				handler[i],
+				capture
+			);
 		}
 	} else if (OBJECT_IS_FUNCTION(handler)) {
 		if (!this.__handlers) this.__handlers = {};
 		if (!this.__handlers[type]) this.__handlers[type] = [];
-		handlerAdd(this, type, handler, !!capture);
+		DOM_EVENT_HANDLER_ADDER(
+			this,
+			type,
+			handler,
+			capture
+		);
 	} else {
 		throw new TypeError("handler not an instance of a Function");
 	}
@@ -296,7 +314,7 @@ HTMLElement_prototype.once = function(type, handler, capture) {
  * @this {Element}
  * @expose
  * @param {!string} type
- * @param {!Array.<!Function>|Array.<!handlerPair>|Function=} handler
+ * @param {!Array.<!Function>|Array.<!HandlerPair>|Function=} handler
  * @param {!boolean=} capture
  * @return {!Element} this
  */
@@ -310,15 +328,30 @@ HTMLElement_prototype.off = function(type, handler, capture) {
 		}
 	} else if (handler instanceof Array) {
 		for (var i = 0, l = handler.length; i < l; i++) {
-			this.off(type, handler[i].handler || handler[i], typeof capture === "boolean" ? capture : handler[i].capture);
+			this.off(
+				type,
+				handler[i].handler || handler[i],
+				typeof capture === "boolean"
+					? capture
+					: handler[i].phase
+			);
 		}
 	} else if (!handler) {
 		if (this.__handlers[type] instanceof Array) {
-			this.off(type, this.__handlers[type].copy(), capture);
+			this.off(
+				type,
+				this.__handlers[type].copy(),
+				capture
+			);
 		}
 	} else if (OBJECT_IS_FUNCTION(handler)) {
 		if (this.__handlers[type] instanceof Array) {
-			handlerRemove(this, type, handler, !!capture);
+			DOM_EVENT_HANDLER_REMOVER(
+				this,
+				type,
+				handler,
+				capture
+			);
 		}
 	} else {
 		throw new TypeError("handler not an instance of a Function");
@@ -335,7 +368,7 @@ HTMLElement_prototype.off = function(type, handler, capture) {
  * @return {!Event}
  */
 HTMLElement_prototype.fire = function(event) {
-	var e = handlerEvent(OBJECT_IS_STRING(event) ? { "type": event } : event);
+	var e = DOM_EVENT_INIT(OBJECT_IS_STRING(event) ? { "type": event } : event);
 	this.dispatchEvent(e);
 	return e;
 };
@@ -349,10 +382,9 @@ HTMLElement_prototype.fire = function(event) {
  * @return {!boolean}
  */
 HTMLElement_prototype.uses = function(type, handler, capture) {
-	return this.__handlers && this.__handlers[type] ? this.__handlers[type].findIndex(handlerFinder, {
-		"handler": handler,
-		"capture": !!capture
-	}) > -1 : false;
+	return this.__handlers && this.__handlers[type]
+		? this.__handlers[type].findIndex(DOM_EVENT_HANDLER_FINDER, new HandlerPair(handler, capture)) > -1
+		: false;
 };
 
 // add to SVG elements as well
@@ -382,7 +414,7 @@ Event_prototype.cancel = function() {
 Event_prototype.click = function() {
 	var button = this.type === "contextmenu"
 			? "right"
-			: BUTTON_CODES[this.which || this.button];
+			: DOM_EVENT_BUTTON_CODES[this.which || this.button];
 	if (button === "left" && this.metaKey === true) button = "middle";
 	return button;
 };
@@ -394,7 +426,7 @@ Event_prototype.click = function() {
  * @return {number}
  */
 Event_prototype.getKey = function() {
-	return KEYCODES[(this.code || this.key || "").toLowerCase()]
+	return DOM_EVENT_KEY_CODES[(this.code || this.key || "").toLowerCase()]
 		|| String.fromCharCode(this.keyCode).toUpperCase().charCodeAt(0);
 };
 /**
@@ -422,9 +454,9 @@ ns.Event = {
 	/**
 	 * @expose
 	 **/
-	"buttons": BUTTON_CODES,
+	"buttons": DOM_EVENT_BUTTON_CODES,
 	/**
 	 * @expose
 	 **/
-	"keys": KEYCODES,
+	"keys": DOM_EVENT_KEY_CODES,
 };

@@ -114,7 +114,7 @@ ns.keyboard = (function() {
 				case "win":
 				case "windows": sc.meta = true; break;
 
-				default: sc.code = KEYCODES[k] || k[0].toUpperCase().charCodeAt(0);
+				default: sc.code = DOM_EVENT_KEY_CODES[k] || k[0].toUpperCase().charCodeAt(0);
 			}
 			return sc;
 		}, new ShortcutKeys);
@@ -236,7 +236,7 @@ ns.keyboard = (function() {
 	}
 
 	return {
-		"codes": KEYCODES,
+		"codes": DOM_EVENT_KEY_CODES,
 
 		"addShortcut": addShortcut,
 		"hasShortcut": hasShortcut,
