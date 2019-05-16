@@ -1,14 +1,17 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
-/**
- * Polyfill for creating an Array instance from nearly any kind of enumerable.
- * @expose
- * @param {Object} list	A list of objects.  For example, a NodeList.
- * @return {Array}
- **/
-Array.of = Array.of || function(list) {
-	return SLICE.call(list);
-};
+// polyfill
+if (!Array.of) {
+	/**
+	 * Polyfill for creating an Array instance from nearly any kind of enumerable.
+	 * @expose
+	 * @param {Object} list	A list of objects.  For example, a NodeList.
+	 * @return {Array}
+	 **/
+	Array.of = function(list) {
+		return SLICE.call(list);
+	};
+}
 
 /**
  * Quickly creates and returns a duplicate of this array.
