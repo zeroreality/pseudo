@@ -25,12 +25,12 @@ var CLEAR_EVERY = self.clearInterval;
 /**
  * Sets a callback to happen the instance the main thread ends execution.
  * Only supported by Microsoft, so polyfill to help other browsers.
- * @param {function():?} func
+ * @param {Function} func
  * @param {...?} var_args
  * @return {number}		Handle for the callback timer.
  **/
 var SET_INSTANT = self.setImmediate || function(func, var_args) {
-	return SET_TIMER.apply(this, [func, 0].concat(SLICE.call(arguments, 0)));
+	return SET_TIMER.apply(this, [func, 0].concat(SLICE.call(arguments)));
 };
 /**
  * Clears a setImmediate (or polyfilled) timeout.
