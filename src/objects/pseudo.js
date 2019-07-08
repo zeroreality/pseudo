@@ -40,6 +40,7 @@ function PSEUDO_ADD_SCRIPT(source, callback, reload) {
  * @param {string} source
  * @param {string} media
  * @param {boolean} reload
+ * @return {HTMLLinkElement}
  */
 function PSEUDO_ADD_SHEET(source, media, reload) {
 	if (reload) PSEUDO_RELOAD("link", "href", source);
