@@ -181,47 +181,46 @@ var EventDefinitionInitKinds = {
 	 * 
 	 **/
 	"ui": "ui",
-	/**
-	 * 
-	 **/
-	"mutant": "mutation",
-	/**
-	 * 
-	 **/
-	"mutation": "mutation",
 };
 /**
  * 
  * @constructor
  * @param {!string} type
- * @param {EventDefinitionInitKinds=} init
+ * @param {string=} init
  * @param {boolean=} bubbles
  * @param {boolean=} cancelable
  **/
 function EventDefinition(type, init, bubbles, cancelable) {
 	/**
+	 * The event.type. ie: "click", "keypress", "change", etc...
+	 * @type {!string}
+	 **/
+	this.type = type || "";
+	/**
 	 * 
 	 * Default is "html".
 	 * @type {!EventDefinitionInitKinds}
 	 **/
-	this.init = init || EventDefinitionInitKinds.html;
-	/**
-	 * The event.type. ie: "click", "keypress", "change", etc...
-	 * @type {!string}
-	 **/
-	this.type = type;
-	/**
-	 * 
-	 * Default is true.
-	 * @type {!boolean}
-	 **/
-	this.bubbles = !!bubbles;
+	this.init = EventDefinitionInitKinds[init]
+		|| (/mouse|click|contextmenu/gim).test(this.type)
+		? EventDefinitionInitKinds.mouse
+		: this.type.includes("key")
+			? EventDefinitionInitKinds.keyboard
+			: (/abort|unload|load|error|resize|scroll|select/gim).test(this.type)
+				? EventDefinitionInitKinds.ui
+				: EventDefinitionInitKinds.html;
 	/**
 	 * 
 	 * Default is true.
 	 * @type {!boolean}
 	 **/
-	this.cancelable = !!cancelable;
+	this.bubbles = !OBJECT_IS_BOOLEAN(bubbles) || bubbles;
+	/**
+	 * 
+	 * Default is true.
+	 * @type {!boolean}
+	 **/
+	this.cancelable = !OBJECT_IS_BOOLEAN(cancelable) || cancelable;
 }
 /**
  * 
@@ -349,51 +348,6 @@ function EventDefinitionKeyboard(definition) {
  * @extends {EventDefinition}
  * @param {Object} definition
  **/
-function EventDefinitionMutant(definition) {
-	EventDefinition.call(
-		this,
-		definition["type"],
-		definition["init"],
-		definition["bubbles"],
-		definition["cancelable"]
-	);
-	/**
-	 * 
-	 * @type {!Object}
-	 **/
-	this.view = definition["view"] || WIN;
-	/**
-	 * 
-	 * @type {!Node}
-	 **/
-	this.relatedNode = definition["relatedNode"] || null;
-	/**
-	 * 
-	 * @type {string}
-	 **/
-	this.prevValue = definition["prevValue"] || null;
-	/**
-	 * 
-	 * @type {string}
-	 **/
-	this.newValue = definition["newValue"] || null;
-	/**
-	 * 
-	 * @type {string}
-	 **/
-	this.attrName = definition["attrName"] || null;
-	/**
-	 *
-	 * @type {!number}
-	 **/
-	this.attrChange = definition["attrChange"] || 0;
-}
-/**
- * 
- * @constructor
- * @extends {EventDefinition}
- * @param {Object} definition
- **/
 function EventDefinitionUi(definition) {
 	EventDefinition.call(
 		this,
@@ -423,7 +377,7 @@ function DOM_EVENT_INIT(definition) {
 	var event;
 	if (!("bubbles" in definition)) definition["bubbles"] = true;
 	if (!("cancelable" in definition)) definition["cancelable"] = true;
-	switch (definition["init"] || EventDefinitionInitKinds.html) {
+	switch (definition.init || EventDefinitionInitKinds.html) {
 		case EventDefinitionInitKinds.mouse:
 			event = DOC.createEvent("MouseEvents");
 			event.initMouseEvent(
@@ -468,20 +422,6 @@ function DOM_EVENT_INIT(definition) {
 				!!definition["cancelable"],
 				definition["view"] || WIN,
 				INT(definition["detail"], 10) || 0
-			);
-			break;
-		case EventDefinitionInitKinds.mutant:
-		case EventDefinitionInitKinds.mutation:
-			event = DOC.createEvent("MutationEvents");
-			event.initMutationEvent(
-				definition["type"],
-				!!definition["bubbles"],
-				!!definition["cancelable"],
-				definition["relatedNode"] || null,
-				definition["prevValue"] || null,
-				definition["newValue"] || null,
-				definition["attrName"] || null,
-				INT(definition["attrChange"], 10) || 0
 			);
 			break;
 		case EventDefinitionInitKinds.html:
@@ -707,4 +647,10 @@ ns.Event = {
 	 * @expose
 	 **/
 	"definitions": EventDefinitionInitKinds,
+
+	// included so the export works properly
+	EventDefinition: EventDefinition,
+	EventDefinitionMouse: EventDefinitionMouse,
+	EventDefinitionKeyboard: EventDefinitionKeyboard,
+	EventDefinitionUi: EventDefinitionUi,
 };
