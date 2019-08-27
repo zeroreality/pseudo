@@ -63,9 +63,14 @@ function JSON_PARSE_SAFE(jsonString, errorContainer) {
 	try {
 		json = JSON_PARSE(jsonString);
 	} catch (error) {
-		["name"].concat(GET_ALL_KEYS(error)).forEach(function(key) {
-			this[key] = error[key];
-		}, errorContainer || {});
+		[
+			"name",
+			"message",
+		].concat(GET_ALL_KEYS(error))
+			.unique()
+			.forEach(function(key) {
+				this[key] = error[key];
+			}, errorContainer || {});
 	}
 	return json;
 }
