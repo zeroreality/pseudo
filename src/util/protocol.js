@@ -41,21 +41,6 @@ function PROTOCOL_IFRAME() {
 		})));
 }
 /**
- * Returns a string identifying the browser.
- * @return {string|null}
- */
-function checkBrowser() {
-	return !!WIN["chrome"]
-		? "chrome"
-		: typeof WIN["InstallTrigger"] !== "undefined"
-			? "firefox"
-			: eval("/*@cc_on!@*/false") || !!DOC["documentMode"]
-				? "ie"
-				: !!WIN["opera"]
-					? "opera"
-					: null;
-}
-/**
  * 
  * @param {Event} event
  */
@@ -92,7 +77,7 @@ function checkProtocolHandled(uri, success, failure) {
 	 */
 	PROTOCOL_FAILURE = function() { if (failure) failure(); };
 
-	switch (checkBrowser()) {
+	switch (PSEUDO_BROWSER()) {
 		case "chrome":
 			openUriWithTimeoutHack(uri);
 			break;
