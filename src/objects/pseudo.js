@@ -78,6 +78,24 @@ function PSEUDO_ESCAPE(input) {
 		}
 	});
 }
+
+/**
+ * Returns a string identifying the browser.
+ * @return {string|null}
+ */
+function PSEUDO_BROWSER() {
+	return WIN["chrome"]
+		? WIN["chrome"]["runtime"]
+			? "chrome"
+			: "edge"
+		: typeof WIN["InstallTrigger"] !== "undefined"
+			? "firefox"
+			: !!DOC["documentMode"]
+				? "ie"
+				: !!WIN["opera"]
+					? "opera"
+					: null;
+}
 /**
  * Does a deep copy/clone of the given object.  Automatically omits recursive branches.
  * @param {?} object			The object to copy/clone.
@@ -107,7 +125,7 @@ function PSEUDO_CLONE_OBJECT(object, depth, chain) {
 	for (var i = 0, l = keys.length; i < l; i++) {
 		var key = keys[i],
 			value = object[key];
-		if (typeof value === "object") {
+		if (typeof value === "object" && !OBJECT_IS_NOTHING(value)) {
 			if (depth > 0 && chain.indexOf(value) < 0) {
 				result[key] = value instanceof Array
 					? PSEUDO_CLONE_ARRAY(value, depth - 1, [value].concat(chain))
@@ -145,7 +163,8 @@ function PSEUDO_CLONE_ARRAY(array, depth, chain) {
 		}
 	}
 	return result;
-}
+	}
+
 /**
  * @expose
  */
@@ -182,3 +201,7 @@ ns.isNaN = IS_NAN;
  * @expose
  */
 ns.isN = IS_AN;
+/**
+ * @expose
+ */
+ns.checkBrowser = PSEUDO_BROWSER;
