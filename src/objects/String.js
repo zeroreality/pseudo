@@ -50,6 +50,7 @@ String_prototype.hasAll = function(var_args) {
 String_prototype.count = function(value) {
 	return this.split(value).length - 1;
 };
+
 /**
  * Returns a string with this characters in reverse order.
  * @expose
@@ -59,6 +60,7 @@ String_prototype.count = function(value) {
 String_prototype.reverse = function() {
 	return this.split("").reverse().join("");
 };
+
 /**
  * Checks to see if this string begins with the given {@link String} or {@link RegExp} pattern.
  * @expose
@@ -100,6 +102,7 @@ String_prototype.endsWith = function(object) {
 	//this.slice(-(object = object.toString()).length) === object;
 	*/
 };
+
 /**
  * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim|String#trim},
  * but also takes a {@link String} or {@link RegExp} argument to trim from the start and end of this string.
@@ -180,6 +183,7 @@ String_prototype.replaceAll = function(find, replacement) {
 	if (arguments.length < 2) replacement = "";
 	return this.split(find).join(replacement);
 };
+
 /**
  * Returns the left-most N characters of this string.
  * If a negative number is used, it will return that number of right-most characters instead.
@@ -206,6 +210,7 @@ String_prototype.right = function(length) {
 		? this.substring(0, length + this.length)
 		: this.slice(-length);
 };
+
 /**
  * Returns a concatenated string composed of this string N times.
  * @expose
@@ -230,6 +235,7 @@ String_prototype.repeat = function(number) {
 String_prototype.toCapital = function() {
 	return this[0].toUpperCase() + this.substring(1);
 };
+
 /**
  * Returns the section of this string after the first instance of the given value.
  * If the value is not found, a blank string is returned.
@@ -285,4 +291,25 @@ String_prototype.beforeLast = function(value) {
 	return index < 0
 		? this.valueOf()
 		: this.substring(0, index);
+};
+
+/**
+ * Formats a well formed template string with the given values.
+ * @expose
+ * @this {String}
+ * @param {Object} values
+ * @param {RegExp=} regex
+ * @param {string=} notFound
+ * @return {!string}
+ */
+String_prototype.format = function(values, regex, notFound) {
+	return this.replace(regex || /\{[^}]+\}/gim, function(match, index, string) {
+		var name = match.slice(1, -1),
+			value = name in values
+				? values[name]
+				: (notFound || "");
+		return OBJECT_IS_FUNCTION(value)
+			? value(match, index, string)
+			: value;
+	});
 };
