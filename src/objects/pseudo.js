@@ -58,9 +58,11 @@ function PSEUDO_ADD_SHEET(source, media, reload) {
  * @returns {string}
  */
 function PSEUDO_KLASS_NAME(object) {
-	if (object === undefined) return "undefined";
-	else if (object === null) return "null";
-	else return TOSTRING.call(object).match(PSEUDO_FILTER_CLASS)[1];
+	return object === undefined
+		? "undefined"
+		: object === null
+			? "null"
+			: TOSTRING.call(object).slice("[object ".length, -1);
 }
 /**
  * Creates an HTTP safe string for transmission similar to the {@link window.escape} function.
@@ -88,7 +90,7 @@ function PSEUDO_BROWSER() {
 		? WIN["chrome"]["runtime"]
 			? "chrome"
 			: "edge"
-		: typeof WIN["InstallTrigger"] !== "undefined"
+		: typeof WIN["InstallTrigger"] !== undefined
 			? "firefox"
 			: !!DOC["documentMode"]
 				? "ie"
