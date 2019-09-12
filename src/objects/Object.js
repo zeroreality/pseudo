@@ -26,7 +26,10 @@ var OBJECT_KEYS_DONT = [
  */
 function OBJECT_IS_ARGUMENTS(object) {
 	var cn = PSEUDO_KLASS_NAME(object);
-	return cn === "Arguments" || cn === "Object" && IS_AN(object.length) && "callee" in object;
+	return cn === "Arguments"
+		|| cn === "Object"
+		&& IS_AN(object.length)
+		&& "callee" in object;
 };
 /**
  * Checks for both null and undefined
@@ -34,31 +37,33 @@ function OBJECT_IS_ARGUMENTS(object) {
  * @return {!boolean}
  */
 function OBJECT_IS_NOTHING(value) {
-	return value === null || typeof value === "undefined";
+	var cn = PSEUDO_KLASS_NAME(value);
+	return cn === "null"
+		|| cn === "undefined";
 }
 /**
- * Checks to see if the given parameter is a number object or number literal.
+ * Checks to see if the given parameter is a boolean object or literal.
  * @param {?} value The variable to check
  * @return {!boolean}
  */
 function OBJECT_IS_BOOLEAN(value) {
-	return typeof value === "boolean" || value instanceof Boolean;
+	return PSEUDO_KLASS_NAME(value) === "Boolean";
 }
 /**
- * Checks to see if the given parameter is a number object or number literal.
+ * Checks to see if the given parameter is a number object or literal.
  * @param {?} value The variable to check
  * @return {!boolean}
  */
 function OBJECT_IS_NUMBER(value) {
-	return typeof value === "number" || value instanceof Number;
+	return PSEUDO_KLASS_NAME(value) === "Number";
 }
 /**
- * Checks to see if the given parameter is a number object or number literal.
+ * Checks to see if the given parameter is a string object or literal.
  * @param {?} value The variable to check
  * @return {!boolean}
  */
 function OBJECT_IS_STRING(value) {
-	return typeof value === "string" || value instanceof String;
+	return PSEUDO_KLASS_NAME(value) === "String";
 }
 /**
  * Checks to see if the given parameter is a function.
@@ -66,18 +71,31 @@ function OBJECT_IS_STRING(value) {
  * @return {!boolean}
  */
 function OBJECT_IS_FUNCTION(value) {
-	return typeof value === "function" || value instanceof Function;
+	return PSEUDO_KLASS_NAME(value) === "Function";
 }
 /**
- * Checks to see if the given parameter is an object, not undefined or a number/string/boolean object.
+ * Checks to see if the given parameter is a RegExp object or literal.
+ * @param {?} value The variable to check
+ * @return {boolean}
+ */
+function OBJECT_IS_REGEXP(value) {
+	return PSEUDO_KLASS_NAME(value) === "RegExp";
+}
+/**
+ * Checks to see if the given parameter is a Date object.
+ * @param {?} value The variable to check
+ * @return {boolean}
+ */
+function OBJECT_IS_DATE(value) {
+	return PSEUDO_KLASS_NAME(value) === "Date";
+}
+/**
+ * Checks to see if the given parameter is an object, not undefined or a primitive type.
  * @param {?} value The variable to check
  * @return {boolean}
  */
 function OBJECT_IS_OBJECT(value) {
-	return typeof value !== "undefined"
-		&& !OBJECT_IS_BOOLEAN(value)
-		&& !OBJECT_IS_NUMBER(value)
-		&& !OBJECT_IS_STRING(value);
+	return PSEUDO_KLASS_NAME(value) === "Object";
 }
 
 /**
@@ -156,6 +174,18 @@ ns.Object = {
 	 * @expose
 	 */
 	"isFunction": OBJECT_IS_FUNCTION,
+	/**
+	 * @expose
+	 */
+	"isRegExp": OBJECT_IS_REGEXP,
+	/**
+	 * @expose
+	 */
+	"isDate": OBJECT_IS_DATE,
+	/**
+	 * @expose
+	 */
+	"isObject": OBJECT_IS_OBJECT,
 	/**
 	 * @expose
 	 */
