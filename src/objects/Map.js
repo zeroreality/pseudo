@@ -70,32 +70,6 @@ function FINDER_ZERO(value) {
 
 //#region Inspection
 /**
- * Gets an Array of keys within this dictionary.
- * @expose
- * @this {Map.<K,V>}
- * @return {!Array.<K>}
- */
-Map_prototype.keys = function() {
-	var keys = [];
-	this.forEach(function(v, k) {
-		keys.push(k);
-	});
-	return keys;
-};
-/**
- * Gets the Array of values from this dictionary.
- * @expose
- * @this {Map.<K,V>}
- * @return {!Array.<V>}
- */
-Map_prototype.values = function() {
-	var values = [];
-	this.forEach(function(v, k) {
-		values.push(v);
-	});
-	return values;
-};
-/**
  * Returns a boolean asserting whether a value has been added to the dictionary or not.
  * @expose
  * @this {Map.<K,V>}
@@ -151,19 +125,6 @@ Map_prototype.every = function(predicate, context) {
 	return all;
 };
 //#endregion Inspection
-
-//#region Modification
-/**
- * Removes all key/value pairs from the dictionary.
- * @expose
- * @this {Map.<K,V>}
- */
-Map_prototype.clear = function() {
-	this.keys().forEach(function(key) {
-		this.delete(key);
-	}, this);
-};
-//#endregion Modification
 
 //#region Transform
 /**
