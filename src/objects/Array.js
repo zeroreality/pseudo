@@ -82,7 +82,7 @@ function ARRAY_NATURAL(a, b) {
 	return 0;
 }
 /**
- * Sorts strings as if they were numbers.  Sorts non numbers to the end of the list.
+ * Sorts strings as if they were numbers.  Sorts non-numbers to the end of the list.
  * @param {number} a
  * @param {number} b
  * @returns {number}
@@ -93,6 +93,47 @@ function ARRAY_NUMERIC(a, b) {
 		bNum = FLOAT(b),
 		bNaN = IS_NAN(bNum);
 	return aNum < bNum || !aNaN && bNaN ? -1 : aNum > bNum || aNaN && !bNaN ? 1 : 0;
+}
+/**
+ *
+ * @param {Array} a
+ * @param {Array} b
+ * @returns {number}
+ **/
+function ARRAY_SUPER_NATURAL(a, b) {
+	for (var i = 0, l = MAX(a.length, b.length); i < l; i++) {
+		var aValue = a[i] || NaN,
+			bValue = b[i] || NaN,
+			aNaN = isNaN(aValue),
+			bNaN = isNaN(bValue);
+		if (aNaN === bNaN) {
+			// compare as if both are strings or numbers
+			if (aValue < bValue) return -1;
+			else if (aValue > bValue) return 1;
+		} else {
+			// non-number is higher
+			return aNaN ? -1 : 1;	// same as "aNaN ? -1 : bNaN ? 1 : 0" since aNaN !== bNaN
+		}
+	}
+	// same same
+	return 0;
+}
+/**
+ * 
+ * @param {?} input
+ * @returns {Array}
+ */
+function ARRAY_SPLIT_NATURAL(input) {
+	var parts = OBJECT_IS_NOTHING(input)
+		? []
+		: String(input).match(ARRAY_FILTER_NATURAL) || [];
+	for (var i = 0, p; p = parts[i]; i++) {
+		var number = INT(p, 10);
+		parts[i] = isNaN(number)
+			? p.toUpperCase()
+			: number;
+	}
+	return parts;
 }
 
 /**
@@ -844,15 +885,23 @@ Array_prototype.animForEach = function(predicate, context) {
  **/
 ns.Array = {
 	/**
-	 * A predicate passed to {@link Arra#sort}, it uses "natural" sorting by trying to sort by words alphabetically and numbers numerically.
+	 * A predicate passed to {@link Array#sort}, it uses "natural" sorting by trying to sort by words alphabetically and numbers numerically.
 	 **/
 	"natural": ARRAY_NATURAL,
 	/**
-	 * A predicate passed to {@link Arra#sort}, it sorts strings as if they were numbers.  Sorts non numbers to the end of the list.
+	 * Similar to {@link pseudo3.Array.natural}, but compares pre-computed mixed arrays of numbers/strings.
+	 **/
+	"superNatural": ARRAY_SUPER_NATURAL,
+	/**
+	 * The input is converted to a mixed array of numbers/strings to be used in {@link pseudo3.Array.superNatural} sorting.
+	 **/
+	"splitNatural": ARRAY_SPLIT_NATURAL,
+	/**
+	 * A predicate passed to {@link Array#sort}, it sorts strings as if they were numbers.  Sorts non numbers to the end of the list.
 	 **/
 	"numeric": ARRAY_NUMERIC,
 	/**
-	 * A predicate passed to {@link Arra#sort}, it simply compares values are returns -1, 0 or 1.
+	 * A predicate passed to {@link Array#sort}, it simply compares values are returns -1, 0 or 1.
 	 **/
 	"compare": ARRAY_COMPARE,
 };

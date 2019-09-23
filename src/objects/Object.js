@@ -32,6 +32,14 @@ function OBJECT_IS_ARGUMENTS(object) {
 		&& "callee" in object;
 };
 /**
+ * Checks to see if the given parameter is an array.
+ * @param {?} value The variable to check
+ * @return {!boolean}
+ */
+function OBJECT_IS_ARRAY(value) {
+	return PSEUDO_KLASS_NAME(value) === "Array";
+}
+/**
  * Checks for both null and undefined
  * @param {?} value The variable to check
  * @return {!boolean}
@@ -154,6 +162,10 @@ ns.Object = {
 	 * @expose
 	 */
 	"isArguments": OBJECT_IS_ARGUMENTS,
+	/**
+	 * @expose
+	 */
+	"isArray": OBJECT_IS_ARRAY,
 	/**
 	 * @expose
 	 */
