@@ -18,6 +18,8 @@
 /// <reference path="..\src\objects\Date.js" />
 /// <reference path="..\src\objects\String.js" />
 /// <reference path="..\src\objects\Function.js" />
+/// <reference path="..\src\objects\Map.js" />
+/// <reference path="..\src\objects\Set.js" />
 /// </section>
 /// <section name="DOM">
 /// <reference path="..\src\dom\_include.js" />
