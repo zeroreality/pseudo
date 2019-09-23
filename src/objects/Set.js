@@ -89,8 +89,8 @@ Set_prototype.filter = function(predicate, context) {
 	if (arguments.length < 2) context = this;
 	var results = new Set();
 	this.forEach(function(value) {
-		if (predicate.call(context, value,  this)) {
-			results.add(key, value);
+		if (predicate.call(context, value, this)) {
+			results.add(value);
 		}
 	}, context);
 	return results;
@@ -112,7 +112,7 @@ Set_prototype.toArray = function(predicate, context) {
 	var results = [],
 		index = 0;
 	this.forEach(function(value) {
-		results[index++] = predicate.call(context, value,  this);
+		results[index++] = predicate.call(context, value, this);
 	}, context);
 	return results;
 };
