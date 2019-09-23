@@ -72,8 +72,8 @@ function FINDER_ZERO(value) {
 /**
  * Returns a boolean asserting whether a value has been added to the dictionary or not.
  * @expose
- * @this {Map.<K,V>}
- * @param {V} value
+ * @this {Map}
+ * @param {?} value
  * @return {!boolean}
  */
 Map_prototype.hasValue = function(value) {
@@ -87,7 +87,7 @@ Map_prototype.hasValue = function(value) {
 /**
  * Checks each pair in the dictionary and returns true if one pair matches the predicate.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  * @param {!function(?,?,Map):boolean} predicate
  * @param {!Object=} context
  * @throws {TypeError} predicate is not a Function
@@ -107,7 +107,7 @@ Map_prototype.some = function(predicate, context) {
 /**
  * Checks each pair in the dictionary and returns true only if all pairs match the predicate.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  * @param {!function(?,?,Map):boolean} predicate
  * @param {!Object=} context
  * @throws {TypeError} predicate is not a Function
@@ -130,7 +130,7 @@ Map_prototype.every = function(predicate, context) {
 /**
  * Quickly creates and returns a duplicate of this dictionary.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  */
 Map_prototype.copy = function() {
 	return new Map(this);
@@ -138,7 +138,7 @@ Map_prototype.copy = function() {
 /**
  * Builds a new dictionary with only the positive results from the predicate.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  * @param {!function(?,?,Map):boolean} predicate
  * @param {!Object=} context
  * @throws {TypeError} predicate is not a Function
@@ -160,7 +160,7 @@ Map_prototype.filter = function(predicate, context) {
 /**
  * Builds an array out of the results of the predicate.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  * @param {!function(?,?,Map):?} predicate
  * @param {!Object=} context
  * @throws {TypeError} predicate is not a Function
@@ -181,7 +181,7 @@ Map_prototype.toArray = function(predicate, context) {
 /**
  * Builds a new dictionary out of the results of the predicates.
  * @expose
- * @this {Map.<K,V>}
+ * @this {Map}
  * @param {!function(?,?,Map):?} valuePredicate
  * @param {!function(?,?,Map):?=} keyPredicate
  * @param {!Object=} context
