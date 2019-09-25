@@ -175,3 +175,77 @@ var RADIANS_TO_DEGREES = 180 / PI;
  */
 var DEGREES_TO_RADIANS = PI / 180;
 //#endregion Constant Numbers
+
+//#region Iteration Helpers
+/**
+ * When used as an Array iterator, will return the value as given.
+ * @param {?} value
+ * @return {?} value
+ */
+function ITERATOR_VALUE(value) {
+	return value;
+}
+/**
+ * When used as a Map iterator, will return the key as given.
+ * @param {?} object
+ * @param {?} key
+ * @return {?} key
+ */
+function ITERATOR_KEY(object, key) {
+	return key;
+}
+/**
+ * Chooses the best finder predicate
+ * @param {?} value
+ * @return {!function(?,number,Array):boolean}
+ */
+function CHOOSE_FINDER(value) {
+	return OBJECT_IS_NUMBER(value)
+		&& (
+			isNaN(value) && FINDER_NAN
+			|| value == 0 && FINDER_ZERO
+		)
+		|| OBJECT_IS_NOTHING(value)
+		&& FINDER_SELF
+		|| FINDER_VALUE;
+}
+/**
+ * Given as the first argument for Array#filter, and finds the matching object in the array by identity match.
+ * @this {?}
+ * @param {?} value
+ * @return {!boolean}
+ */
+function FINDER_VALUE(value) {
+	return value === this.valueOf();
+}
+/**
+ * Given as the first argument for Array#filter, and finds the matching object in the array by reference.
+ * Used for *null* and *undefined* search values.
+ * @this {?}
+ * @param {?} value
+ * @return {!boolean}
+ */
+function FINDER_SELF(value) {
+	return value === this;
+}
+/**
+ * Given as the first argument for Array#filter, uses a special case for finding NaN values.
+ * @this {?}
+ * @param {?} value
+ * @return {!boolean}
+ */
+function FINDER_NAN(value) {
+	return IS_NAN(value);
+}
+/**
+ * Given as the first argument for Array#filter, and finds a numeric value of zero.
+ * Differentiates between positive zero and negative zero.
+ * @this {?}
+ * @param {?} value
+ * @return {!boolean}
+ */
+function FINDER_ZERO(value) {
+	return value === 0
+		&& (1 / value) === (1 / this.valueOf());
+}
+//#endregion Iteration Helpers

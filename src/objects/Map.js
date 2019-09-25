@@ -3,72 +3,34 @@
 /** @const {Object} */
 var Map_prototype = Map[PROTOTYPE];
 
-/**
- * When used as a Map iterator, will return the key as given.
- * @param {?} object
- * @param {?} key
- * @return {?} key
- */
-function MAP_KEY(object, key) {
-	return key;
-}
-/**
- * Chooses the best finder predicate
- * @param {?} value
- * @return {!function(Object,number,Array):boolean}
- */
-function CHOOSE_FINDER(value) {
-	return OBJECT_IS_NUMBER(value)
-		&& (
-			isNaN(value) && FINDER_NAN
-			|| value == 0 && FINDER_ZERO
-		)
-		|| OBJECT_IS_NOTHING(value)
-		&& FINDER_SELF
-		|| FINDER_VALUE;
-}
-/**
- * Given as the first argument for Array#filter, and finds the matching object in the array by identity match.
- * @this {?}
- * @param {?} value
- * @return {!boolean}
- */
-function FINDER_VALUE(value) {
-	return value === this.valueOf();
-}
-/**
- * Given as the first argument for Array#filter, and finds the matching object in the array by reference.
- * Used for *null* and *undefined* search values.
- * @this {?}
- * @param {?} value
- * @return {!boolean}
- */
-function FINDER_SELF(value) {
-	return value === this;
-}
-/**
- * Given as the first argument for Array#filter, uses a special case for finding NaN values.
- * @this {?}
- * @param {?} value
- * @return {!boolean}
- */
-function FINDER_NAN(value) {
-	return IS_NAN(value);
-}
-/**
- * Given as the first argument for Array#filter, and finds a numeric value of zero.
- * Differentiates between positive zero and negative zero.
- * @this {?}
- * @param {?} value
- * @return {!boolean}
- */
-function FINDER_ZERO(value) {
-	return value === 0
-		&& (1 / value) === (1 / this.valueOf());
-}
-
-
 //#region Inspection
+/**
+ * Gets an Array of keys within this dictionary.
+ * @expose
+ * @this {Map}
+ * @return {!Array}
+ */
+Map_prototype.allKeys = function() {
+	var results = [];
+	this.forEach(function(value, key, map) {
+		results.push(key);
+	});
+	return results;
+};
+/**
+ * Gets the Array of values from this dictionary.
+ * @expose
+ * @this {Map}
+ * @return {!Array}
+ */
+Map_prototype.allValues = function() {
+	var results = [];
+	this.forEach(function(value, key, map) {
+		results.push(value);
+	});
+	return results;
+};
+
 /**
  * Returns a boolean asserting whether a value has been added to the dictionary or not.
  * @expose
@@ -125,6 +87,53 @@ Map_prototype.every = function(predicate, context) {
 	return all;
 };
 //#endregion Inspection
+
+//#region Modification
+/**
+ * Either adds the given key/value, or replaces the value for the given key.
+ * The setValue is invoked only for add operations, and the updateValue is invoked only for replace operations.
+ * The setValue function is invoked with the key, and itself, and returns the value to be set.
+ * The updateValue function is invoked with the existing value, a reference to the setValue function, the key, and itself, and returns the value to be set.
+ * The method itself returns undefined.
+ * @expose
+ * @this {Map}
+ * @param {?} key
+ * @param {function(?,Map):?} setValue
+ * @param {function(?,Function,?,Map):?} updateValue
+ * @param {!Object=} context
+ */
+Map_prototype.setOrReplace = function(key, setValue, updateValue, context) {
+	if (!OBJECT_IS_FUNCTION(setValue)) throw new TypeError("setValue is not a Function");
+	if (!OBJECT_IS_FUNCTION(updateValue)) throw new TypeError("updateValue is not a Function");
+	this.set(
+		key,
+		!this.has(key)
+			? setValue.call(context, key, this)
+			: updateValue.call(context, this.get(key), setValue, key, this)
+	);
+};
+/**
+ * Either adds the given key/value, or replaces the value for the given key.
+ * The updateValue is invoked only for replace operations.
+ * The updateValue function is invoked with the existing value, the replacement value, the key, and itself, and returns the value to be set.
+ * The method itself returns undefined.
+ * @expose
+ * @this {Map}
+ * @param {?} key
+ * @param {?} value
+ * @param {function(?,?,?,Map):?} updateValue
+ * @param {!Object=} context
+ */
+Map_prototype.addOrReplace = function(key, value, updateValue, context) {
+	if (!OBJECT_IS_FUNCTION(updateValue)) throw new TypeError("updateValue is not a Function");
+	this.set(
+		key,
+		!this.has(key)
+			? value
+			: updateValue.call(context, this.get(key), value, key, this)
+	);
+};
+//#endregion Modification
 
 //#region Transform
 /**
@@ -194,7 +203,7 @@ Map_prototype.map = function(valuePredicate, keyPredicate, context) {
 		throw new TypeError("predicate is not a Function");
 	}
 	if (!OBJECT_IS_FUNCTION(keyPredicate)) {
-		if (OBJECT_IS_NOTHING(keyPredicate)) keyPredicate = MAP_KEY;	// not required
+		if (OBJECT_IS_NOTHING(keyPredicate)) keyPredicate = ITERATOR_KEY;	// not required
 		else throw new TypeError("predicate is not a Function");
 	}
 	if (arguments.length < 3) context = this;
