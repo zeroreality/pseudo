@@ -32,6 +32,51 @@ Map_prototype.allValues = function() {
 };
 
 /**
+ * Checks each pair in the dictionary and returns true only if all pairs match the predicate.
+ * @expose
+ * @this {Map}
+ * @param {!function(?,?,Map):boolean} predicate
+ * @param {!Object=} context
+ * @throws {TypeError} predicate is not a Function
+ * @return {!boolean}
+ */
+Map_prototype.every = function(predicate, context) {
+	if (!OBJECT_IS_FUNCTION(predicate)) {
+		throw new TypeError("predicate is not a Function");
+	}
+	if (arguments.length < 2) context = this;
+	var all = true;
+	this.forEach(function(value, key) {
+		if (all) all = predicate.call(context, value, key, this);
+	});
+	return all;
+};
+/**
+ * 
+ * @expose
+ * @this {Map}
+ * @param {!function(?,?,Map):boolean} predicate
+ * @param {!Object=} context
+ * @throws {TypeError} predicate is not a Function
+ * @return {!boolean}
+ */
+Map_prototype.find = function(predicate, context) {
+	if (!OBJECT_IS_FUNCTION(predicate)) {
+		throw new TypeError("predicate is not a Function");
+	}
+	if (arguments.length < 2) context = this;
+	var found = false,
+		result;
+	this.forEach(function(value, key) {
+		if (!found) {
+			if (found = predicate.call(context, value, key, this)) {
+				result = [key, value];
+			}
+		}
+	});
+	return result;
+};
+/**
  * Returns a boolean asserting whether a value has been added to the dictionary or not.
  * @expose
  * @this {Map}
@@ -66,29 +111,37 @@ Map_prototype.some = function(predicate, context) {
 	});
 	return has;
 };
-/**
- * Checks each pair in the dictionary and returns true only if all pairs match the predicate.
- * @expose
- * @this {Map}
- * @param {!function(?,?,Map):boolean} predicate
- * @param {!Object=} context
- * @throws {TypeError} predicate is not a Function
- * @return {!boolean}
- */
-Map_prototype.every = function(predicate, context) {
-	if (!OBJECT_IS_FUNCTION(predicate)) {
-		throw new TypeError("predicate is not a Function");
-	}
-	if (arguments.length < 2) context = this;
-	var all = true;
-	this.forEach(function(value, key) {
-		if (all) all = predicate.call(context, value, key, this);
-	});
-	return all;
-};
 //#endregion Inspection
 
 //#region Modification
+/**
+ * 
+ * @expose
+ * @this {Map}
+ * @param {Map|Set|Array.<Array>=} iterable
+ */
+Map_prototype.concat = function(iterable) {
+	var me = this,
+		other = new Map(iterable);
+	me.forEach(function(value, key) {
+		other.set(key, value);
+	});
+	return other;
+};
+/**
+ * 
+ * @expose
+ * @this {Map}
+ * @param {Map|Set|Array.<Array>=} iterable
+ */
+Map_prototype.inject = function(iterable) {
+	var me = this,
+		other = new Map(iterable);
+	other.forEach(function(value, key) {
+		me.set(key, value);
+	});
+	return me;
+};
 /**
  * Either adds the given key/value, or replaces the value for the given key.
  * The setValue is invoked only for add operations, and the updateValue is invoked only for replace operations.
