@@ -26,6 +26,7 @@
 /// <reference path="..\src\dom\query.js" />
 /// <reference path="..\src\dom\tree.js" />
 /// <reference path="..\src\dom\events.js" />
+/// <reference path="..\src\dom\css.js" />
 /// </section>
 /// <section name="Utilities">
 /// <reference path="..\src\util\cookie.js" />
