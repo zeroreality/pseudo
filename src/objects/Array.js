@@ -445,12 +445,13 @@ Array_prototype.insertBefore = function(item, before) {
  * Returns itself.
  * @expose
  * @this {Array}
- * @param {?} item
+ * @param {...*} var_args
  * @return {!Array} this
  */
-Array_prototype.remove = function(item) {
+Array_prototype.remove = function(var_args) {
+	var args = SLICE.call(arguments);
 	for (var i = 0; i < this.length; i++) {
-		if (this[i] === item) {
+		if (args.includes(this[i])) {
 			this.splice(i--, 1);
 		}
 	}
@@ -707,30 +708,59 @@ Array_prototype.toDictionary = function(keyPredicate, valuePredicate, dictionary
  * The value creating predicate is optional, and when not specified, the array item is added as the value in the Map.
  * @expose
  * @this {Array}
- * @param {!function(?,number,Object):?} keyPredicate
- * @param {function(?,string,number,Object):?=} valuePredicate
- * @param {Map=} map
- * @return {!Map} map
+ * @param {!function(?,number,Array):?} keyPredicate
+ * @param {function(?,string,?,Array):?=} valuePredicate
+ * @param {?=} context
+ * @return {!Map}
  */
-Array_prototype.toMap = function(keyPredicate, valuePredicate, map) {
-	if (typeof keyPredicate !== "function" || valuePredicate && typeof valuePredicate !== "function") {
+Array_prototype.toMap = function(keyPredicate, valuePredicate, context) {
+	if (
+		!OBJECT_IS_FUNCTION(keyPredicate)
+		|| !OBJECT_IS_NOTHING(valuePredicate)
+		&& !OBJECT_IS_FUNCTION(valuePredicate)
+	) {
 		throw new TypeError(PREDICATE_ERROR);
 	}
-	if (!map) map = new Map();
-	if (!(map instanceof Map)) {
-		throw new TypeError("map is not an instance of Map");
-	}
+	if (!context) context = this;
+	var map = new Map();
 	for (var i = 0, l = this.length; i < l; i++) {
 		var value = this[i],
-			key = keyPredicate.call(this, value, i, map);
+			key = keyPredicate.call(context, value, i, this);
 		map.set(
 			key,
 			!valuePredicate
 				? value
-				: valuePredicate.call(this, value, key, i, map)
+				: valuePredicate.call(context, value, key, i, this)
 		);
 	}
 	return map;
+};
+/**
+ * Creates a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set|Set} using the given predicate.
+ * The predicate is optional, and when not specified, the array item is added as the value in the Set.
+ * @expose
+ * @this {Array}
+ * @param {!function(?,number,Object):?} predicate
+ * @param {?=} context
+ * @return {!Set}
+ */
+Array_prototype.toSet = function(predicate, context) {
+	if (
+		!OBJECT_IS_NOTHING(predicate)
+		&& !OBJECT_IS_FUNCTION(predicate)
+	) {
+		throw new TypeError(PREDICATE_ERROR);
+	}
+	if (!context) context = this;
+	var set = new Set;
+	for (var i = 0, l = this.length; i < l; i++) {
+		set.add(
+			!predicate
+				? this[i]
+				: predicate.call(context, this[i], i, this)
+		);
+	}
+	return set;
 };
 //#endregion Transform
 
