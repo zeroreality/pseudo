@@ -406,3 +406,15 @@ Set_prototype.unshift = function(var_args) {
 	SLICE.call(arguments).concat(entries).forEach(SET_ADD, this);
 	return this.size;
 };
+
+/**
+ * Similar to {@link Array#inject}, will add the items of the given list to itself, then return itself.
+ * @expose
+ * @this {Set}
+ * @param {Set|Array} list
+ * @return {!Set}
+ */
+Set_prototype.inject = function(list) {
+	list.forEach(SET_ADD, this);
+	return this;
+};
