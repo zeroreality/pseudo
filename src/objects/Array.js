@@ -102,17 +102,23 @@ function ARRAY_NUMERIC(a, b) {
  **/
 function ARRAY_SUPER_NATURAL(a, b) {
 	for (var i = 0, l = MAX(a.length, b.length); i < l; i++) {
-		var aValue = a[i] || NaN,
-			bValue = b[i] || NaN,
+		var aValue = a[i],
+			bValue = b[i],
 			aNaN = isNaN(aValue),
 			bNaN = isNaN(bValue);
-		if (aNaN === bNaN) {
+		if (aValue === undefined) {
+			// this is the case if a has fewer values in the sort array
+			return -1;
+		} else if (bValue === undefined) {
+			// this is the case if a has more values in the sort array
+			return 1;
+		} else if (aNaN === bNaN) {
 			// compare as if both are strings or numbers
 			if (aValue < bValue) return -1;
 			else if (aValue > bValue) return 1;
 		} else {
-			// non-number is higher
-			return aNaN ? -1 : 1;	// same as "aNaN ? -1 : bNaN ? 1 : 0" since aNaN !== bNaN
+			// number is higher
+			return aNaN ? 1 : -1;	// same as "aNaN ? 1 : bNaN ? -1 : 0" since aNaN !== bNaN
 		}
 	}
 	// same same
@@ -141,12 +147,19 @@ function ARRAY_SPLIT_NATURAL(input) {
  * @expose
  * @this {Array}
  * @param {Function=} predicate
+ * @param {?=} context
  * @return {!Array} this
  */
-Array_prototype.order = function(predicate) {
+Array_prototype.order = function(predicate, context) {
 	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_NATURAL;
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	this.sort(predicate);
+	this.sort(
+		predicate.bind(
+			arguments.length < 2
+				? this
+				: context
+		)
+	);
 	return this;
 };
 /**
@@ -280,8 +293,12 @@ Array_prototype.sum = function(predicate, initialValue) {
  */
 Array_prototype.each = function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	else if (arguments.length < 2) context = this;
-	this.forEach(predicate, context);
+	this.forEach(
+		predicate,
+		arguments.length < 2
+			? this
+			: context
+	);
 	return this;
 };
 /**
@@ -344,7 +361,7 @@ Array_prototype.flatten = function(levels) {
  */
 Array_prototype.find = Array_prototype.find || function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	else if (arguments.length < 2) context = this;
+	if (arguments.length < 2) context = this;
 	for (var i = 0, l = this.length; i < l; i++) {
 		if (predicate.call(context, this[i], i, this)) {
 			return this[i];
@@ -361,7 +378,7 @@ Array_prototype.find = Array_prototype.find || function(predicate, context) {
  */
 Array_prototype.findIndex = Array_prototype.findIndex || function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	else if (arguments.length < 2) context = this;
+	if (arguments.length < 2) context = this;
 	for (var i = 0, l = this.length; i < l; i++) {
 		if (predicate.call(context, this[i], i, this)) {
 			return i;
@@ -379,7 +396,7 @@ Array_prototype.findIndex = Array_prototype.findIndex || function(predicate, con
  */
 Array_prototype.findIndexes = function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	else if (arguments.length < 2) context = this;
+	if (arguments.length < 2) context = this;
 	var result = [];
 	for (var i = 0, l = this.length; i < l; i++) {
 		if (predicate.call(context, this[i], i, this)) {
@@ -496,6 +513,18 @@ Array_prototype.plant = function(propertyName, value) {
 		this[i][propertyName] = value;
 	}
 	return this;
+};
+/**
+ * Similar to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push|Array#push}, will only add the value to the array if it does not already contain it.  Returns the length of the array.
+ * @expose
+ * @this {Array}
+ * @param {?=} value
+ * @return {!number}
+ */
+Array_prototype.shove = function(value) {
+	return this.includes(value)
+		? this.length
+		: this.push(value);
 };
 //#endregion Modification
 
@@ -633,6 +662,7 @@ Array_prototype.without = function(array) {
 Array_prototype.unique = function(predicate, context) {
 	if (!predicate) predicate = ARRAY_HELPER_IDENTITY;
 	else if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
+	if (arguments.length < 2) context = this;
 	var result = [];
 	for (var i = 0, l = this.length; i < l; i++) {
 		var found = false;
@@ -712,7 +742,7 @@ Array_prototype.toDictionary = function(keyPredicate, valuePredicate, dictionary
  * @param {function(?,string,?,Array):?=} valuePredicate
  * @param {?=} context
  * @return {!Map}
- */
+ **/
 Array_prototype.toMap = function(keyPredicate, valuePredicate, context) {
 	if (
 		!OBJECT_IS_FUNCTION(keyPredicate)
@@ -721,8 +751,8 @@ Array_prototype.toMap = function(keyPredicate, valuePredicate, context) {
 	) {
 		throw new TypeError(PREDICATE_ERROR);
 	}
-	if (!context) context = this;
-	var map = new Map();
+	if (arguments.length < 3) context = this;
+	var map = new Map;
 	for (var i = 0, l = this.length; i < l; i++) {
 		var value = this[i],
 			key = keyPredicate.call(context, value, i, this);
@@ -740,10 +770,10 @@ Array_prototype.toMap = function(keyPredicate, valuePredicate, context) {
  * The predicate is optional, and when not specified, the array item is added as the value in the Set.
  * @expose
  * @this {Array}
- * @param {!function(?,number,Object):?} predicate
+ * @param {function(?,number,Object):?=} predicate
  * @param {?=} context
  * @return {!Set}
- */
+ **/
 Array_prototype.toSet = function(predicate, context) {
 	if (
 		!OBJECT_IS_NOTHING(predicate)
@@ -751,7 +781,7 @@ Array_prototype.toSet = function(predicate, context) {
 	) {
 		throw new TypeError(PREDICATE_ERROR);
 	}
-	if (!context) context = this;
+	if (arguments.length < 2) context = this;
 	var set = new Set;
 	for (var i = 0, l = this.length; i < l; i++) {
 		set.add(
@@ -777,7 +807,7 @@ Array_prototype.toSet = function(predicate, context) {
  */
 Array_prototype.asyncForEach = function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (!context) context = this;
+	if (arguments.length < 2) context = this;
 
 
 	/**
@@ -822,7 +852,7 @@ Array_prototype.asyncForEach = function(predicate, context) {
  */
 Array_prototype.deferForEach = function(predicate, context, delay) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (!context) context = this;
+	if (arguments.length < 2) context = this;
 	if (!delay || delay < 0) delay = 0;
 	var timer,
 		array = this.slice(),
@@ -890,7 +920,7 @@ Array_prototype.deferForEach = function(predicate, context, delay) {
  */
 Array_prototype.animForEach = function(predicate, context) {
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (!context) context = this;
+	if (arguments.length < 2) context = this;
 	var array = this.slice(),
 		length = array.length,
 		index = 0;
