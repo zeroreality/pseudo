@@ -4,9 +4,9 @@
  * 
  **/
 [
-	"matrix",	"matrix3D",
+	"matrix",		"matrix3d",
 	"perspective",
-	"rotate",		"rotate3D",	"rotateX",	"rotateY",	"rotateZ",
+	"rotate",		"rotate3d",	"rotateX",	"rotateY",	"rotateZ",
 	"scale",		"scale3d",	"scaleX",		"scaleY",		"scaleZ",
 	"skew",					"skewX",		"skewY",
 	"translate",	"translate3d",	"translateX",	"translateY",	"translateZ",
