@@ -241,6 +241,26 @@ Map_prototype.toArray = function(predicate, context) {
 	return results;
 };
 /**
+ * Creates a primitive version of the dictionary and its values.
+ * @expose
+ * @this {Map}
+ * @return {!Object}
+ */
+Map_prototype.toJSON = function() {
+	var object = {};
+	this.forEach(function(value, key) {
+		var type = PSEUDO_KLASS_NAME(value);
+		if (type !== "undefined") {
+			object[String(key)] = value && OBJECT_IS_FUNCTION(value.toJSON)
+				? value.toJSON()
+				: type !== "Number" || IS_AN(value)	// NaN becomes null
+					? value
+					: null;
+		}
+	});
+	return object;
+};
+/**
  * Builds a new dictionary out of the results of the predicates.
  * @expose
  * @this {Map}
