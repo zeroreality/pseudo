@@ -132,6 +132,24 @@ Map_prototype.concat = function(iterable) {
  * 
  * @expose
  * @this {Map}
+ * @param {?} value
+ * @return {!Set.<?>}
+ */
+Map_prototype.deleteValue = function(value) {
+	var keys = new Set(),
+		finder = CHOOSE_FINDER(value);
+	this.forEach(function(v, k) {
+		if (finder.call(value, v)) keys.add(k);
+	});
+	keys.forEach(function(k) {
+		this.delete(k);
+	}, this);
+	return keys;
+};
+/**
+ * 
+ * @expose
+ * @this {Map}
  * @param {Map|Set|Array.<Array>=} iterable
  */
 Map_prototype.inject = function(iterable) {
