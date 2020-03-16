@@ -70,7 +70,7 @@ var DOM_EVENT_KEY_CODES = {
 
 	// windows keys (left and right)
 	"windows": 91,
-	//	"windows": 92,
+//	"windows": 92,
 
 	"select": 93,
 
@@ -607,8 +607,18 @@ Event_prototype.click = function() {
  * @return {number}
  */
 Event_prototype.getKey = function() {
-	return DOM_EVENT_KEY_CODES[(this.code || this.key || "").toLowerCase()]
+	return DOM_EVENT_KEY_CODES[(this.key || "").toLowerCase()]
 		|| String.fromCharCode(this.keyCode).toUpperCase().charCodeAt(0);
+};
+/**
+ * Returns true when the Keyboard event's key produces a character.
+ * True for Numbers, letters, and symbols; false for control characters.
+ * @this {Event}
+ * @expose
+ * @return {boolean}
+ */
+Event_prototype.isContentKey = function() {
+	return (this.key || "").length === 1;
 };
 /**
  * Removes selection from all text.
