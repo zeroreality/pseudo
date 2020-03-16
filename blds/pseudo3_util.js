@@ -11,6 +11,7 @@
 /// <reference path="..\src\_include.js" />
 /// </section>
 /// <section name="Utilities">
+/// <reference path="..\src\util\classes.js" />
 /// <reference path="..\src\util\cookie.js" />
 /// <reference path="..\src\util\css.js" />
 /// <reference path="..\src\util\forms.js" />

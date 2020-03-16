@@ -1,6 +1,6 @@
 ﻿/// <namespace>pseudo3</namespace>
 /// <copyright>Trak iT Wireless Inc.</copyright>
-/// <version>2.0</version>
+/// <version>2.2</version>
 /// <readme>
 /// <h2>pseudo3 utility JavaScript framework</h2>
 /// <p>Pseudo is freely distributable under the terms of The MIT License.</p>
@@ -18,8 +18,9 @@
 /// <reference path="..\src\objects\Date.js" />
 /// <reference path="..\src\objects\String.js" />
 /// <reference path="..\src\objects\Function.js" />
-/// <reference path="..\src\objects\Map.js" />
 /// <reference path="..\src\objects\Set.js" />
+/// <reference path="..\src\objects\Map.js" />
+/// <reference path="..\src\objects\Promise.js" />
 /// </section>
 /// <section name="DOM">
 /// <reference path="..\src\dom\_include.js" />
@@ -29,6 +30,7 @@
 /// <reference path="..\src\dom\css.js" />
 /// </section>
 /// <section name="Utilities">
+/// <reference path="..\src\util\classes.js" />
 /// <reference path="..\src\util\cookie.js" />
 /// <reference path="..\src\util\css.js" />
 /// <reference path="..\src\util\forms.js" />

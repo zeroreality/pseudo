@@ -19,6 +19,9 @@
 /// <reference path="..\src\objects\Date.js" />
 /// <reference path="..\src\objects\String.js" />
 /// <reference path="..\src\objects\Function.js" />
+/// <reference path="..\src\objects\Set.js" />
+/// <reference path="..\src\objects\Map.js" />
+/// <reference path="..\src\objects\Promise.js" />
 /// </section>
 /// <output name="..\out\pseudo3_objects.js" />
 
