@@ -76,7 +76,7 @@ function PSEUDO_ESCAPE(input) {
 			case "\r": return "";
 			case " ": return "+";
 			case "+": return "%2b";
-			default: return escape(char).toLowerCase();
+			default: return escape(char);
 		}
 	});
 }
@@ -87,14 +87,14 @@ function PSEUDO_ESCAPE(input) {
  */
 function PSEUDO_BROWSER() {
 	return WIN["chrome"]
-		? WIN["chrome"]["runtime"]
-			? "chrome"
-			: "edge"
-		: typeof WIN["InstallTrigger"] !== undefined
+		? !WIN["chrome"]["loadTimes"] //|| NAV.appVersion.search(/Edge?/) > -1
+			? "edge"
+			: "chrome"
+		: WIN["InstallTrigger"]
 			? "firefox"
-			: !!DOC["documentMode"]
+			: DOC["documentMode"]
 				? "ie"
-				: !!WIN["opera"]
+				: WIN["opera"]
 					? "opera"
 					: null;
 }
@@ -165,45 +165,58 @@ function PSEUDO_CLONE_ARRAY(array, depth, chain) {
 		}
 	}
 	return result;
-	}
+}
 
 /**
+ * Adds a script to the document inside the <head> tag.
  * @expose
- */
+ **/
 ns.addScript = PSEUDO_ADD_SCRIPT;
 /**
+ * Adds a link element for the given CSS file to the document inside the <head> tag.
  * @expose
- */
+ **/
 ns.addSheet = PSEUDO_ADD_SHEET;
 /**
+ * Returns the class name of the given object like "Array", "Document", or "Number".
+ * For null and undefined will return "null" and "undefined" respectively.
  * @expose
- */
+ **/
 ns.className = PSEUDO_KLASS_NAME;
 /**
+ * Does a deep-copy of the given object/array.
+ * Omits recursive branches.
  * @expose
- */
+ **/
 ns.clone = PSEUDO_CLONE;
 /**
+ * Does a deep-copy of the given object.
  * @expose
- */
+ **/
 ns.cloneObject = PSEUDO_CLONE_OBJECT;
 /**
+ * Does a deep-copy of the given array.
  * @expose
- */
+ **/
 ns.cloneArray = PSEUDO_CLONE_ARRAY;
 /**
+ * Similar to {@link global.escape}, removes return characters, and substitutes spaces for "+" and "+" for "%2b".
  * @expose
- */
+ **/
 ns.escape = PSEUDO_ESCAPE;
 /**
+ * Similar to {@link global.isNaN}, but also returns false for nulls and other non-number types.
  * @expose
- */
+ **/
 ns.isNaN = IS_NAN;
 /**
+ * Opposite of {@link pseudo3.isNaN}.
  * @expose
- */
+ **/
 ns.isN = IS_AN;
 /**
+ * Returns a string identifying the browser.
+ * If the browser cannot be identified, returns null.
  * @expose
- */
+ **/
 ns.checkBrowser = PSEUDO_BROWSER;
