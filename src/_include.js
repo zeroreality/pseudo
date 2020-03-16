@@ -49,6 +49,10 @@ var GET_KEYS = OBJECT.keys;
 /** @const {Function} */
 var GET_ALL_KEYS = OBJECT.getOwnPropertyNames;
 /** @const {Function} */
+var LOOKUP_PROP = OBJECT.getOwnPropertyDescriptor;
+/** @const {Function} */
+var LOOKUP_PROPS = OBJECT.getOwnPropertyDescriptors;
+/** @const {Function} */
 var DEFINE_PROP = OBJECT.defineProperty;
 /** @const {Function} */
 var DEFINE_PROPS = OBJECT.defineProperties;
@@ -197,7 +201,7 @@ function ITERATOR_KEY(object, key) {
 /**
  * Chooses the best finder predicate
  * @param {?} value
- * @return {!function(?,number,Array):boolean}
+ * @return {!function(?):boolean}
  */
 function CHOOSE_FINDER(value) {
 	return OBJECT_IS_NUMBER(value)
@@ -249,3 +253,10 @@ function FINDER_ZERO(value) {
 		&& (1 / value) === (1 / this.valueOf());
 }
 //#endregion Iteration Helpers
+
+/**
+ * The version number of this JavaScript library.
+ * @expose
+ * @define {number}
+ */
+ns.version = 0;
