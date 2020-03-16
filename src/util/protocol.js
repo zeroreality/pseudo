@@ -56,6 +56,7 @@ function PROTOCOL_BLUR_SUCCESS(event) {
  */
 function PROTOCOL_BLUR_FAILURE(event) {
 	//	console.info("PROTOCOL_BLUR_FAILURE");
+	CLEAR_TIMER(PROTOCOL_TIMER);
 	PROTOCOL_TARGET.off("blur", PROTOCOL_BLUR_SUCCESS);
 	PROTOCOL_FAILURE();
 }
@@ -68,16 +69,27 @@ function PROTOCOL_BLUR_FAILURE(event) {
  * @param {Function=} failure
  */
 function checkProtocolHandled(uri, success, failure) {
+	if (PROTOCOL_FAILURE) PROTOCOL_FAILURE();
+
 	/**
 	 * Wrapper function to invoke the success callback if it is defined.
 	 */
-	PROTOCOL_SUCCESS = function() { if (success) success(); };
+	PROTOCOL_SUCCESS = function() {
+		PROTOCOL_SUCCESS =
+			PROTOCOL_FAILURE = null;
+		if (success) success(uri);
+	};
 	/**
 	 * Wrapper function to invoke the failure callback if it is defined.
 	 */
-	PROTOCOL_FAILURE = function() { if (failure) failure(); };
+	PROTOCOL_FAILURE = function() {
+		PROTOCOL_SUCCESS =
+			PROTOCOL_FAILURE = null;
+		if (failure) failure(uri);
+	};
 
 	switch (PSEUDO_BROWSER()) {
+		//	case "edge": for when Edge beta is released into the wild
 		case "chrome":
 			openUriWithTimeoutHack(uri);
 			break;
@@ -99,6 +111,16 @@ function checkProtocolHandled(uri, success, failure) {
 			break;
 	}
 }
+/**
+ * Returns a Promise that will either be resolved or rejected when checking the protocol.
+ * @param {!string} uri
+ * @return {!Promise}
+ **/
+function checkProtocolPromise(uri) {
+	return new Promise(function(resolve, reject) {
+		checkProtocolHandled(uri, resolve, reject);
+	});
+}
 
 /**
  * Attempt to launch an application URI using the IE specific msLaunchUri function.
@@ -119,7 +141,7 @@ function openUriWithMsLaunchUri(uri) {
 function openUriWithTimeoutHack(uri) {
 	PROTOCOL_TARGET = WIN;
 	while (PROTOCOL_TARGET !== PROTOCOL_TARGET.parent) PROTOCOL_TARGET = PROTOCOL_TARGET.parent;	// blur event from top level window
-	PROTOCOL_TARGET.on("blur", PROTOCOL_BLUR_SUCCESS);
+	PROTOCOL_TARGET.once("blur", PROTOCOL_BLUR_SUCCESS);
 	PROTOCOL_TIMER = SET_TIMER(PROTOCOL_BLUR_FAILURE, PROTOCOL_FAILURE_TIMEOUT);
 	WIN.location = uri;
 }
@@ -154,5 +176,12 @@ function openUriWithHiddenFrame(uri) {
 
 /** @expose */
 ns.protocol = {
+	/**
+	 * Attempts to run the given URI to see if the protocol is handled in the browser.
+	 **/
 	"check": checkProtocolHandled,
+	/**
+	 * Returns a Promise that will either be resolved or rejected when checking the protocol.
+	 **/
+	"promise": checkProtocolPromise,
 };
