@@ -28,13 +28,13 @@ Array_prototype.copy = function() {
  * This expression will help string sorting algorithms by sorting alphabetically and numerically.
  * @const {RegExp}
  */
-var ARRAY_FILTER_NATURAL = /[a-z][a-z0-9]*|[0-9]+/gim;
+var ARRAY_FILTER_NATURAL = /[a-z][a-z\d]*|[\d]+/gim;
 /**
- * Simple comparable function that helps Array#sort.
+ * Simple comparable function that helps {@link Array#sort}.
  * @param {?} a
  * @param {?} b
  * @returns {number}
- */
+ **/
 function ARRAY_COMPARE(a, b) {
 	return a < b
 		? -1
@@ -47,11 +47,13 @@ function ARRAY_COMPARE(a, b) {
  * @param {string} a
  * @param {string} b
  * @returns {number}
- */
+ **/
 function ARRAY_NATURAL(a, b) {
-	if (!a && !b) return 0;
-	else if (!a) return -1;
-	else if (!b) return 1;
+	var aNothing = OBJECT_IS_NOTHING(a),
+		bNothing = OBJECT_IS_NOTHING(b);
+	if (aNothing && bNothing) return 0;
+	else if (aNothing) return -1;
+	else if (bNothing) return 1;
 
 	var first = a.toString().match(ARRAY_FILTER_NATURAL),
 		second = b.toString().match(ARRAY_FILTER_NATURAL);
@@ -86,7 +88,7 @@ function ARRAY_NATURAL(a, b) {
  * @param {number} a
  * @param {number} b
  * @returns {number}
- */
+ **/
 function ARRAY_NUMERIC(a, b) {
 	var aNum = FLOAT(a),
 		aNaN = IS_NAN(aNum),
@@ -95,7 +97,8 @@ function ARRAY_NUMERIC(a, b) {
 	return aNum < bNum || !aNaN && bNaN ? -1 : aNum > bNum || aNaN && !bNaN ? 1 : 0;
 }
 /**
- *
+ * Uses pre-computed Arrays containing strings and numbers to sort.
+ * Very similar to "natural" sorting, but faster for repeated comparisons due to pre-computed values.
  * @param {Array} a
  * @param {Array} b
  * @returns {number}
@@ -104,8 +107,8 @@ function ARRAY_SUPER_NATURAL(a, b) {
 	for (var i = 0, l = MAX(a.length, b.length); i < l; i++) {
 		var aValue = a[i],
 			bValue = b[i],
-			aNaN = isNaN(aValue),
-			bNaN = isNaN(bValue);
+			aNaN = IS_NAN(aValue),
+			bNaN = IS_NAN(bValue);
 		if (aValue === undefined) {
 			// this is the case if a has fewer values in the sort array
 			return -1;
@@ -125,19 +128,24 @@ function ARRAY_SUPER_NATURAL(a, b) {
 	return 0;
 }
 /**
- * 
+ * Converts the input into an Array of strings and numbers so it can be sorted using the "super natural" algorithm.
  * @param {?} input
  * @returns {Array}
- */
-function ARRAY_SPLIT_NATURAL(input) {
-	var parts = OBJECT_IS_NOTHING(input)
-		? []
-		: String(input).match(ARRAY_FILTER_NATURAL) || [];
-	for (var i = 0, p; p = parts[i]; i++) {
-		var number = INT(p, 10);
-		parts[i] = isNaN(number)
-			? p.toUpperCase()
-			: number;
+ **/
+function ARRAY_SUPER_NATURAL_SPLIT(input) {
+	if (OBJECT_IS_NOTHING(input)) return [];
+
+	var string = input.toString().split("");
+	for (var i = 0, l = string.length; i < l; i++) {
+		var char = DIACRITICS[string[i]]
+		if (char) string[i] = char;
+	}
+	var parts = string.join("")
+					.toLowerCase()
+					.match(ARRAY_FILTER_NATURAL) || [];
+	for (var i = 0, l = parts.length; i < l; i++) {
+		var number = FLOAT(parts[i]);
+		if (!IS_NAN(number)) parts[i] = number;
 	}
 	return parts;
 }
@@ -334,7 +342,7 @@ Array_prototype.invoke = function(methodName, var_args) {
 };
 /**
  * Iterates through all this array's arrays and injects the values of the contained arrays into a single flat-result.
- * Optionally, if skipNested is true, only the top-level arrays are flattened.
+ * Optionally specify the deepest level to flatten.
  * @expose
  * @this {Array}
  * @param {number=} levels
@@ -343,8 +351,11 @@ Array_prototype.invoke = function(methodName, var_args) {
 Array_prototype.flatten = function(levels) {
 	var result = [];
 	for (var i = 0, l = this.length; i < l; i++) {
-		if (!(levels < 0) && this[i] instanceof Array) result.inject(this[i].flatten(levels - 1));
-		else result.push(this[i]);
+		if (!(levels < 1) && this[i] instanceof Array) {
+			result.inject(this[i].flatten(levels - 1));
+		} else {
+			result.push(this[i]);
+		}
 	}
 	return result;
 };
@@ -568,6 +579,22 @@ Array_prototype.hasAll = function(var_args) {
 Array_prototype.count = function(item) {
 	var count = 0;
 	for (var i = 0, l = this.length; i < l; i++) if (this[i] === item) count++;
+	return count;
+};
+/**
+ * Examines the array using the predicate and returns a count of where the predicate returned true.
+ * @expose
+ * @this {Array}
+ * @param {function(*,number,Array):boolean} predicate
+ * @return {!number}
+ */
+Array_prototype.poll = function(predicate, context) {
+	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
+	if (arguments.length < 2) context = this;
+	var count = 0;
+	for (var i = 0, l = this.length; i < l; i++) {
+		if (predicate.call(context, this[i], i, this)) count++;
+	}
 	return count;
 };
 /**
@@ -955,7 +982,7 @@ ns.Array = {
 	/**
 	 * The input is converted to a mixed array of numbers/strings to be used in {@link pseudo3.Array.superNatural} sorting.
 	 **/
-	"splitNatural": ARRAY_SPLIT_NATURAL,
+	"superSplit": ARRAY_SUPER_NATURAL_SPLIT,
 	/**
 	 * A predicate passed to {@link Array#sort}, it sorts strings as if they were numbers.  Sorts non numbers to the end of the list.
 	 **/
