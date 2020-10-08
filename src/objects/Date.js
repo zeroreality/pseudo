@@ -96,95 +96,66 @@ Date_prototype.copy = function() { return new Date(this); };
 
 //#region Comparison
 /**
- * An array used by the {@link Date#context} function.
- * @const {Array.<{type:string,value:number}>}
- **/
-var DATE_HELPER_COMPARE = [
-	{ "type": "yyyy", "value": DATE_MILLI_PER["yyyy"] },
-	{ "type": "MM", "value": DATE_MILLI_PER["MM"] },
-	{ "type": "ww", "value": DATE_MILLI_PER["ww"] },
-	{ "type": "dd", "value": DATE_MILLI_PER["dd"] },
-	{ "type": "hh", "value": DATE_MILLI_PER["hh"] },
-	{ "type": "mm", "value": DATE_MILLI_PER["mm"] },
-	{ "type": "ss", "value": DATE_MILLI_PER["ss"] },
-	//	{ "type": "fff", "value": DATE_MILLI_PER["fff"] },
-];
-
-/**
  * Compares this date to the given value and returns an array containing a sum of differential values.
  * @expose
  * @this {Date}
- * @param {Date=} value		Default is "now".
- * @param {number=} levels	Default is 2.
- * @param {boolean=} roundUp	Rounds the last level up instead of even rounding.
+ * @param {Date=} other			Default is "now".
+ * @param {number=} levels		Default is 2.
+ * @param {Array.<string>=} kinds	Default is yyyy, MM, ww, dd, hh, mm, ss. Does not include fff.
  * @return {!Array.<{value:number,type:string}>}
  */
-Date_prototype.context = function(value, levels, roundUp) {
-	if (!(value instanceof Date) || IS_NAN(value.valueOf())) value = new Date;
+Date_prototype.context = function(other, levels, kinds) {
+	/**
+	 * A part of the description of the difference between two dates.
+	 * @constructor
+	 * @param {!number} value
+	 * @param {!string} type
+	 **/
+	function DateContextDescriptor(value, type) {
+		/**
+		 * Numeric value for this difference.
+		 * @expose
+		 **/
+		this.value = value;
+		/**
+		 * Abbreviation of the kind of difference.
+		 * @expose
+		 **/
+		this.type = type;
+	}
+	other = !(other instanceof Date) || IS_NAN(other.valueOf())
+		? new Date
+		: new Date(other);	// create a copy of the target date
 	if (IS_NAN(levels)) levels = 2;
+	if (!kinds || !kinds.length) kinds = "yyyy,MM,ww,dd,hh,mm,ss".split(",");
 
-	var s = 0,
-		descriptor = [],
-		method = levels - s === 1
-			? roundUp
-				? CEIL
-				: ROUND
-			: FLOOR,
-		difference = value.valueOf() - this.valueOf(),
-		before = difference < 0,
-		absolute = ABS(difference);
-
-	// compare the two dates
-	for (var i = 0, criteria = null; criteria = DATE_HELPER_COMPARE[i]; i++) {
-		if (absolute < criteria["value"]) {
-			descriptor.push({
-				"value": 0,
-				"type": criteria["type"],
-			});
-		} else {
-			var diff = method(absolute / criteria["value"]);
-			descriptor.push({
-				"value": before ? -diff : diff,
-				"type": criteria["type"],
-			});
-			absolute -= diff * criteria["value"];
-			s++;
-		}
-		if (levels <= s || absolute < 1) break;
-		else if (levels - s === 1) method = roundUp ? CEIL : ROUND;
-	}
-
-	// round the last result to match levels
-	var x = descriptor.length;
-	while (--x > 0) {
-		criteria = descriptor[x];
-		var next = descriptor[x - 1];
-		if (criteria["value"] * DATE_MILLI_PER[criteria["type"]] === DATE_MILLI_PER[next["type"]]) {
-			next["value"]++;
-			descriptor.pop();
-		} else {
-			break;
+	// cycle through helper/comparers
+	var descriptor = [];
+	for (var i = 0, criteria; criteria = DATE_HELPER_COMPARE[i]; i++) {
+		if (kinds.includes(criteria.type)) {
+			var diff = criteria._get.call(other) - criteria._get.call(this);
+			if (diff) criteria._add.call(other, diff);
+			// only add results if there are any, or there have been some
+			if (diff || descriptor.length) descriptor.push(new DateContextDescriptor(diff, criteria.type));
 		}
 	}
 
-	// remove prefix "zero" values
-	while (descriptor.length && !descriptor[0]["value"]) descriptor.shift();
-
-	return descriptor;
+	// remove "zero" values
+	return descriptor.filter(function(desc) { return desc.value; }).slice(0, levels);
 };
 /**
  * Internally invoked {@link Date#context} and returns a concatenated string describing the difference between this date and the given value.
  * @expose
  * @this {Date}
- * @param {Date=} value		Default is "now".
- * @param {number=} levels	Default is 2.
- * @param {boolean=} roundUp	Rounds the last level up instead of even rounding.
+ * @param {Date=} value									Default is "now".
+ * @param {number=} levels								Default is 2.
  * @param {{after:string,before:string,now:string}=} template	Strings are templates that use {diff} as the replacement value.
+ * @param {Array.<string>=} kinds							Default is yyyy, MM, ww, dd, hh, mm, ss. Does not include fff.
  * @return {!string}
  **/
-Date_prototype.contextString = function(value, levels, roundUp, template) {
+Date_prototype.contextString = function(value, levels, template, kinds) {
 	template = PSEUDO_MERGE(ns.Date["context"], template || {});
-	var array = this.context(value, levels, roundUp),
+	var array = this.context(value, levels, kinds),
 		i = array.length,
 		results = [],
 		context = i === 0 ? "now" : array[0]["value"] > 0 ? "after" : "before";
@@ -645,3 +616,19 @@ ns.Date = {
 		"now": "now",
 	},
 };
+
+/**
+ * An array used by the {@link Date#context} function.
+ * This is added to the bottom of the file so all the prototypes ae defined.
+ * @const {Array.<{type:string,_get:function():number,_add:function(number)}>}
+ **/
+var DATE_HELPER_COMPARE = [
+	{ type: "yyyy", _get: Date_prototype.getFullYear, _add: Date_prototype.addYear },
+	{ type: "MM", _get: Date_prototype.getMonth, _add: Date_prototype.addMonth },
+	{ type: "ww", _get: function() { return this.getDate() / 7; }, _add: function() { this.addDate(7); } },
+	{ type: "dd", _get: Date_prototype.getDate, _add: Date_prototype.addDate },
+	{ type: "hh", _get: Date_prototype.getHours, _add: Date_prototype.addHours },
+	{ type: "mm", _get: Date_prototype.getMinutes, _add: Date_prototype.addMinutes },
+	{ type: "ss", _get: Date_prototype.getSeconds, _add: Date_prototype.addSeconds },
+	{ type: "fff", _get: Date_prototype.getMilliseconds, _add: Date_prototype.addMilliseconds },
+];
