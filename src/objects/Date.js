@@ -125,8 +125,12 @@ Date_prototype.context = function(value, levels, roundUp) {
 
 	var s = 0,
 		descriptor = [],
-		method = levels - s === 1 ? roundUp ? CEIL : ROUND : FLOOR,
-		difference = this.valueOf() - value.valueOf(),
+		method = levels - s === 1
+			? roundUp
+				? CEIL
+				: ROUND
+			: FLOOR,
+		difference = value.valueOf() - this.valueOf(),
 		before = difference < 0,
 		absolute = ABS(difference);
 
@@ -175,19 +179,19 @@ Date_prototype.context = function(value, levels, roundUp) {
  * @param {Date=} value		Default is "now".
  * @param {number=} levels	Default is 2.
  * @param {boolean=} roundUp	Rounds the last level up instead of even rounding.
- * @param {{after:string,before:string,now:string}=} suffix
- * @param {{after:string,before:string,now:string}=} prefix
+ * @param {{after:string,before:string,now:string}=} template	Strings are templates that use {diff} as the replacement value.
  * @return {!string}
- */
-Date_prototype.contextString = function(value, levels, roundUp, prefix, suffix) {
-	if (!prefix) prefix = { "before": "", "after": "", "now": "", };
-	if (!suffix) suffix = { "before": "until", "after": "ago", "now": "now", };
-	var array = this.context(value, levels, !!roundUp),
+ **/
+Date_prototype.contextString = function(value, levels, roundUp, template) {
+	template = PSEUDO_MERGE(ns.Date["context"], template || {});
+	var array = this.context(value, levels, roundUp),
 		i = array.length,
 		results = [],
 		context = i === 0 ? "now" : array[0]["value"] > 0 ? "after" : "before";
 	while (i--) results[i] = ABS(array[i]["value"]) + " " + ns.Date["parts"][array[i]["type"]];
-	return ((prefix[context] || "") + " " + results.join(", ") + " " + (suffix[context] || "")).trim();
+	return template[context].format({
+		"diff": results.join(", "),
+	});
 };
 //#endregion Comparison
 
@@ -612,7 +616,7 @@ ns.Date = {
 	],
 	/**
 	 * A twelve-item array containing the names of the months.
-	 * When working in a different language, change these values so {@link Date#compare} responses are correct.
+	 * When working in a different language, change these values so {@link Date#context} responses are correct.
 	 * @const {Array.<string>}
 	 **/
 	"monthNames": [
@@ -629,4 +633,15 @@ ns.Date = {
 		"November",
 		"December",
 	],
+	/**
+	 * A dictionary where the key is one of "before", "after", and "now", and the value is a string.
+	 * Each string can optionally contain the value "{diff}" which is replaced with the date comparisn context string value.
+	 * When working in a different language, change these values so {@link Date#contextString} responses are correct.
+	 * @const {Object}
+	 **/
+	"context": {
+		"before": "{diff} until",
+		"after": "{diff} ago",
+		"now": "now",
+	},
 };
