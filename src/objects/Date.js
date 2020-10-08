@@ -133,8 +133,8 @@ Date_prototype.context = function(other, levels, kinds) {
 	var descriptor = [];
 	for (var i = 0, criteria; criteria = DATE_HELPER_COMPARE[i]; i++) {
 		if (kinds.includes(criteria.type)) {
-			var diff = criteria._get.call(other) - criteria._get.call(this);
-			if (diff) criteria._add.call(other, diff);
+			var diff = FLOOR(criteria._get.call(other) - criteria._get.call(this));
+			if (diff) criteria._add.call(other, -diff);
 			// only add results if there are any, or there have been some
 			if (diff || descriptor.length) descriptor.push(new DateContextDescriptor(diff, criteria.type));
 		}
@@ -625,7 +625,7 @@ ns.Date = {
 var DATE_HELPER_COMPARE = [
 	{ type: "yyyy", _get: Date_prototype.getFullYear, _add: Date_prototype.addYear },
 	{ type: "MM", _get: Date_prototype.getMonth, _add: Date_prototype.addMonth },
-	{ type: "ww", _get: function() { return this.getDate() / 7; }, _add: function() { this.addDate(7); } },
+	{ type: "ww", _get: function() { return FLOOR(this.getDate() / 7); }, _add: function(n) { this.addDate(n * 7); } },
 	{ type: "dd", _get: Date_prototype.getDate, _add: Date_prototype.addDate },
 	{ type: "hh", _get: Date_prototype.getHours, _add: Date_prototype.addHours },
 	{ type: "mm", _get: Date_prototype.getMinutes, _add: Date_prototype.addMinutes },

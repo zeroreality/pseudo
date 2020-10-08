@@ -21,43 +21,117 @@
 	<!-- test -->
 	<script type="text/javascript" defer="defer">
 		describe("context", function() {
-			var now = new Date,
-				milli = new Date(now.valueOf() + DATE_MILLI_PER["fff"]),
-				second = new Date(now.valueOf() + DATE_MILLI_PER["ss"]),
-				minute = new Date(now.valueOf() + DATE_MILLI_PER["mm"]),
-				hour = new Date(now.valueOf() + DATE_MILLI_PER["hh"]),
-				day = new Date(now.valueOf() + DATE_MILLI_PER["MM"]),
-				week = new Date(now.valueOf() + DATE_MILLI_PER["ww"]),
-				year = new Date(now.valueOf() + DATE_MILLI_PER["yyyy"]);
+			var base = new Date(2020, 0, 1),
+				milli = new Date(base).addMilliseconds(1),
+				second = new Date(base).addSeconds(1),
+				minute = new Date(base).addMinutes(1),
+				hour = new Date(base).addHours(1),
+				day = new Date(base).addDate(1),
+				week = new Date(base).addDate(7),
+				month = new Date(base).addMonth(1),
+				year = new Date(base).addYear(1);
 			
 			it("same date", function() {
-				expect(now.context(now)).toEqual([]);
+				expect(base.context(base)).toEqual([]);
 				expect(midnight.context(midnight)).toEqual([]);
 				expect(epoch.context(epoch)).toEqual([]);
 			});
+			it("milli: future to past", function() {
+				var compare = milli.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("fff");
+			});
+			it("milli: past to future", function() {
+				var compare = base.context(milli, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("fff");
+			});
+			it("second: future to past", function() {
+				var compare = second.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("ss");
+			});
+			it("second: past to future", function() {
+				var compare = base.context(second, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("ss");
+			});
+			it("minute: future to past", function() {
+				var compare = minute.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("mm");
+			});
+			it("minute: past to future", function() {
+				var compare = base.context(minute, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("mm");
+			});
 			it("hour: future to past", function() {
-				var compare = hour.context(now);
+				var compare = hour.context(base, 9, Object.keys(DATE_MILLI_PER));
 				expect(compare.length).toBe(1);
 				expect(compare[0].value).toBe(-1);
 				expect(compare[0].type).toBe("hh");
 			});
 			it("hour: past to future", function() {
-				var compare = now.context(hour);
+				var compare = base.context(hour, 9, Object.keys(DATE_MILLI_PER));
 				expect(compare.length).toBe(1);
 				expect(compare[0].value).toBe(1);
 				expect(compare[0].type).toBe("hh");
 			});
-			/*
-			it("uses given bumper", function() {
-				expect(bumpers_uses.length).toBe(1);
-				expect(infinite_uses.list.childElementCount).toBe(1);
-				expect(bumpers_uses[0]).toBe(infinite_uses.list.firstElementChild);
+			it("day: future to past", function() {
+				var compare = day.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("dd");
 			});
-			it("removes extra content", function() {
-				expect(bumpers_removes.length).toBe(2);
-				expect(infinite_removes.list.childElementCount).toBe(1);
+			it("day: past to future", function() {
+				var compare = base.context(day, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("dd");
 			});
-			*/
+			it("week: future to past", function() {
+				var compare = week.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("ww");
+			});
+			it("week: past to future", function() {
+				var compare = base.context(week, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("ww");
+			});
+			it("month: future to past", function() {
+				var compare = month.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("MM");
+			});
+			it("month: past to future", function() {
+				var compare = base.context(month, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("MM");
+			});
+			it("year: future to past", function() {
+				var compare = year.context(base, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("yyyy");
+			});
+			it("year: past to future", function() {
+				var compare = base.context(year, 9, Object.keys(DATE_MILLI_PER));
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("yyyy");
+			});
 		});
 	</script>
 </body>
