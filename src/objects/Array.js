@@ -778,8 +778,8 @@ Array_prototype.toMap = function(keyPredicate, valuePredicate, context) {
 	) {
 		throw new TypeError(PREDICATE_ERROR);
 	}
-	if (arguments.length < 3) context = this;
 	var map = new Map;
+	if (arguments.length < 3) context = map;
 	for (var i = 0, l = this.length; i < l; i++) {
 		var value = this[i],
 			key = keyPredicate.call(context, value, i, this);
