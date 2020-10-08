@@ -168,6 +168,21 @@ function PSEUDO_CLONE_ARRAY(array, depth, chain) {
 }
 
 /**
+ * Merges the keys of the given objects together onto a new object.
+ * Keys in the first object(s) are overwritten by key values in the later object(s).
+  * @param {...Object} var_args
+ * @return {!Object}
+ **/
+function PSEUDO_MERGE(var_args) {
+	return SLICE.call(arguments).reduce(function(object, other) {
+		GET_KEYS(other).forEach(function(key) {
+			object[key] = other[key];
+		});
+		return object;
+	}, {});
+}
+
+/**
  * Adds a script to the document inside the <head> tag.
  * @expose
  **/
@@ -199,6 +214,12 @@ ns.cloneObject = PSEUDO_CLONE_OBJECT;
  * @expose
  **/
 ns.cloneArray = PSEUDO_CLONE_ARRAY;
+/**
+ * Merges the keys of the given objects together onto a new object.
+ * Keys in the first object(s) are overwritten by key values in the later object(s).
+ * @expose
+ **/
+ns.merge = PSEUDO_MERGE;
 /**
  * Similar to {@link global.escape}, removes return characters, and substitutes spaces for "+" and "+" for "%2b".
  * @expose
