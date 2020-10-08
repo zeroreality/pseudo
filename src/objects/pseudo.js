@@ -53,18 +53,6 @@ function PSEUDO_ADD_SHEET(source, media, reload) {
 	return DOC_HEAD.appendChild(file);
 }
 /**
- * Gets the name of the Klass
- * @param {*} object
- * @returns {string}
- */
-function PSEUDO_KLASS_NAME(object) {
-	return object === undefined
-		? "undefined"
-		: object === null
-			? "null"
-			: TOSTRING.call(object).slice("[object ".length, -1);
-}
-/**
  * Creates an HTTP safe string for transmission similar to the {@link window.escape} function.
  * @param {string} input
  * @return {!string}
