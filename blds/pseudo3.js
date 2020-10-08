@@ -11,16 +11,17 @@
 /// <reference path="..\src\_include.js" />
 /// </section>
 /// <section name="Objects">
+/// <reference path="..\src\objects\Array.js" />
 /// <reference path="..\src\objects\Boolean.js" />
+/// <reference path="..\src\objects\Date.js" />
+/// <reference path="..\src\objects\Function.js" />
+/// <reference path="..\src\objects\Map.js" />
 /// <reference path="..\src\objects\Number.js" />
 /// <reference path="..\src\objects\Object.js" />
-/// <reference path="..\src\objects\Array.js" />
-/// <reference path="..\src\objects\Date.js" />
-/// <reference path="..\src\objects\String.js" />
-/// <reference path="..\src\objects\Function.js" />
-/// <reference path="..\src\objects\Set.js" />
-/// <reference path="..\src\objects\Map.js" />
 /// <reference path="..\src\objects\Promise.js" />
+/// <reference path="..\src\objects\RegExp.js" />
+/// <reference path="..\src\objects\Set.js" />
+/// <reference path="..\src\objects\String.js" />
 /// </section>
 /// <section name="DOM">
 /// <reference path="..\src\dom\_include.js" />
@@ -34,9 +35,9 @@
 /// <reference path="..\src\util\cookie.js" />
 /// <reference path="..\src\util\css.js" />
 /// <reference path="..\src\util\forms.js" />
+/// <reference path="..\src\util\json.js" />
 /// <reference path="..\src\util\keyboard.js" />
 /// <reference path="..\src\util\processor.js" />
-/// <reference path="..\src\util\json.js" />
 /// <reference path="..\src\util\protocol.js" />
 /// </section>
 /// <section name="namespace">

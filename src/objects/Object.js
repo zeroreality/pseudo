@@ -151,7 +151,6 @@ function OBJECT_EACH(object, predicate, context, keyOrder) {
 	return results;
 }
 
-
 /**
  * Utility functions for inspecting objects.
  * @namespace
