@@ -1,0 +1,64 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Date prototype tests</title>
+	<!-- jasmine -->
+	<link rel="stylesheet" href="../jasmine-3.5.0/jasmine.css">
+	<script src="../jasmine-3.5.0/jasmine.js"></script>
+	<script src="../jasmine-3.5.0/jasmine-html.js"></script>
+	<script src="../jasmine-3.5.0/boot.js"></script>
+</head>
+<body>
+	<script>var ns = {};</script>
+	<script src="../../src/_include.js"></script>
+	<script src="../../src/objects/Date.js"></script>
+	<!-- support -->
+	<script type="text/javascript">
+		var epoch = new Date(0),
+			midnight = Date.midnight();
+	</script>
+	<!-- test -->
+	<script type="text/javascript" defer="defer">
+		describe("context", function() {
+			var now = new Date,
+				milli = new Date(now.valueOf() + DATE_MILLI_PER["fff"]),
+				second = new Date(now.valueOf() + DATE_MILLI_PER["ss"]),
+				minute = new Date(now.valueOf() + DATE_MILLI_PER["mm"]),
+				hour = new Date(now.valueOf() + DATE_MILLI_PER["hh"]),
+				day = new Date(now.valueOf() + DATE_MILLI_PER["MM"]),
+				week = new Date(now.valueOf() + DATE_MILLI_PER["ww"]),
+				year = new Date(now.valueOf() + DATE_MILLI_PER["yyyy"]);
+			
+			it("same date", function() {
+				expect(now.context(now)).toEqual([]);
+				expect(midnight.context(midnight)).toEqual([]);
+				expect(epoch.context(epoch)).toEqual([]);
+			});
+			it("hour: future to past", function() {
+				var compare = hour.context(now);
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(-1);
+				expect(compare[0].type).toBe("hh");
+			});
+			it("hour: past to future", function() {
+				var compare = now.context(hour);
+				expect(compare.length).toBe(1);
+				expect(compare[0].value).toBe(1);
+				expect(compare[0].type).toBe("hh");
+			});
+			/*
+			it("uses given bumper", function() {
+				expect(bumpers_uses.length).toBe(1);
+				expect(infinite_uses.list.childElementCount).toBe(1);
+				expect(bumpers_uses[0]).toBe(infinite_uses.list.firstElementChild);
+			});
+			it("removes extra content", function() {
+				expect(bumpers_removes.length).toBe(2);
+				expect(infinite_removes.list.childElementCount).toBe(1);
+			});
+			*/
+		});
+	</script>
+</body>
+</html>
