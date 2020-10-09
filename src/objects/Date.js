@@ -59,7 +59,7 @@ var DATE_MILLI_PER = {
 	 * The number of milliseconds in a millisecond... Why is this even defined?
 	 * @const {number}
 	 **/
-	"fff": 1
+	"fff": 1,
 };
 
 //#region Static
@@ -101,10 +101,10 @@ Date_prototype.copy = function() { return new Date(this); };
  * @this {Date}
  * @param {Date=} other			Default is "now".
  * @param {number=} levels		Default is 2.
- * @param {Array.<string>=} kinds	Default is yyyy, MM, ww, dd, hh, mm, ss. Does not include fff.
+ * @param {Array.<{type:string,get:function():number,inc:function(number)}>=} comparers
  * @return {!Array.<{value:number,type:string}>}
- */
-Date_prototype.context = function(other, levels, kinds) {
+ **/
+Date_prototype.context = function(other, levels, comparers) {
 	/**
 	 * A part of the description of the difference between two dates.
 	 * @constructor
@@ -123,25 +123,24 @@ Date_prototype.context = function(other, levels, kinds) {
 		 **/
 		this.type = type;
 	}
-	other = !(other instanceof Date) || IS_NAN(other.valueOf())
-		? new Date
-		: new Date(other);	// create a copy of the target date
+
+	var descriptors = [],
+		copy = !(other instanceof Date) || IS_NAN(other.valueOf())
+			? new Date
+			: new Date(other),
+		target = new Date(copy);	// another copy because we use target to iterate
 	if (IS_NAN(levels)) levels = 2;
-	if (!kinds || !kinds.length) kinds = "yyyy,MM,ww,dd,hh,mm,ss".split(",");
+	if (!comparers || !comparers.length) comparers = DEFAULT_DATE_CONTEXT_COMPARERS;
 
 	// cycle through helper/comparers
-	var descriptor = [];
-	for (var i = 0, criteria; criteria = DATE_HELPER_COMPARE[i]; i++) {
-		if (kinds.includes(criteria.type)) {
-			var diff = FLOOR(criteria._get.call(other) - criteria._get.call(this));
-			if (diff) criteria._add.call(other, -diff);
-			// only add results if there are any, or there have been some
-			if (diff || descriptor.length) descriptor.push(new DateContextDescriptor(diff, criteria.type));
-		}
+	for (var i = 0, compare; compare = comparers[i]; i++) {
+		var diff = FLOOR(compare.get.call(target) - compare.get.call(this));
+		if (diff) compare.inc.call(target, -diff);
+		descriptors.push(new DateContextDescriptor(diff, compare.type));
 	}
 
 	// remove "zero" values
-	return descriptor.filter(function(desc) { return desc.value; }).slice(0, levels);
+	return descriptors.filter(function(desc) { return desc.value; }).slice(0, levels);
 };
 /**
  * Internally invoked {@link Date#context} and returns a concatenated string describing the difference between this date and the given value.
@@ -620,15 +619,15 @@ ns.Date = {
 /**
  * An array used by the {@link Date#context} function.
  * This is added to the bottom of the file so all the prototypes ae defined.
- * @const {Array.<{type:string,_get:function():number,_add:function(number)}>}
+ * @const {Array.<{type:string,get:function():number,inc:function(number)}>}
  **/
-var DATE_HELPER_COMPARE = [
-	{ type: "yyyy", _get: Date_prototype.getFullYear, _add: Date_prototype.addYear },
-	{ type: "MM", _get: Date_prototype.getMonth, _add: Date_prototype.addMonth },
-	{ type: "ww", _get: function() { return FLOOR(this.getDate() / 7); }, _add: function(n) { this.addDate(n * 7); } },
-	{ type: "dd", _get: Date_prototype.getDate, _add: Date_prototype.addDate },
-	{ type: "hh", _get: Date_prototype.getHours, _add: Date_prototype.addHours },
-	{ type: "mm", _get: Date_prototype.getMinutes, _add: Date_prototype.addMinutes },
-	{ type: "ss", _get: Date_prototype.getSeconds, _add: Date_prototype.addSeconds },
-	{ type: "fff", _get: Date_prototype.getMilliseconds, _add: Date_prototype.addMilliseconds },
+var DEFAULT_DATE_CONTEXT_COMPARERS = [
+	{ type: "yyyy", get: Date_prototype.getFullYear, inc: Date_prototype.addYear },
+	{ type: "MM", get: Date_prototype.getMonth, inc: Date_prototype.addMonth },
+	{ type: "ww", get: function() { return FLOOR(this.getDate() / 7); }, inc: function(n) { this.addDate(n * 7); } },
+	{ type: "dd", get: Date_prototype.getDate, inc: Date_prototype.addDate },
+	{ type: "hh", get: Date_prototype.getHours, inc: Date_prototype.addHours },
+	{ type: "mm", get: Date_prototype.getMinutes, inc: Date_prototype.addMinutes },
+	{ type: "ss", get: Date_prototype.getSeconds, inc: Date_prototype.addSeconds },
+//	{ type: "fff", get: Date_prototype.getMilliseconds, inc: Date_prototype.addMilliseconds },
 ];
