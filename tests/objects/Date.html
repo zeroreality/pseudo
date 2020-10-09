@@ -20,16 +20,297 @@
 	</script>
 	<!-- test -->
 	<script type="text/javascript" defer="defer">
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		describe("addMonth", function() {
+			var base,
+				jan31;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+				jan31 = new Date(2020, 0, 31);
+			});
+			it("without", function() {
+				base.addMonth();
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with NaN", function() {
+				base.addMonth(NaN);
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with null", function() {
+				base.addMonth(NaN);
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with string", function() {
+				base.addMonth("string");
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with numeric-string", function() {
+				base.addMonth("5");
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with 1", function() {
+				base.addMonth(1);
+				expect(base.getMonth()).toBe(1);
+			});
+			it("with 5", function() {
+				base.addMonth(5);
+				expect(base.getMonth()).toBe(5);
+			});
+			it("with -5", function() {
+				base.addMonth(-5);
+				expect(base.getMonth()).toBe(12 - 5);
+			});
+		});
+		/*
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		describe("addYear", function() {
+			var base;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+			});
+			it("without", function() {
+				base.addYear();
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with NaN", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with null", function() {
+				base.addYear(NaN);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with string", function() {
+				base.addYear("string");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with numeric-string", function() {
+				base.addYear("5");
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 1", function() {
+				base.addYear(1);
+				expect(base.getFullYear()).toBe(2021);
+			});
+			it("with 5", function() {
+				base.addYear(5);
+				expect(base.getFullYear()).toBe(2025);
+			});
+			it("with -5", function() {
+				base.addYear(-5);
+				expect(base.getFullYear()).toBe(2015);
+			});
+		});
+		*/
 		describe("context", function() {
-			var base = new Date(2020, 0, 1),
-				milli = new Date(base).addMilliseconds(1),
-				second = new Date(base).addSeconds(1),
-				minute = new Date(base).addMinutes(1),
-				hour = new Date(base).addHours(1),
-				day = new Date(base).addDate(1),
-				week = new Date(base).addDate(7),
-				month = new Date(base).addMonth(1),
+			var base,
+				//milli,
+				second,
+				minute,
+				hour,
+				day,
+				week,
+				month,
+				year;
+			beforeEach(function() {
+				base = new Date(2020, 0, 1);
+				//milli = new Date(base).addMilliseconds(1);
+				second = new Date(base).addSeconds(1);
+				minute = new Date(base).addMinutes(1);
+				hour = new Date(base).addHours(1);
+				day = new Date(base).addDate(1);
+				week = new Date(base).addDate(7);
+				month = new Date(base).addMonth(1);
 				year = new Date(base).addYear(1);
+			});
 
 			it("same date", function() {
 				expect(base.context(base)).toEqual([]);
