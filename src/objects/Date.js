@@ -76,13 +76,7 @@ Date.midnight = function(date) {
 	} else {
 		date = new Date;
 	}
-	date.addMilliseconds(
-		-date.getMilliseconds()
-		- (date.getSeconds() * DATE_MILLI_PER["ss"])
-		- (date.getMinutes() * DATE_MILLI_PER["mm"])
-		- (date.getHours() * DATE_MILLI_PER["hh"])
-	);
-	return date;
+	return date.zero("h", "m", "s", "f");
 };
 //#endregion Static
 
@@ -543,15 +537,15 @@ Date_prototype.add = Date_prototype.addMilliseconds;
 Date_prototype.zero = function(var_args) {
 	var_args = SLICE.call(arguments);
 	var_args.forEach(function(part) {
-		switch (part) {
-			case "yyyy": this.setFullYear(0); break;
-			case "MM": this.setMonth(0); break;
-			case "ww": this.setDate(-this.getDay()); break;
-			case "dd": this.setDate(0); break;
-			case "hh": this.setHours(0); break;
-			case "mm": this.setMinutes(0); break;
-			case "ss": this.setSeconds(0); break;
-			case "fff": this.setMilliseconds(0); break;
+		switch (part[0]) {
+			case "y": this.setFullYear(0); break;
+			case "M": this.setMonth(0); break;
+			case "w": this.setDate(-this.getDay()); break;
+			case "d": this.setDate(0); break;
+			case "h": this.setHours(0); break;
+			case "m": this.setMinutes(0); break;
+			case "s": this.setSeconds(0); break;
+			case "f": this.setMilliseconds(0); break;
 		}
 	}, this);
 	return this;

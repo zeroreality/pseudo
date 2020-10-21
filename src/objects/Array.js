@@ -13,6 +13,7 @@ if (!Array.of) {
 	};
 }
 
+//#region Static
 /**
  * Returns an array of numbers.
  * @expose
@@ -25,6 +26,7 @@ Array.range = function(length, start) {
 	for (var i = (start || 0); i <= length; i++) array.push(i);
 	return array;
 }
+//#endregion Static
 
 /**
  * Quickly creates and returns a duplicate of this array.
