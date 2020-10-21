@@ -533,6 +533,29 @@ Date_prototype.addMilliseconds = function(value) {
  * @return {!Date} this
  */
 Date_prototype.add = Date_prototype.addMilliseconds;
+/**
+ * Resets the given date parts to zero.
+ * @expose
+ * @this {Date}
+ * @param {string...} var_args
+ * @return {!Date} this
+ **/
+Date_prototype.zero = function(var_args) {
+	var_args = SLICE.call(arguments);
+	var_args.forEach(function(part) {
+		switch (part) {
+			case "yyyy": this.setFullYear(0); break;
+			case "MM": this.setMonth(0); break;
+			case "ww": this.setDate(-this.getDay()); break;
+			case "dd": this.setDate(0); break;
+			case "hh": this.setHours(0); break;
+			case "mm": this.setMinutes(0); break;
+			case "ss": this.setSeconds(0); break;
+			case "fff": this.setMilliseconds(0); break;
+		}
+	}, this);
+	return this;
+};
 //#endregion Modification
 
 /** 
