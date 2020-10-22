@@ -415,6 +415,30 @@
 				expect(compare[0].type).toBe("yyyy");
 			});
 		});
+		describe("Date#copy", function() {
+			var base, copy;
+			beforeEach(function() {
+				base = new Date(1979, 8, 11, 12, 34, 56, 789);
+			});
+
+			it("same date, new instance", function() {
+				copy = base.copy();
+				expect(base).toEqual(copy);
+				expect(base).not.toBe(copy);
+			});
+			it("copy modified, not original", function() {
+				copy = base.copy();
+				copy.setFullYear(2020);
+				expect(base.getFullYear()).toBe(1979);
+				expect(copy.getFullYear()).toBe(2020);
+			});
+			it("copy invalid when original", function() {
+				base = new Date(NaN);
+				copy = base.copy();
+				expect(base.valueOf()).toBeNaN(NaN);
+				expect(copy.valueOf()).toBeNaN(NaN);
+			});
+		});
 		describe("Date#zero", function() {
 			var base;
 			beforeEach(function() {
