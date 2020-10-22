@@ -364,11 +364,11 @@ Date_prototype.isSameDay = function(other) {
  */
 Date_prototype.isSameTime = function(other, accuracy) {
 	if (IS_NAN(accuracy)) accuracy = 0;
-	return other instanceof Date &&
-		(accuracy > 0 || this.getMilliseconds() === other.getMilliseconds()) &&
-		(accuracy > 1 || this.getSeconds() === other.getSeconds()) &&
-		(accuracy > 2 || this.getMinutes() === other.getMinutes()) &&
-		/*accuracy > 3 ||*/ this.getHours() === other.getHours();
+	return other instanceof Date
+		&& (accuracy > 0 || this.getMilliseconds() === other.getMilliseconds())
+		&& (accuracy > 1 || this.getSeconds() === other.getSeconds())
+		&& (accuracy > 2 || this.getMinutes() === other.getMinutes())
+		&& (/*accuracy > 3 ||*/ this.getHours() === other.getHours());
 };
 /**
  * Checks to see if this date is midnight using given the accuracy.
@@ -388,9 +388,7 @@ Date_prototype.isMidnight = function(accuracy) {
  * @this {Date}
  * @return {!boolean}
  */
-Date_prototype.isValid = function() {
-	return IS_AN(this.valueOf());
-};
+Date_prototype.isValid = function() { return IS_AN(this.valueOf()); };
 /**
  * Returns the first weekday of the month.
  * @expose
@@ -531,17 +529,28 @@ Date_prototype.add = Date_prototype.addMilliseconds;
  * Resets the given date parts to zero.
  * @expose
  * @this {Date}
- * @param {string...} var_args
+ * @param {...string} var_args
  * @return {!Date} this
  **/
 Date_prototype.zero = function(var_args) {
 	var_args = SLICE.call(arguments);
-	var_args.forEach(function(part) {
+	for (var i = 0, l = var_args.length; i < l; i++) {
+		var part = var_args[i],
+			index = part.endsWith("+")
+				? DATE_PART_INDEX.indexOf(part[0])
+				: -1;
+		if (index > -1) var_args.inject(DATE_PART_INDEX.slice(index + 1).remove("w"));
+	}
+	var_args.order(function(a, b) {
+		var aIndex = DATE_PART_INDEX.indexOf(a),
+			bIndex = DATE_PART_INDEX.indexOf(b);
+		return ARRAY_COMPARE(bIndex, aIndex);// reversed because index is highest to lowest, but zeroing should be lowest to highest
+	}).forEach(function(part) {
 		switch (part[0]) {
-			case "y": this.setFullYear(0); break;
+			case "y": this.setFullYear(1970); break;
 			case "M": this.setMonth(0); break;
-			case "w": this.setDate(-this.getDay()); break;
-			case "d": this.setDate(0); break;
+			case "w": this.setDate(this.getDate() - this.getDay()); break;
+			case "d": this.setDate(1); break;
 			case "h": this.setHours(0); break;
 			case "m": this.setMinutes(0); break;
 			case "s": this.setSeconds(0); break;
@@ -647,4 +656,19 @@ var DEFAULT_DATE_CONTEXT_COMPARERS = [
 	{ type: "mm", get: Date_prototype.getMinutes, inc: Date_prototype.addMinutes },
 	{ type: "ss", get: Date_prototype.getSeconds, inc: Date_prototype.addSeconds },
 //	{ type: "fff", get: Date_prototype.getMilliseconds, inc: Date_prototype.addMilliseconds },
+];
+
+/**
+ *
+ * @const {Array.<string>}
+ **/
+var DATE_PART_INDEX = [
+	"y",
+	"M",
+	"w",
+	"d",
+	"h",
+	"m",
+	"s",
+	"f",
 ];
