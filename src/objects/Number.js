@@ -6,6 +6,26 @@
  **/
 var Number_prototype = Number[PROTOTYPE];
 
+//#region Static
+/**
+ * Returns an array of numbers.
+ * @expose
+ * @param {!number} length	The number of numbers to include
+ * @param {number=} start	Optional starting number.
+ * @param {number=} step		Optional increment value.
+ * @return {!Array.<number>}
+ **/
+Number.range = function(length, start, step) {
+	if (IS_NAN(start)) start = 0;
+	if (IS_NAN(step)) step = 1;
+	var array = [];
+	for (var i = 0; i < length; i++) {
+		array[i] = (start + (step * i));
+	}
+	return array;
+}
+//#endregion Static
+
 /**
  * Internal method for returning a string representation of the given number, padded with zeros.
  * @param {number} num

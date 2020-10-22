@@ -13,21 +13,6 @@ if (!Array.of) {
 	};
 }
 
-//#region Static
-/**
- * Returns an array of numbers.
- * @expose
- * @param {!number} length	The number of numbers to include
- * @param {number=} start	Optional starting number.
- * @return {!Array.<number>}
- **/
-Array.range = function(length, start) {
-	var array = [];
-	for (var i = (start || 0); i <= length; i++) array.push(i);
-	return array;
-}
-//#endregion Static
-
 /**
  * Quickly creates and returns a duplicate of this array.
  * You can also use array.slice() for the same effect.
