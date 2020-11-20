@@ -453,6 +453,19 @@ Date_prototype.addMonth = function(value) {
 	return this;
 };
 /**
+ * Add the given value as weeks (7 days) to this date instance.
+ * If no value is given, the default is 1.
+ * @expose
+ * @this {Date}
+ * @param {number=} value	Default is 1.
+ * @return {!Date} this
+ **/
+Date_prototype.addWeek = function(value) {
+	if (!IS_AN(value)) value = 1;
+	this.setDate(this.getDate() + (value * 7));
+	return this;
+};
+/**
  * Add the given value as days to this date instance.
  * If no value is given, the default is 1.
  * @expose
@@ -513,6 +526,7 @@ Date_prototype.addSeconds = function(value) {
  * @return {!Date} this
  */
 Date_prototype.addMilliseconds = function(value) {
+	if (!OBJECT_IS_NOTHING(value)) value = value.valueOf();
 	if (!IS_AN(value)) value = 1;
 	this.setMilliseconds(this.getMilliseconds() + value);
 	return this;
@@ -535,10 +549,11 @@ Date_prototype.add = Date_prototype.addMilliseconds;
 Date_prototype.zero = function(var_args) {
 	var_args = SLICE.call(arguments);
 	for (var i = 0, l = var_args.length; i < l; i++) {
-		var part = var_args[i],
+		var part = var_args[i] || "",
 			index = part.endsWith("+")
 				? DATE_PART_INDEX.indexOf(part[0])
 				: -1;
+		if (part[0] === "w") index++;
 		if (index > -1) var_args.inject(DATE_PART_INDEX.slice(index + 1).remove("w"));
 	}
 	var_args.order(function(a, b) {
@@ -557,6 +572,29 @@ Date_prototype.zero = function(var_args) {
 			case "f": this.setMilliseconds(0); break;
 		}
 	}, this);
+	return this;
+};
+/**
+ * Zeros this date to the given part.
+ * When also giving a denominator, will invoke the {@link Number#nearest} on that part's value.
+ * @expose
+ * @this {Date}
+ * @param {!string} part
+ * @param {number=} denominator	The closest number on which to round.  Default is 1.
+ * @param {boolean=} rounding		When true will round up to the nearest, when false will round down to the nearest, and when not given, will round to closest.
+ * @return {!Date} this
+ **/
+Date_prototype.nearest = function(part, denominator, rounding) {
+	var index = DATE_PART_INDEX.indexOf((part || "")[0]),
+		zero = DATE_PART_INDEX[index + 1],
+		comparer = DEFAULT_DATE_CONTEXT_COMPARERS[index];
+	if (comparer) {
+		var value = comparer.get.call(this);
+		if (zero) this.zero(zero + "+");
+		comparer._set.call(this, NEAREST(value, denominator, rounding));
+	} else if (zero) {
+		this.zero(zero + "+");
+	}
 	return this;
 };
 //#endregion Modification
@@ -645,30 +683,83 @@ ns.Date = {
 /**
  * An array used by the {@link Date#context} function.
  * This is added to the bottom of the file so all the prototypes ae defined.
- * @const {Array.<{type:string,get:function():number,inc:function(number)}>}
+ * @const {Array.<{type:string,_min:string,get:function():number,_set:function(number),inc:function(number)}>}
  **/
 var DEFAULT_DATE_CONTEXT_COMPARERS = [
-	{ type: "yyyy", get: Date_prototype.getFullYear, inc: Date_prototype.addYear },
-	{ type: "MM", get: Date_prototype.getMonth, inc: Date_prototype.addMonth },
-	{ type: "ww", get: function() { return FLOOR(this.getDate() / 7); }, inc: function(n) { this.addDate(n * 7); } },
-	{ type: "dd", get: Date_prototype.getDate, inc: Date_prototype.addDate },
-	{ type: "hh", get: Date_prototype.getHours, inc: Date_prototype.addHours },
-	{ type: "mm", get: Date_prototype.getMinutes, inc: Date_prototype.addMinutes },
-	{ type: "ss", get: Date_prototype.getSeconds, inc: Date_prototype.addSeconds },
-//	{ type: "fff", get: Date_prototype.getMilliseconds, inc: Date_prototype.addMilliseconds },
+	{
+		type: "yyyy",
+		//_min: "y",
+		get: Date_prototype.getFullYear,
+		_set: Date_prototype.setFullYear,
+		inc: Date_prototype.addYear,
+	},
+	{
+		type: "MM",
+		//_min: "MM",
+		get: Date_prototype.getMonth,
+		_set: Date_prototype.setMonth,
+		inc: Date_prototype.addMonth,
+	},
+	{
+		type: "ww",
+		//_min: "ww",
+		/**
+		 * 
+		 * @this  {Date}
+		 **/
+		get: function() { return FLOOR(this.getDate() / 7); },
+		/**
+		 * 
+		 * @this  {Date}
+		 **/
+		_set: function(value) { /* what to do here */ },
+		/**
+		 * 
+		 * @this  {Date}
+		 **/
+		inc: function(n) { this.addDate(n * 7); },
+	},
+	{
+		type: "dd",
+		//_min: "dd",
+		get: Date_prototype.getDate,
+		_set: Date_prototype.setDate,
+		inc: Date_prototype.addDate,
+	},
+	{
+		type: "hh",
+		//_min: "hh",
+		get: Date_prototype.getHours,
+		_set: Date_prototype.setHours,
+		inc: Date_prototype.addHours,
+	},
+	{
+		type: "mm",
+		//_min: "mm",
+		get: Date_prototype.getMinutes,
+		_set: Date_prototype.setMinutes,
+		inc: Date_prototype.addMinutes,
+	},
+	{
+		type: "ss",
+		//_min: "ss",
+		get: Date_prototype.getSeconds,
+		_set: Date_prototype.setSeconds,
+		inc: Date_prototype.addSeconds,
+	},
+	{
+		type: "fff",
+		//_min: "fff",
+		get: Date_prototype.getMilliseconds,
+		_set: Date_prototype.setMilliseconds,
+		inc: Date_prototype.addMilliseconds,
+	},
 ];
 
 /**
  *
  * @const {Array.<string>}
  **/
-var DATE_PART_INDEX = [
-	"y",
-	"M",
-	"w",
-	"d",
-	"h",
-	"m",
-	"s",
-	"f",
-];
+var DATE_PART_INDEX = DEFAULT_DATE_CONTEXT_COMPARERS.map(function(c) {
+	return c._min = c.type[0];
+});
