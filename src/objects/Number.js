@@ -50,10 +50,8 @@ function ZERO_PADDED(num, length, decimals, radix) {
  * @param {number=} decimals	Optionally specify the min-len for decimals
  * @param {number=} radix	Optionally specify the radis when parsing the number to a string
  * @return {string}
- */
-Number_prototype.pad = function(length, decimals, radix) {
-	return ZERO_PADDED(this, length, decimals, radix);
-};
+ **/
+Number_prototype.pad = function(length, decimals, radix) { return ZERO_PADDED(this, length, decimals, radix); };
 /**
  * Returns this number as a string, with separators in groups of digits.
  * @expose
@@ -88,12 +86,21 @@ Number_prototype.group = function(separator, length, decimals, point) {
  * Returns this number rounded to the given number of decimal places.  If no value is given, 0 is assumed.
  * @expose
  * @this {number}
- * @param {number=} places The number of decimal places.  Default is 0.
+ * @param {number=} places	The number of decimal places.  Default is 0.
+ * @param {boolean=} rounding	When true will round up to the nearest, when false will round down to the nearest, and when not given, will round to closest.
  * @return {number}
- */
-Number_prototype.round = function(places) {
-	return ROUND_TO(this, places);
-};
+ **/
+Number_prototype.round = function(places, rounding) { return ROUND_TO(this, places, rounding); };
+/**
+ * Rounds this number to the nearest denominator.
+ * Also works if the denominator is a decimal.
+ * @expose
+ * @this {number}
+ * @param {number=} denominator	The closest number on which to round.  Default is 1.
+ * @param {boolean=} rounding		When true will round up to the nearest, when false will round down to the nearest, and when not given, will round to closest.
+ * @return {number}
+ **/
+Number_prototype.nearest = function(denominator, rounding) { return NEAREST(this, denominator, rounding); };
 /**
  * Returns the number of decimal places in this number.
  * @expose
