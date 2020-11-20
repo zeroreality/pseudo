@@ -152,14 +152,15 @@ function ARRAY_SUPER_NATURAL_SPLIT(input) {
 
 /**
  * Sorts this array with the given predicate and returns itself.
+ * If no predicate is given, will compare array items directly instead of first converting them to string.
  * @expose
  * @this {Array}
  * @param {Function=} predicate
  * @param {?=} context
  * @return {!Array} this
- */
+ **/
 Array_prototype.order = function(predicate, context) {
-	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_NATURAL;
+	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_COMPARE;
 	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
 	this.sort(
 		predicate.bind(
@@ -220,26 +221,20 @@ Array_prototype.orderWith = function(var_args) {
  * @param {?} a
  * @param {?} b
  */
-function ARRAY_HELPER_MAX(a, b) {
-	return b > a ? b : a;
-}
+function ARRAY_HELPER_MAX(a, b) { return b > a ? b : a; }
 /**
  * Helper used to pick the lesser of two given values.
  * 
  * @param {?} a
  * @param {?} b
  */
-function ARRAY_HELPER_MIN(a, b) {
-	return b < a ? b : a;
-}
+function ARRAY_HELPER_MIN(a, b) { return b < a ? b : a; }
 /**
  * Adds the two values together and returns the result.
  * @param {?} a
  * @param {?} b
  */
-function ARRAY_HELPER_SUM(a, b) {
-	return a + b;
-}
+function ARRAY_HELPER_SUM(a, b) { return a + b; }
 
 /**
  * Finds the greatest value in this array.
@@ -255,7 +250,9 @@ function ARRAY_HELPER_SUM(a, b) {
 Array_prototype.max = function(predicate, initialValue) {
 	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_HELPER_MAX;
 	else if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	return this.reduce(predicate, OBJECT_IS_NOTHING(initialValue) ? 0 : initialValue);
+	return this.length > 0 && arguments.length < 2
+		? this.reduce(predicate)
+		: this.reduce(predicate, initialValue);
 };
 /**
  * Finds the lessest value in this array.
@@ -271,7 +268,9 @@ Array_prototype.max = function(predicate, initialValue) {
 Array_prototype.min = function(predicate, initialValue) {
 	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_HELPER_MIN;
 	else if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	return this.reduce(predicate, OBJECT_IS_NOTHING(initialValue) ? 0 : initialValue);
+	return this.length > 0 && arguments.length < 2
+		? this.reduce(predicate)
+		: this.reduce(predicate, initialValue);
 };
 /**
  * Adds all the values in this array together.
@@ -286,7 +285,9 @@ Array_prototype.min = function(predicate, initialValue) {
 Array_prototype.sum = function(predicate, initialValue) {
 	if (OBJECT_IS_NOTHING(predicate)) predicate = ARRAY_HELPER_SUM;
 	else if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	return this.reduce(predicate, OBJECT_IS_NOTHING(initialValue) ? 0 : initialValue);
+	return this.length > 0 && arguments.length < 2
+		? this.reduce(predicate)
+		: this.reduce(predicate, initialValue);
 };
 //#endregion Minimum/Maximum/Sum
 
@@ -425,6 +426,20 @@ Array_prototype.findIndexes = function(predicate, context) {
  */
 Array_prototype.last = function() {
 	return this[this.length - 1];
+};
+/**
+ * Operates as a negative {@link Array#filter}, returning a new Array with the objects return false for the predicate.
+ * @expose
+ * @this {Array}
+ * @param {Function} predicate
+ * @param {?=} context
+ * @return {!Array.<number>}
+ */
+Array_prototype.filterNot = function(predicate, context) {
+	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
+	return this.filter(function(currentValue, index, array) {
+		return !predicate.call(this, currentValue, index, array);
+	}, context);
 };
 //#endregion Searching
 
@@ -820,150 +835,6 @@ Array_prototype.toSet = function(predicate, context) {
 	return set;
 };
 //#endregion Transform
-
-//#region async-iteration tests
-/**
- * Experimental!
- * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} to resolve the predicate for each item in this array.
- * I see no point to this method even existing.
- * @expose
- * @this {Array}
- * @param {function(?,number,Array)} predicate
- * @param {?=} context
- * @return {!Promise}
- */
-Array_prototype.asyncForEach = function(predicate, context) {
-	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (arguments.length < 2) context = this;
-
-
-	/**
-	 * 
-	 * working
-	 *
-	function asyncFunc(value, index, array) {
-		//	console.log("promise", index);
-		return new Promise(function(resolve, reject) {
-			predicate.call(context, value, index, array);
-			resolve();
-			//	console.log("resolved", index);
-		});
-	}
-	return this.reduce(function(promise, value, index, array) {
-		return promise.then(function(result) {
-			return asyncFunc(value, index, array);
-		});
-	}, Promise.resolve());
-	 */
-
-
-	return this.reduce(function(promiseChain, value, index, array) {
-		return promiseChain.then(function() {
-			return new Promise(function(resolve) {
-				predicate.call(context, value, index, array);
-				resolve(array);
-			});
-		});
-	}, Promise.resolve());
-};
-/**
- * Experimental!
- * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} and {@link https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval|setInterval} to resolve the predicate for each item in this array.
- * This can be used to simulate asynchronously processing items in an array.
- * @expose
- * @this {Array}
- * @param {function(?,number,Array)} predicate
- * @param {?=} context
- * @param {number=} delay
- * @return {!Promise}
- */
-Array_prototype.deferForEach = function(predicate, context, delay) {
-	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (arguments.length < 2) context = this;
-	if (!delay || delay < 0) delay = 0;
-	var timer,
-		array = this.slice(),
-		length = array.length,
-		index = 0;
-	return new Promise(function(resolve) {
-		timer = SET_EVERY(
-			function(scope) {
-				if (index < length) {
-					predicate.call(scope, array[index], index++, array);
-				} else {
-					CLEAR_EVERY(timer);
-					resolve(array);
-				}
-			},
-			delay,
-			context
-		);
-	});
-	/**
-	 *
-	 * working
-	 * 
-	 * 
-	function asyncFunc(value, index, array) {
-		//	console.log("promise", index);
-		return new Promise(function(resolve, reject) {
-			SET_TIMER(function() {
-				predicate.call(context, value, index, array);
-				resolve();
-				//	console.log("resolved", index);
-			}, delay);
-		});
-	}
-	return this.reduce(function(promise, value, index, array) {
-		return promise.then(function(result) {
-			return asyncFunc(value, index, array);
-		});
-	}, Promise.resolve());
-	 */
-	/**
-	 *
-	 * also working
-	 *
-	 *
-	return this.reduce(function(promiseChain, value, index, array) {
-		return promiseChain.then(function() {
-			return new Promise(function(resolve) {
-				predicate.call(context, value, index, array);
-				SET_INSTANT(resolve);
-			});
-		});
-	}, Promise.resolve());
-	 */
-};
-/**
- * Experimental!
- * Uses a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise|Promise} and {@link https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame|requestAnimationFrame} to resolve the predicate for each item in this array.
- * Similar to {Array#deferForEach}, this can be used to simulate asynchronously processing items in an array.
- * @expose
- * @this {Array}
- * @param {function(?,number,Array)} predicate
- * @param {?=} context
- * @return {!Promise}
- */
-Array_prototype.animForEach = function(predicate, context) {
-	if (typeof predicate !== "function") throw new TypeError(PREDICATE_ERROR);
-	if (arguments.length < 2) context = this;
-	var array = this.slice(),
-		length = array.length,
-		index = 0;
-	return new Promise(function(resolve, reject) {
-		function animForEach() {
-			if (index < length) {
-				predicate.call(context, array[index], index++, array);
-				WIN.requestAnimationFrame(animForEach);
-			} else {
-				resolve(array);
-			}
-		}
-		WIN.requestAnimationFrame(animForEach);
-	});
-};
-//#endregion async-iteration tests
 
 /** 
  * Exposing the predicates that are used internally for sorting arrays.
