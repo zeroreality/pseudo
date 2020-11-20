@@ -240,13 +240,25 @@ function ID(num) {
 }
 /**
  * Rounds a number to the desired number of decimal places. Using a negative places value will round to the nearest ten.
- * @param {!number} number The number to be rounded
- * @param {number=} places The number of decimal places.  Default is 0.
+ * @param {!number} number	The number to be rounded.
+ * @param {number=} places	The number of decimal places.  Default is 0.
+ * @param {boolean=} rounding		When true will round up to the nearest, when false will round down to the nearest, and when not given, will round to closest.
  * @return {!number}
- */
-function ROUND_TO(number, places) {
+ **/
+function ROUND_TO(number, places, rounding) {
 	var power = POW(10, places || 0);
-	return ROUND(number * power) / power;
+	return (OBJECT_IS_NOTHING(rounding) ? ROUND : rounding ? CEIL : FLOOR)(number * power) / power;
+}
+/**
+ * Rounds a number to the nearest denominator.
+ * @param {!number} number		The number to be rounded.
+ * @param {number=} denominator	The closest number on which to round.  Default is 1.
+ * @param {boolean=} rounding		When true will round up to the nearest, when false will round down to the nearest, and when not given, will round to closest.
+ * @return {!number}
+ **/
+function NEAREST(number, denominator, rounding) {
+	var to = IS_AN(denominator) ? denominator : 1;
+	return (OBJECT_IS_NOTHING(rounding) ? ROUND : rounding ? CEIL : FLOOR)(number / to) * to;
 }
 /**
  * Calls isNaN, but also checks that the given value is a number type.
