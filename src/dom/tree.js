@@ -43,6 +43,12 @@ var DOM_ATTR_WRITERS = {
 		}
 	},
 };
+
+/**
+ * Helper for converting strings, numbers, and other literals into HTML by setting innerHTML and getting content.
+ * @type {HTMLTemplateElement}
+ **/
+var DOM_TEMPLATE = DOC.createElement("template");
 /**
  * Used internally to add values to a given element.
  * @param {!Node} element
@@ -53,24 +59,23 @@ function DOM_ELEMENT_APPENDER(element, value) {
 	if (
 		// if the value is an Element or DocumentFragment
 		// we don't check node because we shouldn't add a Document (child class of Node) in this way
-		value instanceof Element
-		|| value instanceof DocumentFragment
+		value instanceof Node
 	) {
 		element.appendChild(value);
 	} else if (
 		// if the value is an array, iterate through and recursively append the items in the array
-		value instanceof Array
+		OBJECT_IS_ARRAY(value)
 	) {
 		for (var i = 0, l = value.length; i < l; i++) {
 			DOM_ELEMENT_APPENDER(element, value[i]);
 		}
 	} else if (
-		// for any other item that has a value
-		value
-		// of for numbers, because the number 0 or NaN is not considered to have a value
-		|| OBJECT_IS_NUMBER(value)
+		// for values that are not null or undefined
+		!OBJECT_IS_NOTHING(value)
 	) {
-		element.insertAdjacentHTML("beforeEnd", value.toString());
+		//element.insertAdjacentHTML("beforeEnd", value.toString());
+		DOM_TEMPLATE.innerHTML = value;
+		element.appendChild(DOM_TEMPLATE.content);
 	}
 	// lastly, return the given element.
 	return element;
@@ -105,7 +110,26 @@ HTMLElement_prototype.replace = function(withNode) {
  * @return {!Node} this
  **/
 HTMLElement_prototype.append = function(var_args) {
-	return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
+	//return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
+	this.appendChild(DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), SLICE.call(arguments)));
+	return this;
+};
+/**
+ * Adds all the given arguments as child nodes starting at the first-child.
+ * Any non-Element given is added as HTML.
+ * @this {Element}
+ * @expose
+ * @param {*} value
+ * @param {HTMLElement=} before
+ * @return {!Node} this
+ **/
+HTMLElement_prototype.prepend = function(value, before) {
+	//return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
+	this.insertBefore(
+		DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), value),
+		before || this.firstChild || null
+	);
+	return this;
 };
 /**
  * Removes all child nodes from this element.
@@ -141,7 +165,7 @@ HTMLElement_prototype.insertAfter = function(child, after) {
  * @return {!Node} this
  **/
 HTMLElement_prototype.update = function(var_args) {
-	return DOM_ELEMENT_APPENDER(this.empty(), SLICE.call(arguments));
+	return this.empty().append(SLICE.call(arguments));
 };
 /**
  * Amputates this element from its parentNode, and adds it to the new parent.
