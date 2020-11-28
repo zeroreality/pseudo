@@ -147,7 +147,7 @@ Date_prototype.context = function(other, levels, comparers) {
  * @return {!string}
  **/
 Date_prototype.contextString = function(value, levels, template, kinds) {
-	template = PSEUDO_MERGE(ns.Date["context"], template || {});
+	template = PSEUDO_MERGE({}, ns.Date["context"], template || {});
 	var array = this.context(value, levels, kinds),
 		i = array.length,
 		results = [],
