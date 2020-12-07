@@ -257,8 +257,9 @@ function ROUND_TO(number, places, rounding) {
  * @return {!number}
  **/
 function NEAREST(number, denominator, rounding) {
-	var to = IS_AN(denominator) ? denominator : 1;
-	return (OBJECT_IS_NOTHING(rounding) ? ROUND : rounding ? CEIL : FLOOR)(number / to) * to;
+	var to = IS_AN(denominator) ? denominator : 1,
+		rounded = (to.toString().split(".")[1] || "").length;
+	return ROUND_TO((OBJECT_IS_NOTHING(rounding) ? ROUND : rounding ? CEIL : FLOOR)(number / to) * to, rounded);
 }
 /**
  * Calls isNaN, but also checks that the given value is a number type.
