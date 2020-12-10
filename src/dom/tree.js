@@ -48,7 +48,9 @@ var DOM_ATTR_WRITERS = {
  * Helper for converting strings, numbers, and other literals into HTML by setting innerHTML and getting content.
  * @type {HTMLTemplateElement}
  **/
-var DOM_TEMPLATE = DOC.createElement("template");
+var DOM_TEMPLATE = WIN["HTMLTemplateElement"]
+				? DOC.createElement("template")
+				: null;
 /**
  * Used internally to add values to a given element.
  * @param {!Node} element
@@ -60,6 +62,7 @@ function DOM_ELEMENT_APPENDER(element, value) {
 		// if the value is an Element or DocumentFragment
 		// we don't check node because we shouldn't add a Document (child class of Node) in this way
 		value instanceof Node
+		|| value instanceof DocumentFragment
 	) {
 		element.appendChild(value);
 	} else if (
@@ -73,9 +76,12 @@ function DOM_ELEMENT_APPENDER(element, value) {
 		// for values that are not null or undefined
 		!OBJECT_IS_NOTHING(value)
 	) {
-		//element.insertAdjacentHTML("beforeEnd", value.toString());
-		DOM_TEMPLATE.innerHTML = value;
-		element.appendChild(DOM_TEMPLATE.content);
+		if (DOM_TEMPLATE) {
+			DOM_TEMPLATE.innerHTML = value;
+			element.appendChild(DOM_TEMPLATE.content);
+		} else {
+			element.insertAdjacentHTML("beforeEnd", value.toString());
+		}
 	}
 	// lastly, return the given element.
 	return element;
@@ -109,11 +115,14 @@ HTMLElement_prototype.replace = function(withNode) {
  * @param {...*} var_args
  * @return {!Node} this
  **/
-HTMLElement_prototype.append = function(var_args) {
-	//return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
-	this.appendChild(DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), SLICE.call(arguments)));
-	return this;
-};
+HTMLElement_prototype.append = DOM_TEMPLATE
+	? function(var_args) {
+		this.appendChild(DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), SLICE.call(arguments)));
+		return this;
+	}
+	: function(var_args) {
+		return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
+	};
 /**
  * Adds all the given arguments as child nodes starting at the first-child.
  * Any non-Element given is added as HTML.
@@ -124,7 +133,7 @@ HTMLElement_prototype.append = function(var_args) {
  * @return {!Node} this
  **/
 HTMLElement_prototype.prepend = function(value, before) {
-	//return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
+	throw new Error("not implemented in IE yet");
 	this.insertBefore(
 		DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), value),
 		before || this.firstChild || null
