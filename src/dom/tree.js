@@ -17,9 +17,6 @@ var DOM_ATTR_READERS = {
  * @const {Object.<string,function(?)>}
  **/
 var DOM_ATTR_WRITERS = {
-	"for": /** @this {Element} */ function(value) {
-		this.htmlFor = value;
-	},
 	"class": /** @this {Element} */ function(value) {
 		this.className = value;
 	},
@@ -62,28 +59,29 @@ var DOM_PARSER = !DOM_TEMPLATE
 			? new DOMParser()
 			: null;
 /**
- * DOC.importNode(n, true) does't work, because ie11 will import/clone the node as an Element, not an HTML__Element,
- * and Element does not support things like the HTMLElement#dataset dictionary.
+ * DOC.importNode(n, true) does't work on Elements from DOMParser,
+ * because it creates Elements, not HTML__Elements,
+ * and Element does not support things like the HTMLElement#dataset dictionary,
+ * and ie11 will add Elements into a document without error or changing their context.
  * @param {!Node} node
  * @returns {HTMLElement}
  **/
 function DOM_CLONE(node) {
 	var clone;
 	switch (node.nodeName) {
-		case "#text": clone = DOC.createTextNode(node.textContent); break;
-		case "#comment": clone = DOC.createComment(node.textContent); break;
-		case "#document": break;// wtf?
+		case "#text": return DOC.createTextNode(node.textContent);
+		case "#comment": return DOC.createComment(node.textContent);
+		case "#document": return DOM_CLONE(node.documentElement);
 		default:
-			clone = DOC.createElement(node.nodeName);
+			var clone = DOC.createElement(node.nodeName);
 			for (var j = 0, a; a = node.attributes[j]; j++) {
 				clone.write(a.name, a.value);
 			}
 			for (var j = 0, a; a = node.childNodes[j]; j++) {
 				clone.appendChild(DOM_CLONE(a));
 			}
-			break;
+			return clone;
 	}
-	return clone;
 }
 /**
  * Used internally to add values to a given node.
