@@ -122,6 +122,7 @@ function DOM_APPENDER(node, value) {
 			// fallback for ie11 working with the node as a DocumentFragments
 			// because parseFromString only supports one root element, we add the <x/> element
 			// and beause XML escapes &, we replace them all with &amp;
+			// and we can't use "text/html" because then special children (like tr, td, li, etc) won't work.
 			var doc = DOM_PARSER.parseFromString("<x>" + value.toString().split("&").join("&amp;") + "</x>", "text/xml"),
 				nodes = doc.documentElement.childNodes;
 			for (var i = 0, n; n = nodes[i]; i++) {
