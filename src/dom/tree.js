@@ -17,6 +17,9 @@ var DOM_ATTR_READERS = {
  * @const {Object.<string,function(?)>}
  **/
 var DOM_ATTR_WRITERS = {
+	"for": /** @this {Element} */ function(value) {
+		this.htmlFor = value;
+	},
 	"class": /** @this {Element} */ function(value) {
 		this.className = value;
 	},
@@ -52,39 +55,82 @@ var DOM_TEMPLATE = WIN["HTMLTemplateElement"]
 				? DOC.createElement("template")
 				: null;
 /**
- * Used internally to add values to a given element.
- * @param {!Node} element
- * @param {*} value
- * @return {!Node} element
+ * Helper for converting values to Elements, then using DOM_CLONE to do a deep clone.
+ * @type {DOMParser}
  **/
-function DOM_ELEMENT_APPENDER(element, value) {
+var DOM_PARSER = !DOM_TEMPLATE
+			? new DOMParser()
+			: null;
+/**
+ * DOC.importNode(n, true) does't work, because ie11 will import/clone the node as an Element, not an HTML__Element,
+ * and Element does not support things like the HTMLElement#dataset dictionary.
+ * @param {!Node} node
+ * @returns {HTMLElement}
+ **/
+function DOM_CLONE(node) {
+	var clone;
+	switch (node.nodeName) {
+		case "#text": clone = DOC.createTextNode(node.textContent); break;
+		case "#comment": clone = DOC.createComment(node.textContent); break;
+		case "#document": break;// wtf?
+		default:
+			clone = DOC.createElement(node.nodeName);
+			for (var j = 0, a; a = node.attributes[j]; j++) {
+				clone.write(a.name, a.value);
+			}
+			for (var j = 0, a; a = node.childNodes[j]; j++) {
+				clone.appendChild(DOM_CLONE(a));
+			}
+			break;
+	}
+	return clone;
+}
+/**
+ * Used internally to add values to a given node.
+ * @param {!Node} node
+ * @param {*} value
+ * @return {!Node} node
+ **/
+function DOM_APPENDER(node, value) {
 	if (
 		// if the value is an Element or DocumentFragment
 		// we don't check node because we shouldn't add a Document (child class of Node) in this way
 		value instanceof Node
 		|| value instanceof DocumentFragment
 	) {
-		element.appendChild(value);
+		node.appendChild(value);
 	} else if (
 		// if the value is an array, iterate through and recursively append the items in the array
 		OBJECT_IS_ARRAY(value)
 	) {
 		for (var i = 0, l = value.length; i < l; i++) {
-			DOM_ELEMENT_APPENDER(element, value[i]);
+			DOM_APPENDER(node, value[i]);
 		}
 	} else if (
 		// for values that are not null or undefined
 		!OBJECT_IS_NOTHING(value)
 	) {
 		if (DOM_TEMPLATE) {
+			// modern browsers support the <template/> element and it's content getter is a DocumentFragment.
 			DOM_TEMPLATE.innerHTML = value;
-			element.appendChild(DOM_TEMPLATE.content);
+			node.appendChild(DOM_TEMPLATE.content);
+		} else if (node.insertAdjacentHTML) {
+			// part of the DOM Parsing working draft
+			// https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml
+			node.insertAdjacentHTML("beforeEnd", value.toString());
 		} else {
-			element.insertAdjacentHTML("beforeEnd", value.toString());
+			// fallback for ie11 working with the node as a DocumentFragments
+			// because parseFromString only supports one root element, we add the <x/> element
+			// and beause XML escapes &, we replace them all with &amp;
+			var doc = DOM_PARSER.parseFromString("<x>" + value.toString().split("&").join("&amp;") + "</x>", "text/xml"),
+				nodes = doc.documentElement.childNodes;
+			for (var i = 0, n; n = nodes[i]; i++) {
+				node.appendChild(DOM_CLONE(n));
+			}
 		}
 	}
 	// lastly, return the given element.
-	return element;
+	return node;
 }
 
 /**
@@ -115,14 +161,15 @@ HTMLElement_prototype.replace = function(withNode) {
  * @param {...*} var_args
  * @return {!Node} this
  **/
-HTMLElement_prototype.append = DOM_TEMPLATE
-	? function(var_args) {
-		this.appendChild(DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), SLICE.call(arguments)));
-		return this;
-	}
-	: function(var_args) {
-		return DOM_ELEMENT_APPENDER(this, SLICE.call(arguments));
-	};
+HTMLElement_prototype.append = function(var_args) {
+	this.appendChild(
+		DOM_APPENDER(
+			DOC.createDocumentFragment(),
+			SLICE.call(arguments)
+		)
+	);
+	return this;
+};
 /**
  * Adds all the given arguments as child nodes starting at the first-child.
  * Any non-Element given is added as HTML.
@@ -133,9 +180,11 @@ HTMLElement_prototype.append = DOM_TEMPLATE
  * @return {!Node} this
  **/
 HTMLElement_prototype.prepend = function(value, before) {
-	throw new Error("not implemented in IE yet");
 	this.insertBefore(
-		DOM_ELEMENT_APPENDER(DOC.createDocumentFragment(), value),
+		DOM_APPENDER(
+			DOC.createDocumentFragment(),
+			value
+		),
 		before || this.firstChild || null
 	);
 	return this;
@@ -477,6 +526,18 @@ DOC.element = function(nodeName, attributes, handlers) {
 	if (attributes) for (var name in attributes) elem.write(name, attributes[name]);
 	if (handlers) for (var name in handlers) elem.on(name, handlers[name]);
 	return elem;
+};
+/**
+ * A quick way of creating a document fragment.
+ * Internally uses the same method as HTMLElement#append to add the contents.
+ * @param {...*} var_args
+ * @returns {DocumentFragment}
+ **/
+DOC.fragment = function(var_args) {
+	return DOM_APPENDER(
+		DOC.createDocumentFragment(),
+		SLICE.call(arguments)
+	);
 };
 /**
  * Shortcut to getting an element by its id.
