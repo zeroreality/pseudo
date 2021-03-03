@@ -11,6 +11,9 @@ var DOM_ATTR_READERS = {
 	"class": /** @this {Element} */ function() {
 		return this.className;
 	},
+	"readonly": /** @this {Element} */ function() {
+		return this.hasAttribute("readonly") ? "readonly" : "";
+	},
 };
 /**
  * An array of keys that can be used with {@link HTMLElement#write} to more easily write property values.
@@ -41,6 +44,10 @@ var DOM_ATTR_WRITERS = {
 		} else {
 			for (var each in value) this.style[each] = value[each];
 		}
+	},
+	"readonly": /** @this {Element} */ function(value) {
+		if (value) this.setAttribute("readonly", "readonly");
+		else this.removeAttribute("readonly");
 	},
 };
 
