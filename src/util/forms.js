@@ -48,7 +48,12 @@ ns.Opaque = {};
 ns.Opaque.create = function(title, body) {
 	return DOC["element"]("article", {
 		"id": "opaque",
-		"innerHTML": "<div class=\"modal\"><header>" + title + "</header><article><form action=\"javascript:void(0)\" class=\"standard_form\">" + body + "</form></article></div>"
+		"innerHTML": '<div class="modal">'
+			+ '<header>' + title + '</header>'
+			+ '<article>'
+			+ '<form action="javascript:void(0)" class="standard_form">' + body + '</form>'
+			+ '</article>'
+			+ '</div>',
 	});
 	/*
 	<article id="opaque">
