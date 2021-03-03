@@ -14,7 +14,7 @@ var DATE_INVALID = new Date(NaN);
  * This is the format helper tofor parsing date/time format strings.
  * @const {RegExp}
  **/
-var DATE_FILTER_FORMAT = /(\\.|[ydM]{1,4}|[hHmstT]{1,2}|[f]{1,6})/gm;
+var DATE_FILTER_FORMAT = /(\\.|d{1,4}|M{1,4}|y{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|t{1,2}|T{1,2}|f{1,6})/gm;
 
 /**
  * A dictionary/reference of the number of milliseconds in each date-part.
