@@ -440,19 +440,19 @@ function DOM_EVENT_INIT(definition) {
  * Adds the given function as an event handler to this element.
  * @this {Element}
  * @expose
- * @param {!string} type
+ * @param {!string|Array.<string>} type
  * @param {!Array.<function(Event)>|function(Event)} handler
  * @param {!boolean=} capture
  * @return {!Element} this
  */
 HTMLElement_prototype.on = function(type, handler, capture) {
-	if (handler instanceof Array) {
+	if (OBJECT_IS_ARRAY(type)) {
+		for (var i = 0, l = type.length; i < l; i++) {
+			this.on(type[i], handler, capture);
+		}
+	} else if (OBJECT_IS_ARRAY(handler)) {
 		for (var i = 0, l = handler.length; i < l; i++) {
-			this.on(
-				type,
-				handler[i],
-				capture
-			);
+			this.on(type, handler[i], capture);
 		}
 	} else if (OBJECT_IS_FUNCTION(handler)) {
 		if (!this.__handlers) this.__handlers = {};
@@ -503,21 +503,31 @@ HTMLElement_prototype.off = function(type, handler, capture) {
 		for (var i = 0, l = keys.length; i < l; i++) {
 			this.off(keys[i]);
 		}
-	} else if (handler instanceof Array) {
+	} else if (OBJECT_IS_ARRAY(type)) {
+		for (var i = 0, l = type.length; i < l; i++) {
+			this.off(
+				type[i],
+				handler,
+				capture !== undefined
+					? capture
+					: handler.phase
+			);
+		}
+	} else if (OBJECT_IS_ARRAY(handler)) {
 		for (var i = 0, l = handler.length; i < l; i++) {
 			this.off(
 				type,
 				handler[i].handler || handler[i],
-				typeof capture === "boolean"
+				capture !== undefined
 					? capture
 					: handler[i].phase
 			);
 		}
 	} else if (!handler) {
-		if (this.__handlers[type] instanceof Array) {
+		if (OBJECT_IS_ARRAY(this.__handlers[type])) {
 			this.off(
 				type,
-				this.__handlers[type].copy(),
+				this.__handlers[type].slice(),
 				capture
 			);
 		}
