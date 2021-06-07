@@ -172,8 +172,8 @@ Array_prototype.order = function(predicate, context) {
 	return this;
 };
 /**
- * Sorts this array using "natural" sorting based on the given key names.
- * This prototype expects the array to be filled with non-nullable objects, and that the key names passed exist on each object.
+ * Sorts this array by comparing array items directly instead of first converting them to string.
+ * This prototype expects the array to be filled with non-nullable objects.
  * @expose
  * @this {Array}
  * @param {...string} var_args
@@ -184,7 +184,7 @@ Array_prototype.orderBy = function(var_args) {
 	this.sort(function(a, b) {
 		var result = 0;
 		for (var i = 0, key = var_args[i]; key = var_args[i]; i++) {
-			if (result = ARRAY_NATURAL(a[key], b[key])) break;
+			if (result = ARRAY_COMPARE(a[key], b[key])) break;
 		}
 		return result;
 	});
