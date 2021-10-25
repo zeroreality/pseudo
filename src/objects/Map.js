@@ -259,6 +259,32 @@ Map_prototype.toArray = function(predicate, context) {
 	return results;
 };
 /**
+ * Builds an object literal out of the results of the predicate.
+ * @expose
+ * @this {Map}
+ * @param {!function(?,?,Map):?} valuePredicate
+ * @param {!function(?,?,Map):?=} keyPredicate
+ * @param {!Object=} context
+ * @throws {TypeError} valuePredicate is not a Function
+ * @throws {TypeError} keyPredicate is not a Function
+ * @return {!Object}
+ */
+Map_prototype.toObject = function(valuePredicate, keyPredicate, context) {
+	if (!OBJECT_IS_FUNCTION(valuePredicate)) {
+		throw new TypeError("predicate is not a Function");
+	}
+	if (!OBJECT_IS_FUNCTION(keyPredicate)) {
+		if (OBJECT_IS_NOTHING(keyPredicate)) keyPredicate = ITERATOR_KEY;	// not required
+		else throw new TypeError("predicate is not a Function");
+	}
+	if (arguments.length < 3) context = this;
+	var results = {};
+	this.forEach(function(value, key) {
+		results[keyPredicate.call(context, value, key, this)] = valuePredicate.call(context, value, key, this);
+	});
+	return results;
+};
+/**
  * Creates a primitive version of the dictionary and its values.
  * @expose
  * @this {Map}
