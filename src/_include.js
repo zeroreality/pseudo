@@ -1,5 +1,17 @@
 ﻿/// <reference path="..\blds\pseudo3.js" />
 
+/**
+ * The main context.
+ * Usually a {@link Window}, but can be a {@link Worker}.
+ * @const {EventTarget}
+ **/
+var SELF = self;
+/**
+ * The location of the file being executed.
+ * @type {Location}
+ **/
+var LOC = SELF.location;
+
 //#region Constant Strings
 /**
  * The only way I've found to force Closure not to collapse the word "prototype".
@@ -15,13 +27,13 @@ var PREDICATE_ERROR = "predicate must be a function";
 
 //#region Timers
 /** @const {Function} */
-var SET_TIMER = self.setTimeout;
+var SET_TIMER = SELF.setTimeout;
 /** @const {Function} */
-var CLEAR_TIMER = self.clearTimeout;
+var CLEAR_TIMER = SELF.clearTimeout;
 /** @const {Function} */
-var SET_EVERY = self.setInterval;
+var SET_EVERY = SELF.setInterval;
 /** @const {Function} */
-var CLEAR_EVERY = self.clearInterval;
+var CLEAR_EVERY = SELF.clearInterval;
 /**
  * Sets a callback to happen the instance the main thread ends execution.
  * Only supported by Microsoft, so polyfill to help other browsers.
@@ -29,14 +41,14 @@ var CLEAR_EVERY = self.clearInterval;
  * @param {...?} var_args
  * @return {number}		Handle for the callback timer.
  **/
-var SET_INSTANT = self.setImmediate || function(func, var_args) {
+var SET_INSTANT = SELF.setImmediate || function(func, var_args) {
 	return SET_TIMER.apply(this, [func, 0].concat(SLICE.call(arguments)));
 };
 /**
  * Clears a setImmediate (or polyfilled) timeout.
  * @param {number} id	Handle for the callback timer.
  **/
-var CLEAR_INSTANT = self.clearImmediate || function(id) {
+var CLEAR_INSTANT = SELF.clearImmediate || function(id) {
 	return CLEAR_TIMER(id);
 };
 //#endregion Timers
@@ -100,6 +112,22 @@ function OBJECT_IS_ARGUMENTS(object) {
  */
 function OBJECT_IS_ARRAY(value) {
 	return PSEUDO_KLASS_NAME(value) === "Array";
+}
+/**
+ * Checks to see if the given parameter is a Map.
+ * @param {?} value The variable to check
+ * @return {!boolean}
+ */
+function OBJECT_IS_MAP(value) {
+	return PSEUDO_KLASS_NAME(value) === "Map";
+}
+/**
+ * Checks to see if the given parameter is a Set.
+ * @param {?} value The variable to check
+ * @return {!boolean}
+ */
+function OBJECT_IS_SET(value) {
+	return PSEUDO_KLASS_NAME(value) === "Set";
 }
 /**
  * Checks for both null and undefined
