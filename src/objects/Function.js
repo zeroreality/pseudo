@@ -16,5 +16,5 @@ var Function_prototype = Function[PROTOTYPE];
 Function_prototype.defer = function(var_args) {
 	var method = this;
 	var_args = SLICE.call(arguments);
-	return SET_TIMER(function() { return method.apply(WIN, var_args) }, 1);
+	return SET_TIMER(function() { return method.apply(SELF, var_args) }, 1);
 };

@@ -4,7 +4,7 @@
  * Reference to an IFRAME element in use by some of the protocol checking hacks.
  * @type {Window}
  */
-var PROTOCOL_TARGET = WIN;
+var PROTOCOL_TARGET = SELF;
 /**
  * Reference to an IFRAME element in use by some of the protocol checking hacks.
  * @type {HTMLIFrameElement}
@@ -139,11 +139,11 @@ function openUriWithMsLaunchUri(uri) {
  * @param {!string} uri
  */
 function openUriWithTimeoutHack(uri) {
-	PROTOCOL_TARGET = WIN;
+	PROTOCOL_TARGET = SELF;
 	while (PROTOCOL_TARGET !== PROTOCOL_TARGET.parent) PROTOCOL_TARGET = PROTOCOL_TARGET.parent;	// blur event from top level window
 	PROTOCOL_TARGET.once("blur", PROTOCOL_BLUR_SUCCESS);
 	PROTOCOL_TIMER = SET_TIMER(PROTOCOL_BLUR_FAILURE, PROTOCOL_FAILURE_TIMEOUT);
-	WIN.location = uri;
+	SELF.location = uri;
 }
 /**
  * Attempt to launch an application URI using an embedded IFRAME.
@@ -169,7 +169,7 @@ function openUriWithHiddenFrameException(uri) {
  * @param {!string} uri
  */
 function openUriWithHiddenFrame(uri) {
-	PROTOCOL_TARGET = WIN.once("blur", PROTOCOL_BLUR_SUCCESS);
+	PROTOCOL_TARGET = SELF.once("blur", PROTOCOL_BLUR_SUCCESS);
 	PROTOCOL_TIMER = SET_TIMER(PROTOCOL_BLUR_FAILURE, PROTOCOL_FAILURE_TIMEOUT);
 	PROTOCOL_IFRAME().contentWindow.location.href = uri;
 }

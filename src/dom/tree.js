@@ -55,7 +55,7 @@ var DOM_ATTR_WRITERS = {
  * Helper for converting strings, numbers, and other literals into HTML by setting innerHTML and getting content.
  * @type {HTMLTemplateElement}
  **/
-var DOM_TEMPLATE = WIN["HTMLTemplateElement"]
+var DOM_TEMPLATE = SELF["HTMLTemplateElement"]
 				? DOC.createElement("template")
 				: null;
 /**
@@ -400,7 +400,7 @@ HTMLElement_prototype.write = function(propertyName, value) {
  * @return {!string}
  */
 HTMLElement_prototype.getStyle = function(propertyName) {
-	var style = WIN.getComputedStyle(this, null);
+	var style = SELF.getComputedStyle(this, null);
 	return !style ? "" : style.getPropertyValue(propertyName) || "";
 };
 /**
@@ -493,7 +493,7 @@ HTMLElement_prototype.selectText = function(startIndex, endIndex) {
 	if (this.firstChild) {
 		var length = this.textContent.length,
 			range = DOC.createRange(),
-			sel = WIN.getSelection(),
+			sel = SELF.getSelection(),
 			start = !startIndex || startIndex < 0
 				? 0
 				: startIndex > length
@@ -516,7 +516,7 @@ HTMLElement_prototype.selectText = function(startIndex, endIndex) {
  * These method names are shared between the HTMLElement and the document and the window.
  */
 ["on", "once", "off", "fire", "uses", "ask", "query"].forEach(function(name) {
-	DOC[name] = WIN[name] = HTMLElement_prototype[name];
+	DOC[name] = SELF[name] = HTMLElement_prototype[name];
 });
 /**
  * A quick way of creating an element in this document.
@@ -550,7 +550,7 @@ DOC.fragment = function(var_args) {
  * @param {string} id
  * @return {Element}
  */
-WIN["$"] = function(id) {
+SELF["$"] = function(id) {
 	return DOC.getElementById(id) || null;
 };
 /**
@@ -558,6 +558,6 @@ WIN["$"] = function(id) {
  * @param {...string} var_args
  * @return {!Array.<Element>}
  */
-WIN["$$"] = function(var_args) {
+SELF["$$"] = function(var_args) {
 	return DOC["query"](DOM_PARSE_SELECTORS(arguments));
 };

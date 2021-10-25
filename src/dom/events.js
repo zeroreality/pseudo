@@ -10,7 +10,7 @@ var DOM_EVENT_BUTTON_CODES = {
 	"3": "right",
 };
 // additional for IE
-if (OBJECT_IS_FUNCTION(WIN["ScriptEngineMajorVersion"])) {
+if (OBJECT_IS_FUNCTION(SELF["ScriptEngineMajorVersion"])) {
 	DOM_EVENT_BUTTON_CODES["0"] = "left";
 	DOM_EVENT_BUTTON_CODES["4"] = "middle";
 }
@@ -240,7 +240,7 @@ function EventDefinitionMouse(definition) {
 	 * 
 	 * @type {!Object}
 	 **/
-	this.view = definition["view"] || WIN;
+	this.view = definition["view"] || SELF;
 	/**
 	 * 
 	 * @type {!number}
@@ -310,7 +310,7 @@ function EventDefinitionKeyboard(definition) {
 	 * 
 	 * @type {!Object}
 	 **/
-	this.view = definition["view"] || WIN;
+	this.view = definition["view"] || SELF;
 	/**
 	 * 
 	 * @type {!boolean}
@@ -360,7 +360,7 @@ function EventDefinitionUi(definition) {
 	 * 
 	 * @type {!Object}
 	 **/
-	this.view = definition["view"] || WIN;
+	this.view = definition["view"] || SELF;
 	/**
 	 * 
 	 * @type {!number}
@@ -384,7 +384,7 @@ function DOM_EVENT_INIT(definition) {
 				definition["type"],
 				!!definition["bubbles"],
 				!!definition["cancelable"],
-				definition["view"] || WIN,
+				definition["view"] || SELF,
 				INT(definition["detail"], 10) || 0,
 				INT(definition["screenX"], 10) || 0,
 				INT(definition["screenY"], 10) || 0,
@@ -405,7 +405,7 @@ function DOM_EVENT_INIT(definition) {
 				definition["type"],
 				!!definition["bubbles"],
 				!!definition["cancelable"],
-				definition["view"] || WIN,
+				definition["view"] || SELF,
 				!!definition["ctrlKey"] || false,
 				!!definition["altKey"] || false,
 				!!definition["shiftKey"] || false,
@@ -420,7 +420,7 @@ function DOM_EVENT_INIT(definition) {
 				definition["type"],
 				!!definition["bubbles"],
 				!!definition["cancelable"],
-				definition["view"] || WIN,
+				definition["view"] || SELF,
 				INT(definition["detail"], 10) || 0
 			);
 			break;
@@ -636,14 +636,14 @@ Event_prototype.isContentKey = function() {
  * @expose
  */
 Event_prototype.unselect = function() {
-	WIN.getSelection().removeAllRanges();
+	SELF.getSelection().removeAllRanges();
 };
 
 /**
  * Add these few functions to the document and window.
  */
 ["on", "once", "off", "fire", "uses", "ask", "query"].forEach(function(name) {
-	DOC[name] = WIN[name] = HTMLElement_prototype[name];
+	DOC[name] = SELF[name] = HTMLElement_prototype[name];
 });
 
 /**
