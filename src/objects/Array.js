@@ -289,6 +289,34 @@ Array_prototype.sum = function(predicate, initialValue) {
 		? this.reduce(predicate)
 		: this.reduce(predicate, initialValue);
 };
+/**
+ * Returns an average for the this array's values.
+ * Internally uses {@link Array#sum} and divides by it's own length.
+ * @expose
+ * @this {Array}
+ * @param {Function=} predicate
+ **/
+Array_prototype.average = function(predicate) {
+	return this.sum(predicate) / this.length;
+};
+/**
+ * Returns the median for the this array's values.
+ * Internally uses {@link Array#order} and {@link Array#average} for even length arrays.
+ * @expose
+ * @this {Array}
+ * @param {Function=} orderPredicate
+ * @param {Function=} averagePredicate
+ **/
+Array_prototype.median = function(orderPredicate, averagePredicate) {
+	if (OBJECT_IS_NOTHING(orderPredicate)) orderPredicate = ARRAY_COMPARE;
+	else if (typeof orderPredicate !== "function") throw new TypeError(PREDICATE_ERROR);
+	var ordered = this.slice().order(orderPredicate),
+		length = ordered.length,
+		middle = FLOOR(length / 2);
+	return length % 2 === 0
+		? ordered.slice(middle - 1, middle + 1).average(averagePredicate)
+		: ordered[middle];
+};
 //#endregion Minimum/Maximum/Sum
 
 //#region Iterating
