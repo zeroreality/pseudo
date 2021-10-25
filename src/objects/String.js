@@ -425,4 +425,17 @@ ns.String = {
 	 * Helpful for creating page slugs.
 	 **/
 	"slug": CODIFIER,
+	/**
+	 * Alternates upper-case and lower-case letters for a given string.
+	 * @param {!string} string
+	 **/
+	"sarcasm": function(string) {
+		var i = 0;
+		return OBJECT_IS_NOTHING(string)
+			? ""
+			: String(string).split("").map(function(char) {
+				if (!char.search(/[a-z]/i)) i++;
+				return char[i % 2 ? "toUpperCase" : "toLowerCase"]();
+			}).join("");
+	},
 };
