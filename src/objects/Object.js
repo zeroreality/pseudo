@@ -85,6 +85,14 @@ ns.Object = {
 	/**
 	 * @expose
 	 */
+	"isMap": OBJECT_IS_MAP,
+	/**
+	 * @expose
+	 */
+	"isSet": OBJECT_IS_SET,
+	/**
+	 * @expose
+	 */
 	"isBoolean": OBJECT_IS_BOOLEAN,
 	/**
 	 * @expose
