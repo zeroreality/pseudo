@@ -67,24 +67,26 @@ function JSON_PRETTY(object, tab, depth) {
 }
 
 /**
- * Parses the JSON string, and handles the error if any.
+ * Parses the passed JSON string and returns the parsed value.
+ * If there is an exception in parsing, the errorContainer is populated with all the details of the error and `undefined` is returned.
  * @param {!string} jsonString
  * @param {Object=} errorContainer
- * @return {*}
- */
+ * @return {Object}
+ **/
 function JSON_PARSE_SAFE(jsonString, errorContainer) {
 	var json;
 	try {
 		json = JSON_PARSE(jsonString);
-	} catch (error) {
-		[
-			"name",
-			"message",
-		].concat(GET_ALL_KEYS(error))
-			.unique()
-			.forEach(function(key) {
-				this[key] = error[key];
-			}, errorContainer || {});
+	} catch (/** SyntaxError */error) {
+		if (errorContainer) {
+			errorContainer["jsonString"] = jsonString;
+			GET_ALL_KEYS(error)
+				.concat("name", "message")
+				.unique()
+				.forEach(function(key) {
+					errorContainer[key] = error[key] || "";
+				});
+		}
 	}
 	return json;
 }
