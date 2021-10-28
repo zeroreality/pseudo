@@ -136,13 +136,3 @@ ns.merge = PSEUDO_MERGE;
  * @expose
  **/
 ns.escape = PSEUDO_ESCAPE;
-/**
- * Similar to {@link global.isNaN}, but also returns false for nulls and other non-number types.
- * @expose
- **/
-ns.isNaN = IS_NAN;
-/**
- * Opposite of {@link pseudo3.isNaN}.
- * @expose
- **/
-ns.isN = IS_AN;
