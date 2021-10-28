@@ -112,3 +112,23 @@ Number_prototype.countDecimals = function() {
 		? 0
 		: (this.toString().split(".")[1] || "").length;
 };
+
+/** 
+ * 
+ * @namespace
+ * @expose
+ **/
+ns.Number = {
+	/**
+	 * Rounds a number to the desired number of decimal places. Using a negative places value will round to the nearest ten.
+	 **/
+	"roundTo": ROUND_TO,
+	/**
+	 * Similar to {@link global.isNaN}, but also returns false for nulls and other non-number types.
+	 **/
+	"isNaN": IS_NAN,
+	/**
+	 * Opposite of {@link pseudo3.isNaN}.
+	 **/
+	"isAn": IS_AN,
+};
