@@ -65,6 +65,58 @@ function OBJECT_EACH(object, predicate, context, keyOrder) {
 }
 
 /**
+ * Defines a complex attribute getter and setter.
+ * @param {!Object} klass
+ * @param {!string} name
+ * @param {!Function} getter
+ * @param {Function=} setter
+ **/
+function DEFINE_COMPLEX(klass, name, getter, setter) {
+	var propertyDef = {
+		"enumerable": true,
+		"configurable": true,
+		"get": getter,
+	};
+	if (setter instanceof Function) propertyDef["set"] = setter;
+	DEFINE_PROP(klass, name, propertyDef);
+}
+/**
+ * Defines non-writable attribute values.
+ * @param {!Object} klass
+ * @param {!Object.<string,?>} values
+ **/
+function DEFINE_READONLY_VALUES(klass, values) {
+	for (var keys = GET_KEYS(values), i = 0, key; key = keys[i]; i++) {
+		DEFINE_PROP(klass, key, {
+			"writable": false,
+			"enumerable": true,
+			"configurable": true,
+			"value": values[key],
+		});
+	}
+}
+/**
+ * Defines complex attribute getters, but no setters.
+ * @param {!Object} klass
+ * @param {!Object.<string,!Function>} getters
+ **/
+function DEFINE_READONLY_GETTERS(klass, getters) {
+	for (var keys = GET_KEYS(getters), i = 0, key; key = keys[i]; i++) {
+		DEFINE_COMPLEX(klass, key, getters[key]);
+	}
+}
+/**
+ * Defines complex attribute getters and (optional) setters.
+ * @param {!Object} klass
+ * @param {!Object.<string,{get:Function,set:Function}>} complexes
+ **/
+function DEFINE_COMPLEXES(klass, complexes) {
+	for (var keys = GET_KEYS(complexes), i = 0, key; key = keys[i]; i++) {
+		DEFINE_COMPLEX(klass, key, complexes[key]["get"], complexes[key]["set"]);
+	}
+}
+
+/**
  * Utility functions for inspecting objects.
  * @namespace
  * @expose
@@ -126,4 +178,16 @@ ns.Object = {
 	 * @expose
 	 */
 	"each": OBJECT_EACH,
+	/**
+	 * @expose
+	 */
+	"define": DEFINE_COMPLEXES,
+	/**
+	 * @expose
+	 */
+	"getters": DEFINE_READONLY_GETTERS,
+	/**
+	 * @expose
+	 */
+	"readonly": DEFINE_READONLY_VALUES,
 };
