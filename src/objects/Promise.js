@@ -44,9 +44,15 @@ PLEASE.allSettled = PLEASE.allSettled
 					return PLEASE.all(
 						promises.map(function(promise) {
 							return promise.then(function(value) {
-								return value;
+								return {
+									"status": PROMISE_STATUS.fulfilled,
+									"value": value,
+								};
 							}).catch(function(reason) {
-								return reason;
+								return {
+									"status": PROMISE_STATUS.rejected,
+									"reason": reason,
+								};
 							})
 						})
 					);
