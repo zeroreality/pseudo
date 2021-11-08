@@ -32,7 +32,7 @@ function PROMISE_REJECT_RETURNED(value) {
 };
 
 /**
- * Returns a promise that resolves after all of the given promises have either fulfilled or rejected,
+ * Returns a {@link Promise} that resolves after all of the given promises have either fulfilled or rejected,
  * with an array of objects that each describes the outcome of each promise.
  * @expose
  * @param {Array.<Promise>} promises
@@ -59,7 +59,7 @@ PLEASE.allSettled = PLEASE.allSettled
 				};
 
 /**
- * 
+ * Returns a {@link Promise} that resolves after any of the given promises have fulfilled (not rejected).
  * @expose
  * @param {Array.<Promise>} promises
  * @returns {Promise}
@@ -85,14 +85,14 @@ PLEASE.any = PLEASE.any
 	};
 
 /**
- * 
+ * Just like {@link Promise#then} except it only takes one callback function which is used to fulfill or reject this {@link Promise}.
  * @expose
  * @this {Promise}
  * @param {function(?):Promise} callback
  * @returns {Promise}
  * @see {pseudo3.Promise.STATUS} For possible values
  **/
-Promise_prototype.settled = function(callback) {
+Promise_prototype.next = function(callback) {
 	return this.then(callback, callback);
 };
 
