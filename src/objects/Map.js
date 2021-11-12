@@ -172,11 +172,12 @@ Map_prototype.inject = function(iterable) {
  * @param {function(?,Map):?} setValue
  * @param {function(?,Function,?,Map):?} updateValue
  * @param {!Object=} context
+ * @return {!Map} this
  */
 Map_prototype.setOrReplace = function(key, setValue, updateValue, context) {
 	if (!OBJECT_IS_FUNCTION(setValue)) throw new TypeError("setValue is not a Function");
 	if (!OBJECT_IS_FUNCTION(updateValue)) throw new TypeError("updateValue is not a Function");
-	this.set(
+	return this.set(
 		key,
 		!this.has(key)
 			? setValue.call(context, key, this)
@@ -192,17 +193,46 @@ Map_prototype.setOrReplace = function(key, setValue, updateValue, context) {
  * @this {Map}
  * @param {?} key
  * @param {?} value
- * @param {function(?,?,?,Map):?} updateValue
+ * @param {function(?,?,?,Map):?} updateValue	Invoked (in the given context) with current value, the given value, key, and the Map itself.
  * @param {!Object=} context
+ * @return {!Map} this
  */
 Map_prototype.addOrReplace = function(key, value, updateValue, context) {
 	if (!OBJECT_IS_FUNCTION(updateValue)) throw new TypeError("updateValue is not a Function");
-	this.set(
+	return this.set(
 		key,
 		!this.has(key)
 			? value
 			: updateValue.call(context, this.get(key), value, key, this)
 	);
+};
+/**
+ * Either retreives the value for the given key, or sets the key with the given value and returns it.
+ * @expose
+ * @this {Map}
+ * @param {?} key
+ * @param {?} value
+ * @return {?}
+ **/
+Map_prototype.getOrAdd = function(key, value) {
+	var exists = this.has(key);
+	if (!exists) this.set(key, value);
+	return this.get(key);
+};
+/**
+ * Either retreives the value for the given key, or sets the key with the result of the updateValue function and returns it.
+ * @expose
+ * @this {Map}
+ * @param {?} key
+ * @param {function(?,Map):?} func	Invoked (in the given context) with the key, and the Map itself.
+ * @param {!Object=} context
+ * @return {?}
+ **/
+Map_prototype.getOrSetResult = function(key, updateValue, context) {
+	if (!OBJECT_IS_FUNCTION(updateValue)) throw new TypeError("func is not a Function");
+	var exists = this.has(key);
+	if (!exists) this.set(key, updateValue.call(context, key, this));
+	return this.get(key);
 };
 //#endregion Modification
 
