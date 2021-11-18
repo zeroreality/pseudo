@@ -6,7 +6,7 @@
  * If no cookie is set, returns undefined.
  * @param {!string} name
  * @return {string|undefined}
- */
+ **/
 function COOKIE_GETTER(name) {
 	return DOC.cookie.split(new RegExp("\\b" + name + "=([^;]*)"))[1];
 }
@@ -19,10 +19,10 @@ function COOKIE_GETTER(name) {
  * @param {string=} path
  * @param {Date=} expiry
  * @return {!string}
- */
+ **/
 function COOKIE_SETTER(name, value, path, expiry) {
 	expiry = new Date(expiry instanceof Date ? expiry.valueOf() : IS_AN(expiry) ? expiry : Date.parse(String(expiry)));
-	DOC.cookie = name + "=" + value
+	DOC.cookie = name + "=" + (OBJECT_IS_NOTHING(value) ? "" : value)
 		+ "; path=" + (path || "/")
 		+ "; expires=" + (IS_AN(expiry.valueOf()) ? expiry : (new Date).addDate(1)).toUTCString();
 	return COOKIE_GETTER(name);
@@ -34,7 +34,7 @@ function COOKIE_SETTER(name, value, path, expiry) {
  * @param {!string} name
  * @param {string=} path
  * @return {!boolean}
- */
+ **/
 function COOKIE_REMOVE(name, path) {
 	return !COOKIE_SETTER(name, "", path || "/", new Date(0));
 }
