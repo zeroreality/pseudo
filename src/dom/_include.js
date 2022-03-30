@@ -19,6 +19,8 @@ var HISTORY = SELF.history;
 var STORAGE = SELF.localStorage;
 /** @type {DOMApplicationCache} */
 var CACHE = SELF.applicationCache;
+/** @const {!string} */
+var CSP_NONCE = DOC.currentScript.nonce || "";
 
 var HTMLElement_prototype = Element[PROTOTYPE],
 	//	SVGElement_prototype = SVGElement[PROTOTYPE],
@@ -49,6 +51,7 @@ function PSEUDO_ADD_SCRIPT(source, callback, reload) {
 	file.async = false;	// html5/IE10
 	file.type = "text/javascript";
 	file.setAttribute("src", source);
+	if (CSP_NONCE) file.setAttribute("nonce", CSP_NONCE);
 	if (callback) file.onload = callback;
 	return DOC_HEAD.appendChild(file);
 }
@@ -66,6 +69,7 @@ function PSEUDO_ADD_SHEET(source, media, reload) {
 	file.setAttribute("rel", "stylesheet");
 	file.setAttribute("type", "text/css");
 	file.setAttribute("href", source);
+	if (CSP_NONCE) file.setAttribute("nonce", CSP_NONCE);
 	if (media) file.setAttribute("media", media);
 	return DOC_HEAD.appendChild(file);
 }
