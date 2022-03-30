@@ -112,6 +112,22 @@ Number_prototype.countDecimals = function() {
 		? 0
 		: (this.toString().split(".")[1] || "").length;
 };
+/**
+ * Compares the given value as a number literal and returns true if this number has the same value, or if they are both NaN.
+ * @expose
+ * @this {number}
+ * @param {!number} other	
+ * @return {!boolean}
+ **/
+Number_prototype.equals = function(other) {
+	var that = Number(this),
+		num = OBJECT_IS_NUMBER(other)
+			? Number(other)
+			: NaN;
+	return num === that
+		|| isNaN(num)	// isNaN instead of IS_NAN because we already know it's a number type.
+		&& isNaN(that);
+};
 
 /** 
  * 
