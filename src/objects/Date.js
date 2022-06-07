@@ -122,15 +122,17 @@ Date_prototype.context = function(other, levels, comparers) {
 		copy = !(other instanceof Date) || IS_NAN(other.valueOf())
 			? new Date
 			: new Date(other),
-		target = new Date(copy);	// another copy because we use target to iterate
+		negate = this > copy,
+		larger = new Date(negate ? this : copy),	// another copy because we use target to iterate
+		smaller = new Date(!negate ? this : copy);
 	if (IS_NAN(levels)) levels = 2;
 	if (!comparers || !comparers.length) comparers = DEFAULT_DATE_CONTEXT_COMPARERS;
 
 	// cycle through helper/comparers
 	for (var i = 0, compare; compare = comparers[i]; i++) {
-		var diff = FLOOR(compare.get.call(target) - compare.get.call(this));
-		if (diff) compare.inc.call(target, -diff);
-		descriptors.push(new DateContextDescriptor(diff, compare.type));
+		var diff = FLOOR(compare.get.call(larger) - compare.get.call(smaller));
+		if (diff) compare.inc.call(larger, -diff);
+		descriptors.push(new DateContextDescriptor(diff * (!negate || -1), compare.type));
 	}
 
 	// remove "zero" values
