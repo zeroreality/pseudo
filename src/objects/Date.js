@@ -325,6 +325,13 @@ Date_prototype.toFormat = function(string, invalid) {
 		}
 	}, this).join("");
 };
+/**
+ * Returns a string in the same format as {@link Date#toISOString}, but in the local timezone and without the Zulu suffix.
+ * @expose
+ * @this {Date}
+ * @return {!string}
+ **/
+Date_prototype.toLocalString = function toLocalString() { return this.toFormat("yyyy-MM-dd\\THH:mm:ss.fff"); };
 //#endregion Format
 
 //#region Inspection
