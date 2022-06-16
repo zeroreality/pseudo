@@ -73,7 +73,7 @@ function PSEUDO_CLONE_ARRAY(array, depth, chain) {
 	if (!chain) chain = [];
 	for (var i = 0, l = array.length; i < l; i++) {
 		var value = array[i];
-		if (typeof value === "object") {
+		if (typeof value === "object" && !OBJECT_IS_NOTHING(value)) {
 			if (depth > 0 && chain.indexOf(value) < 0) {
 				result.push(
 					value instanceof Array
