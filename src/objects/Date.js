@@ -61,6 +61,19 @@ var DATE_MILLI_PER = {
 	 **/
 	"fff": 1,
 };
+/**
+ * Context for creating date/time comparisons.
+ **/
+var DATE_MILLI_CONTEXT = new Map([
+	["yyyy", DATE_MILLI_PER["yyyy"]],
+	["MM", DATE_MILLI_PER["yyyy"] / 12],	// not DATE_MILLI_PER["MM"]
+	["ww", DATE_MILLI_PER["ww"]],
+	["dd", DATE_MILLI_PER["dd"]],
+	["hh", DATE_MILLI_PER["hh"]],
+	["mm", DATE_MILLI_PER["mm"]],
+	["ss", DATE_MILLI_PER["ss"]],
+	["fff", DATE_MILLI_PER["fff"]],
+]);
 
 //#region Static
 /**
@@ -117,26 +130,24 @@ Date_prototype.context = function(other, levels, comparers) {
 		 **/
 		this.type = type;
 	}
-
 	var descriptors = [],
-		copy = !(other instanceof Date) || IS_NAN(other.valueOf())
-			? new Date
-			: new Date(other),
-		negate = this > copy,
-		larger = new Date(negate ? this : copy),	// another copy because we use target to iterate
-		smaller = new Date(!negate ? this : copy);
+		copy = new Date(isNaN(other) ? new Date : other),
+		future = this > copy,
+		diff = ABS(this - copy);
 	if (IS_NAN(levels)) levels = 2;
-	if (!comparers || !comparers.length) comparers = DEFAULT_DATE_CONTEXT_COMPARERS;
-
-	// cycle through helper/comparers
-	for (var i = 0, compare; compare = comparers[i]; i++) {
-		var diff = FLOOR(compare.get.call(larger) - compare.get.call(smaller));
-		if (diff) compare.inc.call(larger, -diff);
-		descriptors.push(new DateContextDescriptor(diff * (!negate || -1), compare.type));
+	if (!comparers || !comparers.length) comparers = DATE_MILLI_CONTEXT.allKeys();
+	for (var i = 0, l = comparers.length; levels && diff && i < l; i++) {
+		var type = comparers[i],
+			milli = DATE_MILLI_CONTEXT.get(type),
+			//func = levels > 1 ? FLOOR : ROUND,
+			value = FLOOR(diff / milli);
+		if (value) {
+			descriptors.push(new DateContextDescriptor(value * (!future || -1), type));
+			diff -= value * milli;
+			levels--;
+		}
 	}
-
-	// remove "zero" values
-	return descriptors.filter(function(desc) { return desc.value; }).slice(0, levels);
+	return descriptors;
 };
 /**
  * Internally invoked {@link Date#context} and returns a concatenated string describing the difference between this date and the given value.
@@ -606,6 +617,13 @@ Date_prototype.nearest = function(part, denominator, rounding) {
 	}
 	return this;
 };
+/**
+ * Returns a new Date that is adjusted to UTC based on the browser's timezone.
+ * @expose
+ * @this {Date}
+ * @return {!Date}
+ **/
+Date_prototype.toUtc = function() { return (new Date(this)).addMinutes(this.getTimezoneOffset()); }
 //#endregion Modification
 
 /** 
