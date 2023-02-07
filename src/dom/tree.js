@@ -36,9 +36,8 @@ var DOM_ATTR_WRITERS = {
 		if (typeof value === "string") {
 			//	this.style.cssText = value;
 			value.split(";").forEach(function(pair) {
-				var values = pair.split(":"),
-					name = values[0].trim(),
-					value = values[1] || "";
+				var name = pair.before(":").trim(),
+					value = pair.after(":").trim();
 				if (name) this[name] = value.trim();
 			}, this.style);
 		} else {
