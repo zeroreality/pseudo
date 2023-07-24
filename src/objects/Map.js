@@ -246,6 +246,31 @@ Map_prototype.copy = function() {
 	return new Map(this);
 };
 /**
+ * Similar to {@link Array#reduce}, will return the result of the predicate, where the first argument of the predicate is the previous result.
+ * @expose
+ * @this {Map}
+ * @param {!function(?,?,?,Map):boolean} predicate
+ * @param {!*=} initialValue
+ * @throws {TypeError} predicate is not a Function
+ * @return {!Map}
+ **/
+Map_prototype.reduce = function(predicate, initialValue) {
+	if (!OBJECT_IS_FUNCTION(predicate)) {
+		throw new TypeError("predicate is not a Function");
+	}
+	var skipFirst = arguments.length < 2,
+		result = initialValue;
+	this.forEach(function(value, key) {
+		if (!skipFirst) {
+			result = predicate(result, value, key, this);
+		} else {
+			skipFirst = false;
+			result = value;
+		}
+	});
+	return result;
+};
+/**
  * Builds a new dictionary with only the positive results from the predicate.
  * @expose
  * @this {Map}
