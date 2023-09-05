@@ -8,7 +8,7 @@
  **/
 function COOKIE_GETTER(name) {
 	var values = DOC.cookie.split(new RegExp("\\b" + encodeURIComponent(name) + "=([^;]*)"));
-	return values.length > 0
+	return values.length > 1
 		? decodeURIComponent(values[1].replace(/\+/g, " "))
 		: undefined;
 }
