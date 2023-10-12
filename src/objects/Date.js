@@ -131,7 +131,7 @@ Date_prototype.context = function(other, levels, comparers) {
 		this.type = type;
 	}
 	var descriptors = [],
-		copy = new Date(isNaN(other) ? new Date : other),
+		copy = new Date(IS_NAN(other) ? new Date : other),
 		future = this > copy,
 		diff = ABS(this - copy);
 	if (IS_NAN(levels)) levels = 2;
