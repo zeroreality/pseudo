@@ -1,6 +1,5 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
-
 /**
  * Gets a cookie by the given (case-sensitive) name.
  * If no cookie is set, returns undefined.
@@ -8,7 +7,10 @@
  * @return {string|undefined}
  **/
 function COOKIE_GETTER(name) {
-	return DOC.cookie.split(new RegExp("\\b" + name + "=([^;]*)"))[1];
+	var values = DOC.cookie.split(new RegExp("\\b" + encodeURIComponent(name) + "=([^;]*)"));
+	return values.length > 1
+		? decodeURIComponent(values[1].replace(/\+/g, " "))
+		: undefined;
 }
 /**
  * Sets a cookie with the given value, path, and expiriation.
@@ -22,7 +24,7 @@ function COOKIE_GETTER(name) {
  **/
 function COOKIE_SETTER(name, value, path, expiry) {
 	expiry = new Date(expiry instanceof Date ? expiry.valueOf() : IS_AN(expiry) ? expiry : Date.parse(String(expiry)));
-	DOC.cookie = name + "=" + (OBJECT_IS_NOTHING(value) ? "" : value)
+	DOC.cookie = encodeURIComponent(name) + "=" + (OBJECT_IS_NOTHING(value) ? "" : encodeURIComponent(value))
 		+ "; path=" + (path || "/")
 		+ "; expires=" + (IS_AN(expiry.valueOf()) ? expiry : (new Date).addDate(1)).toUTCString();
 	return COOKIE_GETTER(name);
