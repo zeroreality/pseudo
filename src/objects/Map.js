@@ -3,6 +3,21 @@
 /** @const {Object} */
 var Map_prototype = Map[PROTOTYPE];
 
+/**
+ * Creates a new Map from the given object's values by iterating on the object's keys.
+ * @expose
+ * @param {any} object
+ * @return {!Map}
+ **/
+Map.fromObject = function(object) {
+	if (OBJECT_IS_NOTHING(object)) throw new TypeError("object is undefined or null");
+	var map = new Map();
+	OBJECT_EACH(object, function(value, key) {
+		map.set(key, value);
+	});
+	return map;
+};
+
 //#region Inspection
 /**
  * Gets an Array of keys within this dictionary.
