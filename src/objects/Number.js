@@ -1,6 +1,12 @@
 ﻿/// <reference path="..\..\blds\pseudo3.js" />
 
 /**
+ * Matches the last digit of a number and returns it.
+ * For numbers ending in the teens (10-19), it returns two digits.
+ **/
+var NTH_MATCH = new RegExp("1?\\d$");
+
+/**
  * 
  * @const {Object}
  **/
@@ -129,12 +135,38 @@ Number_prototype.equals = function(other) {
 		&& isNaN(that);
 };
 
+/**
+ * A function which returns a number with it's "Nth" suffix.
+ * @expose
+ * @example 1st, 3rd, 11th, etc...
+ * @return {!string}
+ **/
+Number_prototype.nth = function() {
+	return isNaN(this)
+		? ""
+		: this + ns.Number.nth(NTH_MATCH.exec(this)[0]);
+};
 /** 
  * 
  * @namespace
  * @expose
  **/
 ns.Number = {
+	/**
+	 * A function which returns a number with it's "Nth" suffix.
+	 * @expose
+	 * @example st, th, ème, etc...
+	 * @param {!string} last		The last one (or two) digits of a number.
+	 * @return {!string}
+	 **/
+	"nth": function(last) {
+		switch (last) {
+			case "1": return "st";
+			case "2": return "nd";
+			case "3": return "rd";
+			default: return "th";
+		}
+	},
 	/**
 	 * Rounds a number to the desired number of decimal places. Using a negative places value will round to the nearest ten.
 	 **/
