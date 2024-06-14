@@ -10,11 +10,74 @@ var Date_prototype = Date[PROTOTYPE];
  * @const {Date}
  **/
 var DATE_INVALID = new Date(NaN);
+
 /**
- * This is the format helper tofor parsing date/time format strings.
+ * This is the format helper for parsing date/time format strings.
  * @const {RegExp}
  **/
-var DATE_FILTER_FORMAT = /(\\.|d{1,4}|M{1,4}|y{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|t{1,2}|T{1,2}|f{1,6})/gm;
+var DATE_FORMAT_FILTER = /(\\.|d{1,4}|M{1,4}|y{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|t{1,2}|T{1,2}|n{1,2}|f{1,6})/gm;
+/**
+ * A function that returns format markers and filler as pieces to be concantenated together.
+ * @param {!string} piece
+ * @param {!number} index
+ * @param {!Array.<string>} array
+ * @return {!string}
+ **/
+function DATE_FORMAT_PIECE(piece, index, array) {
+	if (!piece) return "";
+	else if (piece.startsWith("\\")) return piece.substring(1);
+	switch (piece) {
+		case "yyyy":
+		case "yyy": return this.getFullYear();
+		case "yy":
+		case "y": return this.getFullYear().toString().right(piece.length);
+		case "MMMM": return this.getMonthName();
+		case "MMM": return this.getMonthName().left(3);
+		case "MM":
+		case "M": return ZERO_PADDED(this.getMonth() + 1, piece.length);
+		case "dddd": return this.getDayName();
+		case "ddd": return this.getDayName().left(3);
+		case "dd":
+		case "d": return ZERO_PADDED(this.getDate(), piece.length);
+		case "nn":
+		case "n":
+			for (var i = index - 1; i >= 0; i--) {
+				if (
+					// make sure it's a format marker and not filler, oran escape character
+					(array[i][0] === "\\" || DATE_FORMAT_FILTER.test(array[i]))
+					// also make sure it's not a meridium marker
+					&& !isNaN(ID(piece = DATE_FORMAT_PIECE.call(this, array[i], i, array)))
+				) {
+					return ns.Number.nth(NTH_MATCH.exec(piece)[0]);
+				}
+			}
+			// if not matching piece is found, just return ""
+			return "";
+		//	case "ww":
+		//	case "w": return ZERO_PADDED(this.getWeek(), piece.length);
+		case "HH":
+		case "H": return ZERO_PADDED(this.getHours(), piece.length);
+		case "hh":
+		case "h": return ZERO_PADDED(this.getHoursBase12(), piece.length);
+		case "mm":
+		case "m": return ZERO_PADDED(this.getMinutes(), piece.length);
+		case "ssss":
+		case "sss":
+		case "ss":
+		case "s": return ZERO_PADDED(this.getSeconds(), piece.length);
+		case "ffffff":
+		case "fffff":
+		case "ffff":
+		case "fff":
+		case "ff":
+		case "f": return ZERO_PADDED(FLOAT("0." + this.getMilliseconds()), 0, piece.length).substring(2);
+		case "TT": return this.getMeridiem().toUpperCase();
+		case "tt": return this.getMeridiem().toLowerCase();
+		case "T": return this.getMeridiem()[0].toUpperCase();
+		case "t": return this.getMeridiem()[0].toLowerCase();
+	}
+	return piece;
+}
 
 /**
  * A dictionary/reference of the number of milliseconds in each date-part.
@@ -296,47 +359,7 @@ Date_prototype.getMeridiem = function getMonthName() {
  */
 Date_prototype.toFormat = function(string, invalid) {
 	if (IS_NAN(this.valueOf())) return arguments.length > 1 ? invalid : DATE_INVALID.toString();
-	return (string || "").split(DATE_FILTER_FORMAT).map(function(piece) {
-		if (!piece) return "";
-		else if (piece.startsWith("\\")) return piece.substring(1);
-		switch (piece) {
-			case "yyyy":
-			case "yyy": return this.getFullYear();
-			case "yy":
-			case "y": return this.getFullYear().toString().right(piece.length);
-			case "MMMM": return this.getMonthName();
-			case "MMM": return this.getMonthName().left(3);
-			case "MM":
-			case "M": return ZERO_PADDED(this.getMonth() + 1, piece.length);
-			case "dddd": return this.getDayName();
-			case "ddd": return this.getDayName().left(3);
-			case "dd":
-			case "d": return ZERO_PADDED(this.getDate(), piece.length);
-			//	case "ww":
-			//	case "w": return ZERO_PADDED(this.getWeek(), piece.length);
-			case "HH":
-			case "H": return ZERO_PADDED(this.getHours(), piece.length);
-			case "hh":
-			case "h": return ZERO_PADDED(this.getHoursBase12(), piece.length);
-			case "mm":
-			case "m": return ZERO_PADDED(this.getMinutes(), piece.length);
-			case "ssss":
-			case "sss":
-			case "ss":
-			case "s": return ZERO_PADDED(this.getSeconds(), piece.length);
-			case "ffffff":
-			case "fffff":
-			case "ffff":
-			case "fff":
-			case "ff":
-			case "f": return ZERO_PADDED(FLOAT("0." + this.getMilliseconds()), 0, piece.length).substring(2);
-			case "TT": return this.getMeridiem().toUpperCase();
-			case "tt": return this.getMeridiem().toLowerCase();
-			case "T": return this.getMeridiem()[0].toUpperCase();
-			case "t": return this.getMeridiem()[0].toLowerCase();
-			default: return piece;
-		}
-	}, this).join("");
+	return (string || "").split(DATE_FORMAT_FILTER).map(DATE_FORMAT_PIECE, this).join("");
 };
 /**
  * Returns a string in the same format as {@link Date#toISOString}, but in the local timezone and without the Zulu suffix.
