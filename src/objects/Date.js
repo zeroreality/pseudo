@@ -18,6 +18,7 @@ var DATE_INVALID = new Date(NaN);
 var DATE_FORMAT_FILTER = /(\\.|d{1,4}|M{1,4}|y{1,4}|h{1,2}|H{1,2}|m{1,2}|s{1,2}|t{1,2}|T{1,2}|n{1,2}|f{1,6})/gm;
 /**
  * A function that returns format markers and filler as pieces to be concantenated together.
+ * @this {Date}
  * @param {!string} piece
  * @param {!number} index
  * @param {!Array.<string>} array
@@ -28,7 +29,7 @@ function DATE_FORMAT_PIECE(piece, index, array) {
 	else if (piece.startsWith("\\")) return piece.substring(1);
 	switch (piece) {
 		case "yyyy":
-		case "yyy": return this.getFullYear();
+		case "yyy": return this.getFullYear().toString();
 		case "yy":
 		case "y": return this.getFullYear().toString().right(piece.length);
 		case "MMMM": return this.getMonthName();
@@ -51,10 +52,9 @@ function DATE_FORMAT_PIECE(piece, index, array) {
 					return ns.Number.nth(NTH_MATCH.exec(piece)[0]);
 				}
 			}
-			// if not matching piece is found, just return ""
-			return "";
-		//	case "ww":
-		//	case "w": return ZERO_PADDED(this.getWeek(), piece.length);
+			return ""; // if not matching piece is found, just return ""
+	//	case "ww":
+	//	case "w": return ZERO_PADDED(this.getWeek(), piece.length);
 		case "HH":
 		case "H": return ZERO_PADDED(this.getHours(), piece.length);
 		case "hh":
