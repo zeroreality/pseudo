@@ -78,6 +78,23 @@ function DATE_FORMAT_PIECE(piece, index, array) {
 	}
 	return piece;
 }
+/**
+ * Creates a Date object out of the given value.
+ * @param {string|number|Date=} value	The value to parse.
+ * @param {boolean=} local			When true, assumes the parse value is a local time instead of UTC.
+ * @return {!Date}
+ **/
+function DATE_PARSE(value, local) {
+	var date = new Date(
+		value instanceof Date
+			? value.valueOf()
+			: OBJECT_IS_NUMBER(value)
+				? value
+				: Date.parse(String(value))
+	);
+	if (local) date.addMinutes(date.getTimezoneOffset());
+	return date;
+}
 
 /**
  * A dictionary/reference of the number of milliseconds in each date-part.
@@ -194,7 +211,7 @@ Date_prototype.context = function(other, levels, comparers) {
 		this.type = type;
 	}
 	var descriptors = [],
-		copy = new Date(IS_NAN(other) ? new Date : other),
+		copy = (other = DATE_PARSE(other)).isValid() ? other : new Date,
 		future = this > copy,
 		diff = ABS(this - copy);
 	if (IS_NAN(levels)) levels = 2;
@@ -728,6 +745,10 @@ ns.Date = {
 		"after": "{diff} ago",
 		"now": "now",
 	},
+	/**
+	 * @expose
+	 */
+	"parse": DATE_PARSE,
 };
 
 /**
